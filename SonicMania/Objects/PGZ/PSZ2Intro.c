@@ -44,10 +44,12 @@ void PSZ2Intro_StageLoad(void)
 {
     PSZ2Intro->sfxExplosion3 = RSDK.GetSfx("Stage/Explosion3.wav");
 
-    foreach_all(FXFade, fxFade)
-    {
-        PSZ2Intro->fxFade = fxFade;
-        foreach_break;
+{
+        foreach_all(FXFade, fxFade)
+        {
+            PSZ2Intro->fxFade = fxFade;
+            foreach_break;
+        }
     }
 
     if (!isMainGameMode() || !globals->atlEnabled || CutsceneRules_CheckStageReload()) {
@@ -57,11 +59,13 @@ void PSZ2Intro_StageLoad(void)
 
 bool32 PSZ2Intro_Cutscene_HandleAct1Finish(EntityCutsceneSeq *host)
 {
+    EntityFXFade *fxFade;
+    EntitySignPost *post;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityFXFade *fxFade = PSZ2Intro->fxFade;
-    EntitySignPost *post = PSZ2Intro->signPost;
+    fxFade = PSZ2Intro->fxFade;
+    post = PSZ2Intro->signPost;
 
     if (!host->timer) {
         Zone->cameraBoundsR[0]      = 1024;
@@ -87,10 +91,12 @@ bool32 PSZ2Intro_Cutscene_HandleAct1Finish(EntityCutsceneSeq *host)
         host->values[0]   = true;
         host->storedTimer = host->timer;
 
-        foreach_all(SignPost, signPost)
-        {
-            PSZ2Intro->signPost = signPost;
-            foreach_break;
+{
+            foreach_all(SignPost, signPost)
+            {
+                PSZ2Intro->signPost = signPost;
+                foreach_break;
+            }
         }
     }
 
@@ -190,12 +196,14 @@ bool32 PSZ2Intro_Cutscene_JogIntoPlace(EntityCutsceneSeq *host)
         player1->stateInput = Player_Input_P1;
         player1->state      = Player_State_Ground;
 
-        foreach_all(TitleCard, titleCard)
-        {
-            titleCard->active    = ACTIVE_NORMAL;
-            titleCard->state     = TitleCard_State_SetupBGElements;
-            titleCard->stateDraw = TitleCard_Draw_SlideIn;
-            foreach_break;
+{
+            foreach_all(TitleCard, titleCard)
+            {
+                titleCard->active    = ACTIVE_NORMAL;
+                titleCard->state     = TitleCard_State_SetupBGElements;
+                titleCard->stateDraw = TitleCard_Draw_SlideIn;
+                foreach_break;
+            }
         }
 
         Music_PlayTrack(TRACK_STAGE);

@@ -30,7 +30,9 @@ void TMZ2Outro_Create(void *data)
     RSDK_THIS(TMZ2Outro);
 
     self->active = ACTIVE_NORMAL;
-    foreach_all(EscapeCar, car) { self->escapeCar = car; }
+    {
+        foreach_all(EscapeCar, car) { self->escapeCar = car; }
+    }
 }
 
 void TMZ2Outro_StageLoad(void)
@@ -70,7 +72,9 @@ void TMZ2Outro_SetupCutscene(void)
                                       TMZ2Outro_Cutscene_StartRubyRampage, TMZ2Outro_Cutscene_Panic, TMZ2Outro_Cutscene_OuttaHere_BadEnd,
                                       TMZ2Outro_Cutscene_FadeOut, TMZ2Outro_Cutscene_FinishSequence, StateMachine_None);
         }
-        foreach_all(TMZFlames, flames) { destroyEntity(flames); }
+        {
+            foreach_all(TMZFlames, flames) { destroyEntity(flames); }
+        }
     }
 #endif
 
@@ -81,20 +85,25 @@ void TMZ2Outro_SetupCutscene(void)
 
 bool32 TMZ2Outro_Cutscene_SetupOutro(EntityCutsceneSeq *host)
 {
+    int32 c;
     TMZ2Outro->playerID = globals->playerID;
 
-    foreach_active(Player, player)
     {
-        player->stateInput = StateMachine_None;
-        if (player->superState == SUPERSTATE_SUPER)
-            player->superState = SUPERSTATE_FADEOUT;
+        foreach_active(Player, player)
+        {
+            player->stateInput = StateMachine_None;
+            if (player->superState == SUPERSTATE_SUPER)
+                player->superState = SUPERSTATE_FADEOUT;
 
-        CutsceneSeq_LockAllPlayerControl();
+            CutsceneSeq_LockAllPlayerControl();
+        }
     }
 
-    foreach_all(BoundsMarker, marker) { destroyEntity(marker); }
+{
+        foreach_all(BoundsMarker, marker) { destroyEntity(marker); }
+    }
 
-    for (int32 c = 0; c < 0x100; ++c) RSDK.SetPaletteEntry(7, c, RSDK.GetPaletteEntry(1, c) & 0xFF0000);
+    for (c = 0; c < 0x100; ++c) RSDK.SetPaletteEntry(7, c, RSDK.GetPaletteEntry(1, c) & 0xFF0000);
 
     return true;
 }
@@ -181,7 +190,9 @@ bool32 TMZ2Outro_Cutscene_EggmanFall(EntityCutsceneSeq *host)
     {
         if (eggman->onGround) {
             RSDK.SetSpriteAnimation(Eggman->aniFrames, 8, &eggman->animator, true, 0);
-            foreach_active(Player, player) { player->up = false; }
+            {
+                foreach_active(Player, player) { player->up = false; }
+            }
 
             eggmanOnGround = true;
             foreach_break;
@@ -196,10 +207,12 @@ bool32 TMZ2Outro_Cutscene_StartAlert(EntityCutsceneSeq *host)
     if (host->timer == 120) {
         RSDK.PlaySfx(TMZ2Outro->sfxAlarm, true, 255);
 
-        foreach_active(TMZAlert, alert)
-        {
-            alert->alpha = 16 * RSDK.Rand(-32, -8);
-            alert->state = TMZAlert_State_Activating;
+{
+            foreach_active(TMZAlert, alert)
+            {
+                alert->alpha = 16 * RSDK.Rand(-32, -8);
+                alert->state = TMZAlert_State_Activating;
+            }
         }
 
         return true;
@@ -229,6 +242,8 @@ bool32 TMZ2Outro_Cutscene_TimeToEscape(EntityCutsceneSeq *host)
 
 bool32 TMZ2Outro_Cutscene_HurryToCar(EntityCutsceneSeq *host)
 {
+    EntityPlayer *player1;
+    EntityEscapeCar *escapeCar;
     RSDK_THIS(TMZ2Outro);
 
     RSDK.SetLimitedFade(0, 7, 1, (RSDK.Cos256(4 * host->timer) >> 1) + 128, 0, 256);
@@ -236,8 +251,8 @@ bool32 TMZ2Outro_Cutscene_HurryToCar(EntityCutsceneSeq *host)
     if (!(host->timer & 7))
         Camera_ShakeScreen(0, 0, 4);
 
-    EntityPlayer *player1      = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
-    EntityEscapeCar *escapeCar = self->escapeCar;
+    player1      = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    escapeCar = self->escapeCar;
 
     if (escapeCar->position.x - player1->position.x < 0x1800000)
         player1->right = false;
@@ -251,9 +266,10 @@ bool32 TMZ2Outro_Cutscene_HurryToCar(EntityCutsceneSeq *host)
         RSDK.PlaySfx(TMZ2Outro->sfxGrab, false, 255);
 
     if (host->timer == 384) {
+        EntityCamera *camera;
         Zone->cameraBoundsR[0] = 0x2000;
 
-        EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         camera->position.x   = (camera->boundsR - ScreenInfo->center.x) << 16;
         camera->boundsR      = 0x2000;
         camera->state        = StateMachine_None;
@@ -266,6 +282,7 @@ bool32 TMZ2Outro_Cutscene_HurryToCar(EntityCutsceneSeq *host)
 }
 bool32 TMZ2Outro_Cutscene_StartFadeOut(EntityCutsceneSeq *host)
 {
+    EntityCamera *camera;
     RSDK_THIS(TMZ2Outro);
 
     RSDK.SetLimitedFade(0, 7, 1, (RSDK.Cos256(4 * host->timer) >> 1) + 128, 0, 256);
@@ -276,7 +293,7 @@ bool32 TMZ2Outro_Cutscene_StartFadeOut(EntityCutsceneSeq *host)
     if (!(host->timer & 7))
         Camera_ShakeScreen(0, 0, 4);
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
 
     if (self->velocity.x < 0x170000)
         self->velocity.x += 0x2000;
@@ -343,13 +360,14 @@ bool32 TMZ2Outro_Cutscene_StartRubyRampage(EntityCutsceneSeq *host)
     }
 
     if (host->timer == 120) {
+        int32 i;
         foreach_active(TMZAlert, alert)
         {
             alert->alpha = 16 * RSDK.Rand(-32, -8);
             alert->state = TMZAlert_State_Activating;
         }
 
-        for (int32 i = 0; i < 7; ++i) RSDK.SetPaletteEntry(2, i - 96, TMZ2Outro->colors[i]);
+        for (i = 0; i < 7; ++i) RSDK.SetPaletteEntry(2, i - 96, TMZ2Outro->colors[i]);
 
         if (SaveGame_AllChaosEmeralds()) {
             CREATE_ENTITY(RubyPortal, RubyPortal_State_EncoreEnd, (ScreenInfo->position.x + 64) << 16,
@@ -427,7 +445,9 @@ bool32 TMZ2Outro_Cutscene_OuttaHere_BadEnd(EntityCutsceneSeq *host)
     if (host->timer == 120) {
         Music_FadeOut(0.0125);
 
-        foreach_active(Player, player) { player->active = ACTIVE_NEVER; }
+{
+            foreach_active(Player, player) { player->active = ACTIVE_NEVER; }
+        }
 
         CutsceneHBH_KingTMZ2Setup();
 
@@ -445,10 +465,12 @@ bool32 TMZ2Outro_Cutscene_OuttaHere_BadEnd(EntityCutsceneSeq *host)
         if (self->heavyKing) {
             RSDK.SetSpriteAnimation(self->heavyKing->aniFrames, 3, &self->heavyKing->mainAnimator, false, 0);
 
-            foreach_active(PhantomRuby, ruby)
-            {
-                ruby->startPos.y -= 0x100000;
-                ruby->state = PhantomRuby_State_MoveToPos;
+{
+                foreach_active(PhantomRuby, ruby)
+                {
+                    ruby->startPos.y -= 0x100000;
+                    ruby->state = PhantomRuby_State_MoveToPos;
+                }
             }
         }
     }
@@ -470,10 +492,12 @@ bool32 TMZ2Outro_Cutscene_OuttaHere_BadEnd(EntityCutsceneSeq *host)
         if (self->heavyKing) {
             RSDK.SetSpriteAnimation(self->heavyKing->aniFrames, 4, &self->heavyKing->mainAnimator, false, 0);
 
-            foreach_active(PhantomRuby, ruby)
-            {
-                ruby->startPos.y += 0x180000;
-                ruby->state = PhantomRuby_State_MoveToPos;
+{
+                foreach_active(PhantomRuby, ruby)
+                {
+                    ruby->startPos.y += 0x180000;
+                    ruby->state = PhantomRuby_State_MoveToPos;
+                }
             }
         }
     }
@@ -568,6 +592,7 @@ bool32 TMZ2Outro_Cutscene_OuttaHere(EntityCutsceneSeq *host)
 }
 bool32 TMZ2Outro_Cutscene_TeamEscape(EntityCutsceneSeq *host)
 {
+    EntityCamera *camera;
     RSDK_THIS(TMZ2Outro);
 
     if (!(Zone->timer & 7))
@@ -576,13 +601,15 @@ bool32 TMZ2Outro_Cutscene_TeamEscape(EntityCutsceneSeq *host)
     if (!(Zone->timer & 0x1F))
         RSDK.PlaySfx(TMZ2Outro->sfxRumble, false, 255);
 
-    foreach_active(RubyPortal, portal)
     {
-        if (portal->velocity.x < 0x71000)
-            portal->velocity.x += 0x2000;
+        foreach_active(RubyPortal, portal)
+        {
+            if (portal->velocity.x < 0x71000)
+                portal->velocity.x += 0x2000;
+        }
     }
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     if (host->timer >= 400)
         camera->position.x += 0x50000;
     else
@@ -592,25 +619,32 @@ bool32 TMZ2Outro_Cutscene_TeamEscape(EntityCutsceneSeq *host)
         RSDK.PlaySfx(TMZ2Outro->sfxCarRev, false, 255);
 
     if (host->timer == 320) {
+        EntityPlayer *player2;
+        EntityPlayer *player3;
+        EntityPlayer *player4;
+        EntityPlayer *player5;
+        int32 offsetX;
+        int32 i;
+        EntitySuperSparkle *sparkle;
         EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         Player_ChangeCharacter(player1, ID_SONIC);
 
-        EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+        player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
         RSDK.CopyEntity(player2, player1, false);
         player2->playerID = 1;
         Player_ChangeCharacter(player2, ID_TAILS);
 
-        EntityPlayer *player3 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
+        player3 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
         RSDK.CopyEntity(player3, player1, false);
         player3->playerID = 3;
         Player_ChangeCharacter(player3, ID_KNUCKLES);
 
-        EntityPlayer *player4 = RSDK_GET_ENTITY(SLOT_PLAYER5, Player);
+        player4 = RSDK_GET_ENTITY(SLOT_PLAYER5, Player);
         RSDK.CopyEntity(player4, player1, false);
         player4->playerID = 4;
         Player_ChangeCharacter(player4, ID_MIGHTY);
 
-        EntityPlayer *player5 = RSDK_GET_ENTITY(SLOT_PLAYER6, Player);
+        player5 = RSDK_GET_ENTITY(SLOT_PLAYER6, Player);
         RSDK.CopyEntity(player5, player1, false);
         player5->playerID = 5;
         Player_ChangeCharacter(player5, ID_RAY);
@@ -618,12 +652,12 @@ bool32 TMZ2Outro_Cutscene_TeamEscape(EntityCutsceneSeq *host)
         SceneInfo->timeEnabled = true;
 
         Player_TryTransform(player1, 0xFF);
-        EntitySuperSparkle *sparkle = RSDK_GET_ENTITY(Player->playerCount, SuperSparkle);
+        sparkle = RSDK_GET_ENTITY(Player->playerCount, SuperSparkle);
         RSDK.ResetEntity(sparkle, SuperSparkle->classID, player1);
 
         Player->playerCount = 6;
-        int32 offsetX       = 0;
-        for (int32 i = 0; i < Player->playerCount; ++i) {
+        offsetX       = 0;
+        for (i = 0; i < Player->playerCount; ++i) {
             if (i != 2) {
                 EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
                 player->groundVel    = 0x100000;
@@ -671,6 +705,7 @@ bool32 TMZ2Outro_Cutscene_FadeOut(EntityCutsceneSeq *host)
 }
 bool32 TMZ2Outro_Cutscene_FinishSequence(EntityCutsceneSeq *host)
 {
+    bool32 isSaveSlot;
     bool32 hasGoodEnding = false;
 
 #if MANIA_USE_PLUS
@@ -679,7 +714,7 @@ bool32 TMZ2Outro_Cutscene_FinishSequence(EntityCutsceneSeq *host)
         hasGoodEnding = (CHECK_CHARACTER_ID(ID_SONIC, 1) || (CHECK_CHARACTER_ID(ID_KNUCKLES, 1) && CHECK_CHARACTER_ID(ID_KNUCKLES, 2)))
                         && SaveGame_AllChaosEmeralds();
 
-    bool32 isSaveSlot = false;
+    isSaveSlot = false;
     if (!hasGoodEnding)
         isSaveSlot = globals->saveSlotID != NO_SAVE_SLOT;
 

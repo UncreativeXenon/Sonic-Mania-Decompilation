@@ -39,7 +39,9 @@ void ButtonDoor_Update(void)
         }
     }
 
-    foreach_active(Player, player) { Player_CheckCollisionBox(player, self, &self->hitbox); }
+    {
+        foreach_active(Player, player) { Player_CheckCollisionBox(player, self, &self->hitbox); }
+    }
 }
 
 void ButtonDoor_LateUpdate(void) {}
@@ -190,6 +192,7 @@ void ButtonDoor_SetupTagLink(void)
 
 void ButtonDoor_DrawSprites(void)
 {
+    int32 i;
     RSDK_THIS(ButtonDoor);
 
     Vector2 drawPos = self->position;
@@ -204,7 +207,7 @@ void ButtonDoor_DrawSprites(void)
         incX      = self->segmentSize.x;
     }
 
-    for (int32 i = 0; i < self->length; ++i) {
+    for (i = 0; i < self->length; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
 
         drawPos.x += incX;

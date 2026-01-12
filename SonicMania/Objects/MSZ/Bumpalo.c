@@ -116,18 +116,22 @@ void Bumpalo_CheckOffScreen(void)
 
 void Bumpalo_BumpPlayer(EntityPlayer *player)
 {
+    int32 angle;
+    int32 velX;
+    int32 velY;
+    int32 anim;
     RSDK_THIS(Bumpalo);
 
     RSDK.PlaySfx(Bumpalo->sfxBumper, false, 0xFF);
 
-    int32 angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
-    int32 velX  = 0x700 * RSDK.Cos256(angle);
-    int32 velY  = 0x700 * RSDK.Sin256(angle);
+    angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
+    velX  = 0x700 * RSDK.Cos256(angle);
+    velY  = 0x700 * RSDK.Sin256(angle);
 
     if (player->state == Player_State_FlyCarried)
         RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
 
-    int32 anim = player->animator.animationID;
+    anim = player->animator.animationID;
     if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED) {
         if (player->state != Player_State_TailsFlight) {
             if (player->state != Player_State_DropDash)
@@ -261,13 +265,14 @@ void Bumpalo_CheckPlayerCollisions(void)
 
 void Bumpalo_HandlePlatformCollisions(EntityPlatform *platform)
 {
+    bool32 collided;
     RSDK_THIS(Bumpalo);
 
     if (platform->state != Platform_State_Falling2 && platform->state != Platform_State_Hold) {
         platform->position.x = platform->drawPos.x - platform->collisionOffset.x;
         platform->position.y = platform->drawPos.y - platform->collisionOffset.y;
 
-        bool32 collided = false;
+        collided = false;
         if (platform->collision) {
             if (platform->collision != PLATFORM_C_SOLID) {
                 if (platform->collision == PLATFORM_C_TILED
@@ -326,55 +331,59 @@ void Bumpalo_HandleObjectCollisions(void)
 
     foreach_all(Platform, platform) { Bumpalo_HandlePlatformCollisions(platform); }
 
-    foreach_all(Spikes, spikes)
-    {
-        int32 velX = self->velocity.x;
+{
+        foreach_all(Spikes, spikes)
+        {
+            int32 velX = self->velocity.x;
 
-        switch (RSDK.CheckObjectCollisionBox(platform, &platform->hitbox, self, &Bumpalo->hitboxBadnik, true)) {
-            default:
-            case C_NONE:
-            case C_BOTTOM: break;
+            switch (RSDK.CheckObjectCollisionBox(platform, &platform->hitbox, self, &Bumpalo->hitboxBadnik, true)) {
+                default:
+                case C_NONE:
+                case C_BOTTOM: break;
 
-            case C_TOP:
-                if (self->velocity.y > 0)
-                    self->onGround |= true;
-                break;
+                case C_TOP:
+                    if (self->velocity.y > 0)
+                        self->onGround |= true;
+                    break;
 
-            case C_LEFT:
-                if (velX > 0)
-                    self->wallCollided |= true;
-                break;
+                case C_LEFT:
+                    if (velX > 0)
+                        self->wallCollided |= true;
+                    break;
 
-            case C_RIGHT:
-                if (velX < 0)
-                    self->wallCollided |= true;
-                break;
+                case C_RIGHT:
+                    if (velX < 0)
+                        self->wallCollided |= true;
+                    break;
+            }
         }
     }
 
-    foreach_all(BreakableWall, wall)
-    {
-        int32 velX = self->velocity.x;
+{
+        foreach_all(BreakableWall, wall)
+        {
+            int32 velX = self->velocity.x;
 
-        switch (RSDK.CheckObjectCollisionBox(wall, &wall->hitbox, self, &Bumpalo->hitboxBadnik, true)) {
-            default:
-            case C_NONE:
-            case C_BOTTOM: break;
+            switch (RSDK.CheckObjectCollisionBox(wall, &wall->hitbox, self, &Bumpalo->hitboxBadnik, true)) {
+                default:
+                case C_NONE:
+                case C_BOTTOM: break;
 
-            case C_TOP:
-                if (self->velocity.y > 0)
-                    self->onGround |= true;
-                break;
+                case C_TOP:
+                    if (self->velocity.y > 0)
+                        self->onGround |= true;
+                    break;
 
-            case C_LEFT:
-                if (velX > 0)
-                    self->wallCollided |= true;
-                break;
+                case C_LEFT:
+                    if (velX > 0)
+                        self->wallCollided |= true;
+                    break;
 
-            case C_RIGHT:
-                if (velX < 0)
-                    self->wallCollided |= true;
-                break;
+                case C_RIGHT:
+                    if (velX < 0)
+                        self->wallCollided |= true;
+                    break;
+            }
         }
     }
 

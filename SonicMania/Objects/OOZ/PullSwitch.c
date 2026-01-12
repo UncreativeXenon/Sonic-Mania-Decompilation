@@ -32,52 +32,54 @@ void PullSwitch_Update(void)
     }
 
     self->activated = false;
-    foreach_active(Player, player)
     {
-        int32 playerID       = RSDK.GetEntitySlot(player);
-        Hitbox *playerHitbox = Player_GetHitbox(player);
+        foreach_active(Player, player)
+        {
+            int32 playerID       = RSDK.GetEntitySlot(player);
+            Hitbox *playerHitbox = Player_GetHitbox(player);
 
-        if (self->playerTimers[playerID]) {
-            self->playerTimers[playerID]--;
-        }
-        else if (((1 << playerID) & self->activePlayers)) {
-            player->position.x = self->position.x;
-            player->position.y = self->position.y - (playerHitbox->top << 16) + 0x1A0000;
-            self->activated    = true;
+            if (self->playerTimers[playerID]) {
+                self->playerTimers[playerID]--;
+            }
+            else if (((1 << playerID) & self->activePlayers)) {
+                player->position.x = self->position.x;
+                player->position.y = self->position.y - (playerHitbox->top << 16) + 0x1A0000;
+                self->activated    = true;
 
-            if (player->state == Player_State_Static) {
-                if (player->jumpPress) {
+                if (player->state == Player_State_Static) {
+                    if (player->jumpPress) {
+                        self->activePlayers &= ~(1 << playerID);
+                        self->playerTimers[playerID] = 60;
+                        player->velocity.y           = -0x40000;
+                        player->onGround             = false;
+                        player->groundedStore        = false;
+                        player->jumpAbilityState     = 1;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                        player->animator.speed = 48;
+                        player->state          = Player_State_Air;
+                    }
+                }
+                else {
                     self->activePlayers &= ~(1 << playerID);
                     self->playerTimers[playerID] = 60;
-                    player->velocity.y           = -0x40000;
-                    player->onGround             = false;
-                    player->groundedStore        = false;
-                    player->jumpAbilityState     = 1;
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                    player->animator.speed = 48;
-                    player->state          = Player_State_Air;
                 }
             }
             else {
-                self->activePlayers &= ~(1 << playerID);
-                self->playerTimers[playerID] = 60;
-            }
-        }
-        else {
-            if (Player_CheckCollisionTouch(player, self, &PullSwitch->hitbox) && player->velocity.y >= 0) {
-                self->activePlayers |= 1 << playerID;
-                player->state           = Player_State_Static;
-                player->nextGroundState = StateMachine_None;
-                player->nextAirState    = StateMachine_None;
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, false, 0);
+                if (Player_CheckCollisionTouch(player, self, &PullSwitch->hitbox) && player->velocity.y >= 0) {
+                    self->activePlayers |= 1 << playerID;
+                    player->state           = Player_State_Static;
+                    player->nextGroundState = StateMachine_None;
+                    player->nextAirState    = StateMachine_None;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, false, 0);
 
-                player->velocity.x  = 0;
-                player->velocity.y  = 0;
-                player->groundVel   = 0;
-                player->controlLock = 0;
-                player->position.x  = self->position.x;
-                player->position.y  = self->position.y - (playerHitbox->top << 16) + 0x1A0000;
-                self->activated     = true;
+                    player->velocity.x  = 0;
+                    player->velocity.y  = 0;
+                    player->groundVel   = 0;
+                    player->controlLock = 0;
+                    player->position.x  = self->position.x;
+                    player->position.y  = self->position.y - (playerHitbox->top << 16) + 0x1A0000;
+                    self->activated     = true;
+                }
             }
         }
     }
@@ -106,6 +108,7 @@ void PullSwitch_Create(void *data)
 
     self->drawFX = FX_FLIP;
     if (!SceneInfo->inEditor) {
+        SpriteFrame *frame;
         self->active        = ACTIVE_BOUNDS;
         self->visible       = true;
         self->drawFX        = FX_FLIP;
@@ -118,7 +121,7 @@ void PullSwitch_Create(void *data)
         RSDK.SetSpriteAnimation(PullSwitch->aniFrames, 0, &self->dispenserAnimator, true, 0);
         RSDK.SetSpriteAnimation(PullSwitch->aniFrames, 0, &self->chainAnimator, true, 1);
 
-        SpriteFrame *frame = RSDK.GetFrame(PullSwitch->aniFrames, 0, 1);
+        frame = RSDK.GetFrame(PullSwitch->aniFrames, 0, 1);
         self->sprY         = frame->sprY;
         self->sprHeight    = frame->height;
     }

@@ -38,6 +38,8 @@ void SpikeFlail_StaticUpdate(void)
 
 void SpikeFlail_Draw(void)
 {
+    int32 ballPos;
+    int32 i;
     RSDK_THIS(SpikeFlail);
 
     Vector2 ringPos, spikeBallPos;
@@ -47,20 +49,21 @@ void SpikeFlail_Draw(void)
 
     ringPos.y = self->position.y;
 
-    int32 ballPos = (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7) + self->position.x;
+    ballPos = (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7) + self->position.x;
 
     if (self->angle >= 0x100) {
         if (SceneInfo->currentDrawGroup != Zone->objectDrawGroup[1]) {
             self->scale = SpikeFlail_GetScale(ballPos, self->angle);
             RSDK.DrawSprite(&self->spikeBallAnimator, &spikeBallPos, false);
 
-            for (int32 i = self->chainLength - 1; i >= 0; --i) {
+            for (i = self->chainLength - 1; i >= 0; --i) {
+                int32 extend;
                 ringPos.x = self->position.x + (((16 * (i + 1)) * RSDK.Cos512(self->angle)) << 7);
                 ringPos.y = self->position.y - 0x80000;
 
                 ballPos = ((((16 * (i + 1)) * RSDK.Cos512(0)) << 7) + self->position.x) - self->position.x;
 
-                int32 extend = (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7) + self->position.x;
+                extend = (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7) + self->position.x;
                 extend       = abs(extend - self->position.x) >> 16;
 
                 self->scale.x = ((((extend * (RSDK.Sin512(self->angle) << 7)) >> 16) * (ballPos / extend)) >> 16) + 0x200;
@@ -82,15 +85,18 @@ void SpikeFlail_Draw(void)
             RSDK.DrawSprite(&self->poleAnimator, NULL, false);
         }
         else {
+            int32 i;
+            int32 extend;
             int32 storeBallPos = ballPos;
 
-            for (int32 i = 0; i < self->chainLength; ++i) {
+            for (i = 0; i < self->chainLength; ++i) {
+                int32 extend;
                 ringPos.x = self->position.x + (((16 * (i + 1)) * RSDK.Cos512(self->angle)) << 7);
                 ringPos.y = self->position.y - 0x80000;
 
                 ballPos = ((((16 * (i + 1)) * RSDK.Cos512(0)) << 7) + self->position.x) - self->position.x;
 
-                int32 extend = self->position.x + (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7);
+                extend = self->position.x + (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7);
                 extend       = abs(extend - self->position.x) >> 16;
 
                 self->scale.x = ((((extend * (RSDK.Sin512(self->angle) << 7)) >> 16) * (ballPos / extend)) >> 16) + 0x200;
@@ -99,7 +105,7 @@ void SpikeFlail_Draw(void)
                 RSDK.DrawSprite(&self->ringAnimator, &ringPos, false);
             }
 
-            int32 extend = self->position.x + (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7);
+            extend = self->position.x + (((16 * self->chainLength + 34) * RSDK.Cos512(0)) << 7);
             extend       = abs(extend - self->position.x) >> 16;
 
             self->scale.x = ((((extend * (RSDK.Sin512(self->angle) << 7)) >> 16) * ((storeBallPos - self->position.x) / extend)) >> 16) + 0x200;

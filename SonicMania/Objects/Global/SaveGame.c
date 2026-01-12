@@ -51,6 +51,7 @@ int32 *SaveGame_GetDataPtr(int32 slot)
 
 void SaveGame_LoadSaveData(void)
 {
+    SaveRAM *saveRAM;
     int32 slot = globals->saveSlotID;
 
     if (slot == NO_SAVE_SLOT)
@@ -64,7 +65,7 @@ void SaveGame_LoadSaveData(void)
 
     LogHelpers_Print("dataPtr: %X", SaveGame->saveRAM);
 
-    SaveRAM *saveRAM = SaveGame_GetSaveRAM();
+    saveRAM = SaveGame_GetSaveRAM();
     if (!saveRAM->lives)
         saveRAM->lives = 3;
 
@@ -92,7 +93,9 @@ void SaveGame_LoadSaveData(void)
 
     if (globals->recallEntities) {
         if (SceneInfo->activeCategory < 3) {
-            for (int32 p = 0; p < 4; ++p) {
+            int32 p;
+            int32 e;
+            for (p = 0; p < 4; ++p) {
                 StarPost->playerPositions[p].x = globals->restartPos[(p * 2) + 0];
                 StarPost->playerPositions[p].y = globals->restartPos[(p * 2) + 1];
                 StarPost->playerDirections[p]  = globals->restartDir[p];
@@ -117,7 +120,7 @@ void SaveGame_LoadSaveData(void)
 
             LogHelpers_Print("RecallCollectedEntities");
 
-            for (int32 e = RESERVE_ENTITY_COUNT; e < RESERVE_ENTITY_COUNT + SCENEENTITY_COUNT; ++e) {
+            for (e = RESERVE_ENTITY_COUNT; e < RESERVE_ENTITY_COUNT + SCENEENTITY_COUNT; ++e) {
                 switch (globals->atlEntityData[(0x200 * 1) + e]) {
                     default:
                     case SAVERECALL_NORMAL: break;
@@ -150,7 +153,8 @@ void SaveGame_LoadSaveData(void)
     }
     else if (!Zone || Zone->listPos != Zone->prevListPos) {
         if (StarPost) {
-            for (int32 p = 0; p < PLAYER_COUNT; ++p) {
+            int32 p;
+            for (p = 0; p < PLAYER_COUNT; ++p) {
                 StarPost->playerPositions[p].x = 0;
                 StarPost->playerPositions[p].y = 0;
                 StarPost->playerDirections[p]  = FLIP_NONE;
@@ -257,17 +261,20 @@ void SaveGame_SaveLoadedCB(bool32 success)
 
 void SaveGame_SaveGameState(void)
 {
+    int32 p;
+    EntityPlayer *player1;
+    int32 i;
     SaveRAM *saveRAM        = SaveGame_GetSaveRAM();
     globals->recallEntities = true;
 
-    for (int32 p = 0; p < PLAYER_COUNT; ++p) {
+    for (p = 0; p < PLAYER_COUNT; ++p) {
         globals->restartPos[(p * 2) + 0] = StarPost->playerPositions[p].x;
         globals->restartPos[(p * 2) + 1] = StarPost->playerPositions[p].y;
         globals->restartDir[p]           = StarPost->playerDirections[p];
         globals->restartSlot[p]          = StarPost->postIDs[p];
     }
 
-    EntityPlayer *player1        = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1        = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     globals->restartMilliseconds = StarPost->storedMS;
     globals->restartSeconds      = StarPost->storedSeconds;
     globals->restartMinutes      = StarPost->storedMinutes;
@@ -291,7 +298,7 @@ void SaveGame_SaveGameState(void)
     globals->restart1UP      = player1->ringExtraLife;
     globals->restartPowerups = player1->shield | (player1->hyperRing << 6);
 
-    for (int32 i = RESERVE_ENTITY_COUNT; i < RESERVE_ENTITY_COUNT + SCENEENTITY_COUNT; ++i) {
+    for (i = RESERVE_ENTITY_COUNT; i < RESERVE_ENTITY_COUNT + SCENEENTITY_COUNT; ++i) {
         EntityItemBox *itemBox = RSDK_GET_ENTITY(i, ItemBox);
 
         globals->atlEntityData[(0x200 * 1) + i] = SAVERECALL_NORMAL;
@@ -464,7 +471,7 @@ void SaveGame_SaveFile_CB(int32 status)
 bool32 SaveGame_AllChaosEmeralds(void)
 {
     SaveRAM *saveRAM = SaveGame_GetSaveRAM();
-    return saveRAM->collectedEmeralds == 0b01111111;
+    return saveRAM->collectedEmeralds == 0x7F;
 }
 
 bool32 SaveGame_GetEmerald(uint8 emeraldID)

@@ -32,10 +32,11 @@ void TornadoPath_Create(void *data)
                 if (!StarPost->postIDs[0]
                     && CutsceneRules_CheckPlayerPos(self->position.x - (self->size.x >> 1), self->position.y - (self->size.y >> 1),
                                                     self->position.x + (self->size.x >> 1), self->position.y + (self->size.y >> 1))) {
+                    EntityCamera *camera;
                     TornadoPath_SetupHitbox();
                     self->active = ACTIVE_NORMAL;
 
-                    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+                    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
                     if (camera) {
                         camera->state       = StateMachine_None;
                         camera->position.x  = self->position.x;
@@ -43,7 +44,9 @@ void TornadoPath_Create(void *data)
                         TornadoPath->camera = camera;
                     }
 
-                    foreach_all(Player, player) { player->camera = NULL; }
+                    {
+                        foreach_all(Player, player) { player->camera = NULL; }
+                    }
 
                     ScreenInfo->position.y = (self->position.y >> 16) - ScreenInfo->center.y;
                     self->state            = TornadoPath_State_SetTornadoSpeed;
@@ -142,18 +145,21 @@ void TornadoPath_HandleMoveSpeed(void)
 
     EntityCamera *camera = TornadoPath->camera;
     if (camera) {
+        int32 cx;
+        int32 cy;
+        int32 radius;
         EntityTornadoPath *node = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, TornadoPath);
         int32 y                 = (camera->position.y - node->position.y) >> 16;
         int32 x                 = (camera->position.x - node->position.x) >> 16;
         self->angle             = RSDK.ATan2(x, y);
 
-        int32 cx = camera->position.x & 0xFFFF0000;
-        int32 cy = camera->position.y & 0xFFFF0000;
+        cx = camera->position.x & 0xFFFF0000;
+        cy = camera->position.y & 0xFFFF0000;
         camera->position.x -= self->currentSpeed * RSDK.Cos256(self->angle);
         camera->position.y -= self->currentSpeed * RSDK.Sin256(self->angle);
         TornadoPath->hitboxID = self->fastMode;
 
-        int32 radius = self->currentSpeed >> 3;
+        radius = self->currentSpeed >> 3;
         if (x * x + y * y < radius) {
             self->active       = ACTIVE_NEVER;
             node->active       = ACTIVE_NORMAL;
@@ -214,7 +220,9 @@ void TornadoPath_State_DisablePlayerInteractions(void)
     player1->collisionPlane = 1;
     player1->interaction    = false;
 
-    foreach_active(Tornado, tornado) { tornado->drawGroup = Zone->playerDrawGroup[1]; }
+    {
+        foreach_active(Tornado, tornado) { tornado->drawGroup = Zone->playerDrawGroup[1]; }
+    }
 
     TornadoPath_HandleMoveSpeed();
     self->state = TornadoPath_State_SetTornadoSpeed;
@@ -236,29 +244,33 @@ void TornadoPath_State_ExitTornadoSequence(void)
     if (player1->groundedStore)
         Player_Action_Jump(player1);
 
-    foreach_active(Tornado, tornado)
     {
-        if (self->type == TORNADOPATH_EXITTORNADO_STOPAUTOSCROLL) {
-            tornado->drawGroup = Zone->objectDrawGroup[1];
-            MSZSetup_ReloadBGParallax_Multiply(0x000);
-            tornado->state = Tornado_State_FlyAway_Right;
-        }
-        else {
-            tornado->drawGroup = Zone->objectDrawGroup[0];
-            tornado->state     = Tornado_State_FlyAway_Left;
+        foreach_active(Tornado, tornado)
+        {
+            if (self->type == TORNADOPATH_EXITTORNADO_STOPAUTOSCROLL) {
+                tornado->drawGroup = Zone->objectDrawGroup[1];
+                MSZSetup_ReloadBGParallax_Multiply(0x000);
+                tornado->state = Tornado_State_FlyAway_Right;
+            }
+            else {
+                tornado->drawGroup = Zone->objectDrawGroup[0];
+                tornado->state     = Tornado_State_FlyAway_Left;
+            }
         }
     }
 
-    foreach_all(TornadoPath, node)
     {
-        bool32 isNextNode = false;
-        if (self->type == TORNADOPATH_EXITTORNADO_STOPAUTOSCROLL)
-            isNextNode = node->type == TORNADOPATH_ENTERTORNADO;
-        else
-            isNextNode = node->type == TORNADOPATH_ENTERTORNADO_FLYTOBOSS;
+        foreach_all(TornadoPath, node)
+        {
+            bool32 isNextNode = false;
+            if (self->type == TORNADOPATH_EXITTORNADO_STOPAUTOSCROLL)
+                isNextNode = node->type == TORNADOPATH_ENTERTORNADO;
+            else
+                isNextNode = node->type == TORNADOPATH_ENTERTORNADO_FLYTOBOSS;
 
-        if (isNextNode)
-            node->active = ACTIVE_XBOUNDS;
+            if (isNextNode)
+                node->active = ACTIVE_XBOUNDS;
+        }
     }
 
     TornadoPath->camera = NULL;
@@ -325,11 +337,14 @@ void TornadoPath_State_CatchPlayer(void)
     }
 
     if (!player1->velocity.y && player1->state != Player_State_Static) {
+        int32 velX;
+        int32 velY;
+        EntityCamera *camera;
         player1->stateInput = Player_Input_P1;
         self->timer         = 0;
 
-        int32 velX = 0;
-        int32 velY = 0;
+        velX = 0;
+        velY = 0;
         if (self->type == TORNADOPATH_ENTERTORNADO_FLYTOBOSS) {
             foreach_all(TornadoPath, node)
             {
@@ -343,7 +358,7 @@ void TornadoPath_State_CatchPlayer(void)
 
         player1->position.x += velX;
         player1->position.y += velY;
-        EntityCamera *camera = player1->camera;
+        camera = player1->camera;
         if (camera) {
             camera->position.x += velX;
             camera->position.y += velY;
@@ -352,12 +367,14 @@ void TornadoPath_State_CatchPlayer(void)
             player1->camera     = NULL;
         }
 
-        foreach_active(Tornado, tornado)
         {
-            tornado->position.x += velX;
-            tornado->position.y += velY;
-            tornado->offsetX   = 0x80000;
-            tornado->showFlame = false;
+            foreach_active(Tornado, tornado)
+            {
+                tornado->position.x += velX;
+                tornado->position.y += velY;
+                tornado->offsetX   = 0x80000;
+                tornado->showFlame = false;
+            }
         }
 
         self->state = TornadoPath_State_SetTornadoSpeed;
@@ -396,30 +413,35 @@ void TornadoPath_State_GoToStopNode(void)
     TornadoPath->moveVel.y = 0;
 
     if (player1->onGround) {
+        EntityCamera *camera;
         int32 velocityX = 0;
         int32 velocityY = 0;
 
-        foreach_all(TornadoPath, node)
         {
-            if (node->type == TORNADOPATH_HANDLEBOSS_MSZ1ST) {
-                velocityX    = node->position.x - player1->position.x;
-                velocityY    = node->position.y - player1->position.y;
-                node->active = ACTIVE_NORMAL;
+            foreach_all(TornadoPath, node)
+            {
+                if (node->type == TORNADOPATH_HANDLEBOSS_MSZ1ST) {
+                    velocityX    = node->position.x - player1->position.x;
+                    velocityY    = node->position.y - player1->position.y;
+                    node->active = ACTIVE_NORMAL;
+                }
             }
         }
 
         player1->position.x += velocityX;
         player1->position.y += velocityY;
 
-        EntityCamera *camera = TornadoPath->camera;
+        camera = TornadoPath->camera;
         camera->position.x += velocityX;
         camera->position.y += velocityY;
-        foreach_active(Tornado, tornado)
         {
-            tornado->position.x += velocityX;
-            tornado->position.y += velocityY;
-            tornado->offsetX   = 0x80000;
-            tornado->showFlame = false;
+            foreach_active(Tornado, tornado)
+            {
+                tornado->position.x += velocityX;
+                tornado->position.y += velocityY;
+                tornado->offsetX   = 0x80000;
+                tornado->showFlame = false;
+            }
         }
     }
 }

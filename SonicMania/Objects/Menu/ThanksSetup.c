@@ -54,28 +54,34 @@ void ThanksSetup_Create(void *data)
 
 void ThanksSetup_StageLoad(void)
 {
+    int32 c;
     ThanksSetup->sfxSega = RSDK.GetSfx("Stage/Sega.wav");
 
     RSDK.ResetEntitySlot(0, ThanksSetup->classID, 0);
 
     UIPicture->aniFrames = RSDK.LoadSpriteAnimation("Thanks/Decorations.bin", SCOPE_STAGE);
 
-    for (int32 c = 0; c < CHANNEL_COUNT; ++c) RSDK.StopChannel(c);
+    for (c = 0; c < CHANNEL_COUNT; ++c) RSDK.StopChannel(c);
 }
 
 void ThanksSetup_HandleIconsPos(void)
 {
+    int32 angle;
     RSDK_THIS(ThanksSetup);
 
     self->angle = (self->angle - 3) & 0x1FF;
 
-    int32 angle = self->angle;
-    foreach_active(UIPicture, picture)
+    angle = self->angle;
     {
-        if (!picture->animator.animationID) {
-            picture->position.x = 0x1000000 + self->radius * RSDK.Sin512(angle);
-            picture->position.y = 0x780000 + self->radius * RSDK.Cos512(angle);
-            angle += 32;
+        foreach_active(UIPicture, picture)
+        {
+        
+            if (!picture->animator.animationID) {
+                picture->position.x = 0x1000000 + self->radius * RSDK.Sin512(angle);
+                picture->position.y = 0x780000 + self->radius * RSDK.Cos512(angle);
+                angle += 32;
+            }
+     
         }
     }
 }
@@ -103,8 +109,9 @@ void ThanksSetup_State_FlipOverIcon(void)
     RSDK_THIS(ThanksSetup);
 
     if (++self->timer > 120) {
+        EntityUIPicture *picture;
         self->rotation += 4;
-        EntityUIPicture *picture = self->thanksLogo;
+        picture = self->thanksLogo;
 
         picture->drawFX  = FX_SCALE;
         picture->scale.x = RSDK.Cos512(self->rotation);

@@ -125,12 +125,14 @@ bool32 MSZ1KIntro_Cutscene_StartAct(EntityCutsceneSeq *host)
         player1->onGround       = true;
         player1->state          = Player_State_Ground;
 
-        foreach_all(TitleCard, titleCard)
-        {
-            titleCard->active    = ACTIVE_NORMAL;
-            titleCard->state     = TitleCard_State_SetupBGElements;
-            titleCard->stateDraw = TitleCard_Draw_SlideIn;
-            foreach_break;
+{
+            foreach_all(TitleCard, titleCard)
+            {
+                titleCard->active    = ACTIVE_NORMAL;
+                titleCard->state     = TitleCard_State_SetupBGElements;
+                titleCard->stateDraw = TitleCard_Draw_SlideIn;
+                foreach_break;
+            }
         }
 
         Music_PlayTrack(TRACK_STAGE);

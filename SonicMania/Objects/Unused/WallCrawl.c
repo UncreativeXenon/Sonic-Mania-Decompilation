@@ -124,6 +124,7 @@ void WallCrawl_CheckOffScreen(void)
 
 void WallCrawl_State_Init(void)
 {
+    int32 offsetX;
     RSDK_THIS(WallCrawl);
 
     int32 offsetY = -0xC0000;
@@ -131,7 +132,7 @@ void WallCrawl_State_Init(void)
     if (self->direction & FLIP_Y)
         offsetY = 0xC0000;
 
-    int32 offsetX = -0xD0000;
+    offsetX = -0xD0000;
     if (!(self->direction & FLIP_X))
         offsetX = 0xC0000;
 
@@ -142,12 +143,15 @@ void WallCrawl_State_Init(void)
 
 void WallCrawl_State_Moving(void)
 {
+    EntityPlayer *playerPtr;
+    int32 offsetY;
+    int32 offsetX;
     RSDK_THIS(WallCrawl);
 
     if (self->timer)
         self->timer--;
 
-    EntityPlayer *playerPtr = self->playerPtr;
+    playerPtr = self->playerPtr;
     if (playerPtr) {
         if (Player_CheckCollisionTouch(playerPtr, self, &WallCrawl->hitboxRange)) {
             if (!Player_CheckCollisionTouch(playerPtr, self, &WallCrawl->hitboxLaser)) {
@@ -185,12 +189,12 @@ void WallCrawl_State_Moving(void)
     }
 
     self->position.y += self->velocity.y;
-    int32 offsetY = -0xC0000;
+    offsetY = -0xC0000;
     self->active  = ACTIVE_NORMAL;
     if (self->direction & FLIP_Y)
         offsetY = 0xC0000;
 
-    int32 offsetX = -0xD0000;
+    offsetX = -0xD0000;
     if (!(self->direction & FLIP_X))
         offsetX = 0xC0000;
     if (!RSDK.ObjectTileGrip(self, Zone->collisionLayers, (2 * ((self->direction & 1) != 0) + 1), 0, offsetX, offsetY, 0)) {
@@ -231,10 +235,12 @@ void WallCrawl_State_Projectile(void)
     else
         self->position.x -= 0x40000;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &WallCrawl->hitboxProjectile)) {
-            Player_Hurt(player, self);
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &WallCrawl->hitboxProjectile)) {
+                Player_Hurt(player, self);
+            }
         }
     }
 }

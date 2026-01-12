@@ -124,13 +124,15 @@ void GiantPistol_State_CloseChamber(void)
 
     RSDK.ProcessAnimation(&self->chamberAnimator);
 
-    foreach_active(Player, player)
-    {
-        if (((1 << (player->playerID)) & self->activePlayers) > 0) {
-            player->position.x += (self->position.x + self->playerPos - player->position.x) >> 3;
-            player->position.y += (self->position.y - player->position.y - 0x200000) >> 3;
-            player->velocity.x = 0;
-            player->velocity.y = 0;
+{
+        foreach_active(Player, player)
+        {
+            if (((1 << (player->playerID)) & self->activePlayers) > 0) {
+                player->position.x += (self->position.x + self->playerPos - player->position.x) >> 3;
+                player->position.y += (self->position.y - player->position.y - 0x200000) >> 3;
+                player->velocity.x = 0;
+                player->velocity.y = 0;
+            }
         }
     }
 
@@ -142,13 +144,15 @@ void GiantPistol_State_CloseChamber(void)
         self->velocity.y               = -0x20000;
         self->rotationVel              = 6;
 
-        foreach_active(Player, playerPtr)
-        {
-            if (((1 << (playerPtr->playerID)) & self->activePlayers) > 0) {
-                playerPtr->blinkTimer = 0;
-                playerPtr->visible    = false;
-                if (playerPtr->camera)
-                    playerPtr->camera->state = StateMachine_None;
+{
+            foreach_active(Player, playerPtr)
+            {
+                if (((1 << (playerPtr->playerID)) & self->activePlayers) > 0) {
+                    playerPtr->blinkTimer = 0;
+                    playerPtr->visible    = false;
+                    if (playerPtr->camera)
+                        playerPtr->camera->state = StateMachine_None;
+                }
             }
         }
     }
@@ -156,6 +160,7 @@ void GiantPistol_State_CloseChamber(void)
 
 void GiantPistol_State_SpinGun(void)
 {
+    int32 angle;
     RSDK_THIS(GiantPistol);
 
     self->position.y += self->velocity.y;
@@ -172,15 +177,17 @@ void GiantPistol_State_SpinGun(void)
     self->angle += self->direction ? -self->rotationVel : self->rotationVel;
 
     self->rotation = self->angle & 0x1FF;
-    int32 angle    = 0x100 - (self->rotation >> 1);
+    angle    = 0x100 - (self->rotation >> 1);
 
-    foreach_active(Player, player)
     {
-        if (((1 << (player->playerID)) & self->activePlayers) > 0) {
-            player->position.x = self->position.x + self->playerPos;
-            player->position.y = self->position.y - 0x200000;
-            
-            Zone_RotateOnPivot(&player->position, &self->position, angle);
+        foreach_active(Player, player)
+        {
+            if (((1 << (player->playerID)) & self->activePlayers) > 0) {
+                player->position.x = self->position.x + self->playerPos;
+                player->position.y = self->position.y - 0x200000;
+
+                Zone_RotateOnPivot(&player->position, &self->position, angle);
+            }
         }
     }
 
@@ -193,11 +200,13 @@ void GiantPistol_State_SpinGun(void)
         self->state  = GiantPistol_State_Aiming;
         self->active = ACTIVE_NORMAL;
 
-        foreach_active(Player, playerPtr)
         {
-            if (((1 << (playerPtr->playerID)) & self->activePlayers) > 0) {
-                if (playerPtr->camera)
-                    playerPtr->camera->state = Camera_State_FollowXY;
+            foreach_active(Player, playerPtr)
+            {
+                if (((1 << (playerPtr->playerID)) & self->activePlayers) > 0) {
+                    if (playerPtr->camera)
+                        playerPtr->camera->state = Camera_State_FollowXY;
+                }
             }
         }
     }
@@ -205,6 +214,8 @@ void GiantPistol_State_SpinGun(void)
 
 void GiantPistol_State_Aiming(void)
 {
+    int32 angle;
+    uint8 jumpPressed;
     RSDK_THIS(GiantPistol);
 
     if (self->timer) {
@@ -220,7 +231,7 @@ void GiantPistol_State_Aiming(void)
 
     self->position = self->startPos;
     self->rotation = (-RSDK.Sin512(self->angle) >> 3) & 0x1FF;
-    int32 angle    = 0x100 - (self->rotation >> 1);
+    angle    = 0x100 - (self->rotation >> 1);
     Zone_RotateOnPivot(&self->position, &self->pivot, angle);
 
     self->position.x -= RSDK.Sin512(self->rotation) << 10;
@@ -235,7 +246,7 @@ void GiantPistol_State_Aiming(void)
             self->playerPos -= 0x40000;
     }
 
-    uint8 jumpPressed = 0;
+    jumpPressed = 0;
 #if MANIA_USE_PLUS
     if (GiantPistol->inCutscene) {
 #else
@@ -262,51 +273,53 @@ void GiantPistol_State_Aiming(void)
         }
     }
 
-    foreach_active(Player, player)
-    {
-        if (((1 << (player->playerID)) & self->activePlayers) > 0) {
-            player->position.x = self->position.x + self->playerPos;
-            player->position.y = self->position.y - 0x200000;
-            
-            Zone_RotateOnPivot(&player->position, &self->position, angle);
-            if (jumpPressed) {
-                player->state            = Player_State_Air;
-                player->onGround         = false;
-                player->jumpAbilityState = 0;
-                player->applyJumpCap     = false;
-                player->jumpPress        = false;
-                player->jumpHold         = false;
+{
+        foreach_active(Player, player)
+        {
+            if (((1 << (player->playerID)) & self->activePlayers) > 0) {
+                player->position.x = self->position.x + self->playerPos;
+                player->position.y = self->position.y - 0x200000;
 
-                if (self->direction) {
-                    player->velocity.x = 0xC00 * RSDK.Cos512(self->rotation);
-                    player->velocity.y = 0xC00 * RSDK.Sin512(self->rotation);
-                }
-                else {
-                    player->velocity.x = -0xC00 * RSDK.Cos512(self->rotation);
-                    player->velocity.y = -0xC00 * RSDK.Sin512(self->rotation);
-                }
+                Zone_RotateOnPivot(&player->position, &self->position, angle);
+                if (jumpPressed) {
+                    player->state            = Player_State_Air;
+                    player->onGround         = false;
+                    player->jumpAbilityState = 0;
+                    player->applyJumpCap     = false;
+                    player->jumpPress        = false;
+                    player->jumpHold         = false;
+
+                    if (self->direction) {
+                        player->velocity.x = 0xC00 * RSDK.Cos512(self->rotation);
+                        player->velocity.y = 0xC00 * RSDK.Sin512(self->rotation);
+                    }
+                    else {
+                        player->velocity.x = -0xC00 * RSDK.Cos512(self->rotation);
+                        player->velocity.y = -0xC00 * RSDK.Sin512(self->rotation);
+                    }
 
 #if MANIA_USE_PLUS
-                if (SceneInfo->filter == (FILTER_BOTH | FILTER_ENCORE) && GiantPistol->inCutscene) {
-                    player->velocity.x += 0x18000;
-                    player->state           = GiantPistol_PlayerState_PistolAir;
-                    player->nextGroundState = GiantPistol_PlayerState_PistolGround;
-                }
-                else if (!Zone->actID && !CHECK_CHARACTER_ID(ID_KNUCKLES, 1)) {
-                    player->jumpAbilityState = 0;
-                }
+                    if (SceneInfo->filter == (FILTER_BOTH | FILTER_ENCORE) && GiantPistol->inCutscene) {
+                        player->velocity.x += 0x18000;
+                        player->state           = GiantPistol_PlayerState_PistolAir;
+                        player->nextGroundState = GiantPistol_PlayerState_PistolGround;
+                    }
+                    else if (!Zone->actID && !CHECK_CHARACTER_ID(ID_KNUCKLES, 1)) {
+                        player->jumpAbilityState = 0;
+                    }
 #else
-                if (!Zone->actID && !CHECK_CHARACTER_ID(ID_KNUCKLES, 1))
-                    player->jumpAbilityState = 0;
+                    if (!Zone->actID && !CHECK_CHARACTER_ID(ID_KNUCKLES, 1))
+                        player->jumpAbilityState = 0;
 #endif
 
-                self->activePlayers &= ~(1 << player->playerID);
-                self->timer = 16;
+                    self->activePlayers &= ~(1 << player->playerID);
+                    self->timer = 16;
 
-                player->velocity.x = CLAMP(player->velocity.x, -0x120000, 0x120000);
-                player->visible    = true;
-                Camera_ShakeScreen(player->playerID, -8, -8);
-                RSDK.PlaySfx(GiantPistol->sfxCannonFire, false, 255);
+                    player->velocity.x = CLAMP(player->velocity.x, -0x120000, 0x120000);
+                    player->visible    = true;
+                    Camera_ShakeScreen(player->playerID, -8, -8);
+                    RSDK.PlaySfx(GiantPistol->sfxCannonFire, false, 255);
+                }
             }
         }
     }

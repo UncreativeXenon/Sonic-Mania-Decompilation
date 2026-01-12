@@ -21,11 +21,12 @@ void DAControl_StaticUpdate(void) {}
 
 void DAControl_Draw(void)
 {
+    int32 i;
     RSDK_THIS(DAControl);
     Vector2 drawPos;
 
     self->direction = FLIP_NONE;
-    for (int32 i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
         drawPos                         = self->position;
         self->backPlateAnimator.frameID = 0;
         RSDK.DrawSprite(&self->backPlateAnimator, &drawPos, false);
@@ -56,7 +57,7 @@ void DAControl_Draw(void)
 
     drawPos.x = self->position.x - 0x700000;
     drawPos.y = self->position.y + 0x1E0000;
-    for (int32 i = 0; i < 5; ++i) {
+    for (i = 0; i < 5; ++i) {
         RSDK.DrawSprite(&self->buttonAnimator, &drawPos, false);
         RSDK.DrawSprite(&self->optionsAnimator[i], &drawPos, false);
         drawPos.x += 0x380000;
@@ -74,6 +75,7 @@ void DAControl_Create(void *data)
 
     self->drawFX = FX_FLIP;
     if (!SceneInfo->inEditor) {
+        int32 i;
         self->visible       = true;
         self->drawGroup     = 2;
         self->active        = ACTIVE_BOUNDS;
@@ -82,7 +84,7 @@ void DAControl_Create(void *data)
         RSDK.SetSpriteAnimation(DAControl->aniFrames, 0, &self->backPlateAnimator, true, 0);
         RSDK.SetSpriteAnimation(DAControl->aniFrames, 1, &self->buttonAnimator, true, 0);
         RSDK.SetSpriteAnimation(DAControl->aniFrames, 4, &self->textAnimator, true, 0);
-        for (int32 i = 0; i < 5; ++i) RSDK.SetSpriteAnimation(DAControl->aniFrames, 2, &self->optionsAnimator[i], true, i);
+        for (i = 0; i < 5; ++i) RSDK.SetSpriteAnimation(DAControl->aniFrames, 2, &self->optionsAnimator[i], true, i);
 
         RSDK.InitString(&self->text, "SELECT A TRACK...", 0);
         RSDK.SetSpriteAnimation(DAControl->aniFrames, 4, &self->textAnimator, true, 0);

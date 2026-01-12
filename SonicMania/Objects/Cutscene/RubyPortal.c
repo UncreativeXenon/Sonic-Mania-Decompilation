@@ -133,14 +133,16 @@ void RubyPortal_HandleTileDestruction(void)
     RSDK_THIS(RubyPortal);
 
     if (!(Zone->timer & 1)) {
+        int32 x;
         int32 tx     = ((self->position.x - 0x180000) >> 20);
         int32 spawnX = (tx << 20) + 0x80000;
 
-        for (int32 x = 0; x < 4; ++x) {
+        for (x = 0; x < 4; ++x) {
+            int32 y;
             int32 ty     = (self->position.y >> 20) - 8;
             int32 spawnY = (ty << 20) + 0x80000;
 
-            for (int32 y = 4; y < 52; y += 3) {
+            for (y = 4; y < 52; y += 3) {
                 uint16 tile = RSDK.GetTile(Zone->fgLayer[0], tx, ty);
                 if (tile != (uint16)-1) {
                     EntityBreakableWall *wall = CREATE_ENTITY(BreakableWall, INT_TO_VOID(BREAKWALL_TILE_FIXED), spawnX, spawnY);
@@ -242,7 +244,10 @@ void RubyPortal_State_Opened(void)
         else {
             EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
             if (Player_CheckCollisionTouch(player1, self, &RubyPortal->hitbox)) {
-                for (int32 p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
+                int32 p;
+                int32 channel;
+                int32 sfx;
+                for (p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
 
                 SaveGame_SavePlayerState();
 
@@ -274,8 +279,8 @@ void RubyPortal_State_Opened(void)
                 self->state = StateMachine_None;
 #endif
 
-                int32 sfx     = RSDK.Rand(0, RUBYSFX_ATTACK6);
-                int32 channel = RSDK.PlaySfx(WarpDoor->sfxRubyAttackL[sfx], false, 0x00);
+                sfx     = RSDK.Rand(0, RUBYSFX_ATTACK6);
+                channel = RSDK.PlaySfx(WarpDoor->sfxRubyAttackL[sfx], false, 0x00);
                 RSDK.SetChannelAttributes(channel, 1.0, -1.0, 1.0);
 
                 channel = RSDK.PlaySfx(WarpDoor->sfxRubyAttackR[sfx], false, 0x00);
@@ -346,10 +351,11 @@ void RubyPortal_State_EncoreEnd(void)
     self->timer++;
     if (self->alpha >= 0x100) {
         if (self->timer == 240) {
+            EntityFXFade *fade;
             self->timer = 0;
             self->state = RubyPortal_State_EncoreRampage;
 
-            EntityFXFade *fade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xF0F0F0), self->position.x, self->position.y);
+            fade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xF0F0F0), self->position.x, self->position.y);
             fade->speedIn      = 512;
             fade->wait         = 16;
             fade->speedOut     = 16;
@@ -372,55 +378,61 @@ void RubyPortal_State_EncoreRampage(void)
 
     self->position.x += self->velocity.x;
 
-    foreach_active(BreakableWall, wall)
     {
-        int32 rx    = (self->position.x - wall->position.x) >> 16;
-        int32 ry    = (self->position.y - wall->position.y) >> 16;
-        int32 angle = RSDK.ATan2(rx, ry);
+        foreach_active(BreakableWall, wall)
+        {
+            int32 rx    = (self->position.x - wall->position.x) >> 16;
+            int32 ry    = (self->position.y - wall->position.y) >> 16;
+            int32 angle = RSDK.ATan2(rx, ry);
 
-        wall->velocity.x += 8 * RSDK.Cos256(angle);
-        wall->velocity.y += 8 * RSDK.Sin256(angle);
-        wall->position.x += self->velocity.x;
+            wall->velocity.x += 8 * RSDK.Cos256(angle);
+            wall->velocity.y += 8 * RSDK.Sin256(angle);
+            wall->position.x += self->velocity.x;
 
-        ++wall->timer;
-        if (wall->timer == 60) {
-            wall->inkEffect = INK_ALPHA;
-            wall->alpha     = 0x100;
-        }
-        else if (wall->timer > 60) {
-            wall->alpha -= 8;
-        }
+            ++wall->timer;
+            if (wall->timer == 60) {
+                wall->inkEffect = INK_ALPHA;
+                wall->alpha     = 0x100;
+            }
+            else if (wall->timer > 60) {
+                wall->alpha -= 8;
+            }
 
-        if (rx * rx + ry * ry < 0x900) {
-            wall->scale.x -= 0x0C;
-            wall->scale.y -= 0x0C;
-            wall->velocity.x = (self->position.x - wall->position.x) >> 3;
-            wall->velocity.y = (self->position.y - wall->position.y) >> 3;
+            if (rx * rx + ry * ry < 0x900) {
+                wall->scale.x -= 0x0C;
+                wall->scale.y -= 0x0C;
+                wall->velocity.x = (self->position.x - wall->position.x) >> 3;
+                wall->velocity.y = (self->position.y - wall->position.y) >> 3;
 
-            if (wall->scale.x <= 0)
-                destroyEntity(wall);
+                if (wall->scale.x <= 0)
+                    destroyEntity(wall);
+            }
         }
     }
 
-    foreach_active(Debris, debris)
     {
-        int32 rx = (self->position.x - debris->position.x) >> 16;
-        int32 ry = (self->position.y - debris->position.y) >> 16;
-        if (rx * rx + ry * ry < 0x900) {
-            debris->scale.x -= 0x0C;
-            debris->scale.y -= 0x0C;
+        foreach_active(Debris, debris)
+        {
+            int32 rx = (self->position.x - debris->position.x) >> 16;
+            int32 ry = (self->position.y - debris->position.y) >> 16;
+            if (rx * rx + ry * ry < 0x900) {
+                debris->scale.x -= 0x0C;
+                debris->scale.y -= 0x0C;
 
-            debris->gravityStrength = 0;
-            debris->position.x += self->velocity.x;
-            debris->velocity.x = (self->position.x - debris->position.x) >> 3;
-            debris->velocity.y = (self->position.y - debris->position.y) >> 3;
+                debris->gravityStrength = 0;
+                debris->position.x += self->velocity.x;
+                debris->velocity.x = (self->position.x - debris->position.x) >> 3;
+                debris->velocity.y = (self->position.y - debris->position.y) >> 3;
 
-            if (debris->scale.x <= 0)
-                destroyEntity(debris);
+                if (debris->scale.x <= 0)
+                    destroyEntity(debris);
+            }
         }
     }
 
-    foreach_active(PhantomRuby, ruby) { ruby->position.x += self->velocity.x; }
+    {
+        foreach_active(PhantomRuby, ruby) { ruby->position.x += self->velocity.x; }
+    }
 }
 #endif
 

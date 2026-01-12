@@ -39,10 +39,11 @@ void ManiaModeMenu_Initialize(void)
 
 bool32 ManiaModeMenu_InitAPI(void)
 {
+    int32 authStatus;
     if (!MenuSetup->initializedAPI)
         MenuSetup->fxFade->timer = 512;
 
-    int32 authStatus = API.GetUserAuthStatus();
+    authStatus = API.GetUserAuthStatus();
     if (!authStatus) {
         API.TryAuth();
     }
@@ -226,14 +227,17 @@ void ManiaModeMenu_State_HandleTransition(void)
 
 void ManiaModeMenu_HandleUnlocks(void)
 {
+    int32 maxRounds;
+    EntityUIControl *compRules;
+    EntityUIVsRoundPicker *vsRoundPicker;
     MainMenu_HandleUnlocks();
     UISubHeading_HandleUnlocks();
     TimeAttackMenu_HandleUnlocks();
 
-    int32 maxRounds            = CompetitionMenu_HandleUnlocks();
-    EntityUIControl *compRules = CompetitionMenu->compRulesControl;
+    maxRounds            = CompetitionMenu_HandleUnlocks();
+    compRules = CompetitionMenu->compRulesControl;
 
-    EntityUIVsRoundPicker *vsRoundPicker = (EntityUIVsRoundPicker *)UIButton_GetChoicePtr(compRules->buttons[1], compRules->buttons[1]->selection);
+    vsRoundPicker = (EntityUIVsRoundPicker *)UIButton_GetChoicePtr(compRules->buttons[1], compRules->buttons[1]->selection);
     if (vsRoundPicker) {
         vsRoundPicker->maxVal = maxRounds;
         vsRoundPicker->val    = MIN(vsRoundPicker->val, maxRounds);
@@ -255,6 +259,8 @@ void ManiaModeMenu_SetupActions(void)
 
 void ManiaModeMenu_HandleMenuReturn(void)
 {
+    int32 zoneID, actID, characterID, isEncoreMode;
+    bool32 inTimeAttack;
     EntityMenuParam *param = MenuParam_GetParam();
 
     char buffer[0x100];
@@ -262,19 +268,21 @@ void ManiaModeMenu_HandleMenuReturn(void)
     if (strcmp(param->menuTag, "") == 0)
         UIUsernamePopup_ShowPopup();
 
-    foreach_all(UIControl, control)
     {
-        if (strcmp(param->menuTag, "") != 0) {
-            RSDK.GetCString(buffer, &control->tag);
+        foreach_all(UIControl, control)
+        {
+            if (strcmp(param->menuTag, "") != 0) {
+                RSDK.GetCString(buffer, &control->tag);
 
-            if (strcmp((const char *)buffer, param->menuTag) != 0) {
-                UIControl_SetInactiveMenu(control);
-            }
-            else {
-                control->storedButtonID  = param->menuSelection;
-                control->hasStoredButton = true;
-                UIControl_SetActiveMenu(control);
-                control->buttonID = param->menuSelection;
+                if (strcmp((const char *)buffer, param->menuTag) != 0) {
+                    UIControl_SetInactiveMenu(control);
+                }
+                else {
+                    control->storedButtonID  = param->menuSelection;
+                    control->hasStoredButton = true;
+                    UIControl_SetActiveMenu(control);
+                    control->buttonID = param->menuSelection;
+                }
             }
         }
     }
@@ -289,8 +297,8 @@ void ManiaModeMenu_HandleMenuReturn(void)
         UIButton_SetChoiceSelection(extras->buttons[1], 1);
     }
 
-    int32 zoneID = 0, actID = 0, characterID = 0, isEncoreMode = false;
-    bool32 inTimeAttack = param->inTimeAttack;
+    zoneID = 0, actID = 0, characterID = 0, isEncoreMode = false;
+    inTimeAttack = param->inTimeAttack;
     if (inTimeAttack) {
         characterID  = param->characterID;
         zoneID       = param->zoneID;

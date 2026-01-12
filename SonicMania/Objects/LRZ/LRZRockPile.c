@@ -313,16 +313,23 @@ void LRZRockPile_SetupDebris(void)
 
 void LRZRockPile_SpawnRockDebris(int32 x, int32 y, int32 velX, int32 velY)
 {
+    int32 sizeX;
+    int32 sizeY;
+    int32 destroyDelay;
+    int32 i;
     RSDK_THIS(LRZRockPile);
 
     LRZRockPile_SetupDebris();
 
-    int32 sizeX = (self->hitbox.right - self->hitbox.left) << 16;
-    int32 sizeY = (self->hitbox.bottom - self->hitbox.top) << 16;
+    sizeX = (self->hitbox.right - self->hitbox.left) << 16;
+    sizeY = (self->hitbox.bottom - self->hitbox.top) << 16;
 
-    int32 destroyDelay = 0;
+    destroyDelay = 0;
     if (RSDK.CheckSceneFolder("LRZ1")) {
-        for (int32 i = 0; i < self->debrisCount; ++i) {
+        for (i = 0; i < self->debrisCount; ++i) {
+            int32 spawnX;
+            int32 spawnY;
+            EntityDebris *rock;
             int32 animationID = self->rockDebrisInfo[(i * 6) + 0];
             int32 frameID     = self->rockDebrisInfo[(i * 6) + 1];
             int32 offsetX     = self->rockDebrisInfo[(i * 6) + 2];
@@ -333,9 +340,9 @@ void LRZRockPile_SpawnRockDebris(int32 x, int32 y, int32 velX, int32 velY)
             if (!offsetX && !offsetY)
                 break;
 
-            int32 spawnX       = self->position.x + offsetX;
-            int32 spawnY       = self->position.y + offsetY;
-            EntityDebris *rock = CREATE_ENTITY(Debris, Debris_State_Fall, spawnX, spawnY);
+            spawnX       = self->position.x + offsetX;
+            spawnY       = self->position.y + offsetY;
+            rock = CREATE_ENTITY(Debris, Debris_State_Fall, spawnX, spawnY);
 
             RSDK.SetSpriteAnimation(LRZRockPile->particleFrames, animationID, &rock->animator, true, frameID);
             rock->drawGroup       = self->drawGroup;

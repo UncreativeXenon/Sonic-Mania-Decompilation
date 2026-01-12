@@ -205,10 +205,12 @@ void SpeedGate_State_ProcessGate(void)
         self->state  = StateMachine_None;
     }
     else {
+        EntityPlayer *player;
         self->timer--;
 
-        EntityPlayer *player = self->triggerPlayer;
+        player = self->triggerPlayer;
         if (self->triggerPlayer) {
+            EntitySpeedGate *finishLine;
             int32 velX = self->triggerPlayer->direction == FLIP_X ? -TO_FIXED(16) : TO_FIXED(16);
             int32 velY = -TO_FIXED(32);
 
@@ -220,7 +222,7 @@ void SpeedGate_State_ProcessGate(void)
             self->timerPos.x = player->position.x + self->playerDistance.x;
             self->timerPos.y = player->position.y + self->playerDistance.y;
 
-            EntitySpeedGate *finishLine = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, SpeedGate);
+            finishLine = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, SpeedGate);
             if (Player_CheckCollisionTouch(player, finishLine, &SpeedGate->hitboxGate)) {
                 RSDK.SetSpriteAnimation(-1, 0, &self->timerAnimator, true, 0);
                 self->state  = StateMachine_None;

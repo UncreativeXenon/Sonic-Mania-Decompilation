@@ -27,6 +27,9 @@ void WarpDoor_Update(void)
                     warped = true;
 
                     if (!self->hasWarped) {
+                        int32 relPosX;
+                        int32 relPosY;
+                        Vector2 newPos;
                         EntityCamera *camera = player->camera;
                         int32 camRelPosX     = 0;
                         int32 camRelPosY     = 0;
@@ -36,12 +39,11 @@ void WarpDoor_Update(void)
                             camRelPosX = camera->position.x - playerX;
                             camRelPosY = camera->position.y - playerY;
                         }
-                        int32 relPosX = playerX - self->position.x;
-                        int32 relPosY = playerY - self->position.y;
+                        relPosX = playerX - self->position.x;
+                        relPosY = playerY - self->position.y;
                         LogHelpers_Print("camRelPos = <%d, %d>", camRelPosX >> 16, camRelPosY >> 16);
                         LogHelpers_Print("relPos = <%d, %d>", relPosX >> 16, relPosY >> 16);
 
-                        Vector2 newPos;
                         newPos.x = tag->position.x;
                         newPos.y = tag->position.y;
                         if (!self->warpToCenter) {
@@ -59,6 +61,7 @@ void WarpDoor_Update(void)
 
                         if (camera) {
                             Vector2 newCamPos;
+                            int32 playerID;
                             newCamPos.x = camRelPosX + newPos.x;
                             newCamPos.y = camRelPosY + newPos.y;
                             LogHelpers_Print("newPos = <%d, %d>", newPos.x >> 16, newPos.y >> 16);
@@ -72,7 +75,7 @@ void WarpDoor_Update(void)
                             player->scrollDelay                     = 0;
                             WarpDoor_SetupBoundaries(boundID, &newPos);
 
-                            int32 playerID                = RSDK.GetEntitySlot(player);
+                            playerID                = RSDK.GetEntitySlot(player);
                             camera->boundsL               = Zone->cameraBoundsL[playerID];
                             camera->boundsR               = Zone->cameraBoundsR[playerID];
                             camera->boundsT               = Zone->cameraBoundsT[playerID];
@@ -100,10 +103,12 @@ void WarpDoor_Update(void)
                                     RSDK.SetChannelAttributes(channel, 1.0, -1.0, 1.0);
                                     channel = RSDK.PlaySfx(WarpDoor->sfxRubyAttackR[sfx], false, 0xFF);
                                     RSDK.SetChannelAttributes(channel, 1.0, 1.0, 1.0);
-                                    foreach_active(TMZBarrier, barrier)
                                     {
-                                        if (barrier->warpTag == self->tag)
-                                            barrier->cleared = true;
+                                        foreach_active(TMZBarrier, barrier)
+                                        {
+                                            if (barrier->warpTag == self->tag)
+                                                barrier->cleared = true;
+                                        }
                                     }
 
                                     tag->fadeTimer = 512;
@@ -218,6 +223,7 @@ void WarpDoor_Create(void *data)
 
 void WarpDoor_StageLoad(void)
 {
+    int32 i;
     WarpDoor->aniFrames = RSDK.LoadSpriteAnimation("Global/PlaneSwitch.bin", SCOPE_STAGE);
 
     WarpDoor_SetStageBounds();
@@ -225,7 +231,7 @@ void WarpDoor_StageLoad(void)
     WarpDoor->hasSetupTags        = 0;
     WarpDoor->boundCount          = 0;
 
-    for (int32 i = 0; i < 0x100; ++i) WarpDoor->tags[i] = NULL;
+    for (i = 0; i < 0x100; ++i) WarpDoor->tags[i] = NULL;
 
     if (RSDK.CheckSceneFolder("FBZ"))
         WarpDoor->sfxWarpDoor = RSDK.GetSfx("FBZ/WarpDoor.wav");
@@ -314,13 +320,14 @@ void WarpDoor_CheckAllBounds(void)
 
 bool32 WarpDoor_SetupBoundaries(int16 boundsID, Vector2 *posPtr)
 {
+    EntityPlayer *player;
     if (!WarpDoor->boundCount)
         return false;
 
     if (Zone->timer < 1)
         return false;
 
-    EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (!player || !player->camera)
         return false;
 
@@ -328,6 +335,9 @@ bool32 WarpDoor_SetupBoundaries(int16 boundsID, Vector2 *posPtr)
         WarpDoor_SetWarpBounds(boundsID);
     }
     else {
+        int32 targetDistance;
+        int32 targetBoundsID;
+        int32 b;
         int32 storeX = player->position.x;
         int32 storeY = player->position.y;
         if (posPtr) {
@@ -335,9 +345,9 @@ bool32 WarpDoor_SetupBoundaries(int16 boundsID, Vector2 *posPtr)
             player->position.y = posPtr->y;
         }
 
-        int32 targetDistance = -1;
-        int32 targetBoundsID = -1;
-        for (int32 b = 0; b < 0x100; ++b) {
+        targetDistance = -1;
+        targetBoundsID = -1;
+        for (b = 0; b < 0x100; ++b) {
             if (!WarpDoor->boundaries[b].left && !WarpDoor->boundaries[b].top && !WarpDoor->boundaries[b].right && !WarpDoor->boundaries[b].bottom)
                 break;
 
@@ -368,6 +378,9 @@ bool32 WarpDoor_SetupBoundaries(int16 boundsID, Vector2 *posPtr)
 
 void WarpDoor_DrawDebug(void)
 {
+    int32 xOff;
+    int32 yOff;
+    int32 i;
     RSDK_THIS(WarpDoor);
 
     int32 x = (self->hitbox.left << 16) + self->position.x + 0x80000;
@@ -375,9 +388,9 @@ void WarpDoor_DrawDebug(void)
 
     self->animator.frameID = self->go ? 2 : 0;
 
-    int32 xOff = 0;
-    int32 yOff = 0;
-    for (int32 i = 0; i < self->width * self->height; ++i) {
+    xOff = 0;
+    yOff = 0;
+    for (i = 0; i < self->width * self->height; ++i) {
         Vector2 drawPos;
         drawPos.y = y + yOff;
         drawPos.x = x + (xOff << 20);

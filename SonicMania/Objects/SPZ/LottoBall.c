@@ -163,6 +163,8 @@ void LottoBall_State_InMachine(void)
 
     EntityLottoMachine *parent = self->parent;
     if (parent) {
+        int32 rx;
+        int32 ry;
         self->velocity.y += self->gravityStrength;
         self->position.x += self->velocity.x;
         self->position.y += self->velocity.y;
@@ -183,23 +185,25 @@ void LottoBall_State_InMachine(void)
             if (!(Zone->timer & 0xF))
                 RSDK.PlaySfx(LottoBall->sfxLottoBounce, false, 255);
 
-            foreach_active(LottoBall, ball)
-            {
-                if (ball != self) {
-                    int32 rx = (self->position.x - ball->position.x) >> 16;
-                    int32 ry = (self->position.y - ball->position.y) >> 16;
+{
+                foreach_active(LottoBall, ball)
+                {
+                    if (ball != self) {
+                        int32 rx = (self->position.x - ball->position.x) >> 16;
+                        int32 ry = (self->position.y - ball->position.y) >> 16;
 
-                    if (rx * rx + ry * ry < 0x100) {
-                        int32 angle      = RSDK.ATan2(rx, ry);
-                        self->velocity.x = (vel * RSDK.Cos256(angle)) >> 8;
-                        self->velocity.y = (vel * RSDK.Sin256(angle)) >> 8;
+                        if (rx * rx + ry * ry < 0x100) {
+                            int32 angle      = RSDK.ATan2(rx, ry);
+                            self->velocity.x = (vel * RSDK.Cos256(angle)) >> 8;
+                            self->velocity.y = (vel * RSDK.Sin256(angle)) >> 8;
+                        }
                     }
                 }
             }
         }
 
-        int32 rx = (self->position.x - parent->position.x) >> 16;
-        int32 ry = (self->position.y - parent->position.y) >> 16;
+        rx = (self->position.x - parent->position.x) >> 16;
+        ry = (self->position.y - parent->position.y) >> 16;
         if (rx * rx + ry * ry > 0x1B90) {
             int32 angle      = RSDK.ATan2(rx, (self->position.y - parent->position.y) >> 16);
             self->position.x = 0x5400 * RSDK.Cos256(angle) + parent->position.x;
@@ -353,11 +357,12 @@ void LottoBall_State_EnterUIBall(void)
 
 void LottoBall_State_ShowUIBall(void)
 {
+    int32 scale;
     RSDK_THIS(LottoBall);
 
     self->timer += 8;
 
-    int32 scale   = MIN(self->scale.x + ((0x214 - self->scale.x) >> 3), 0x200);
+    scale   = MIN(self->scale.x + ((0x214 - self->scale.x) >> 3), 0x200);
     self->scale.x = scale;
     self->scale.y = scale;
 

@@ -58,6 +58,7 @@ void UIControl_Create(void *data)
     RSDK_THIS(UIControl);
 
     if (!SceneInfo->inEditor) {
+        int32 slotID;
         if (data) {
             Vector2 *size = (Vector2 *)data;
             self->size.x  = size->x;
@@ -87,7 +88,7 @@ void UIControl_Create(void *data)
         self->startPos.y = self->position.y;
 
 #if MANIA_USE_PLUS
-        int32 slotID = RSDK.GetEntitySlot(self);
+        slotID = RSDK.GetEntitySlot(self);
         if (UIButtonPrompt && slotID != SLOT_DIALOG_UICONTROL) {
             foreach_all(UIButtonPrompt, prompt)
             {
@@ -145,7 +146,8 @@ EntityUIControl *UIControl_GetUIControl(void)
 
 void UIControl_ClearInputs(uint8 buttonID)
 {
-    for (int32 i = 0; i < PLAYER_COUNT; ++i) {
+    int32 i;
+    for (i = 0; i < PLAYER_COUNT; ++i) {
         UIControl->upPress[i]      = false;
         UIControl->downPress[i]    = false;
         UIControl->leftPress[i]    = false;
@@ -186,12 +188,13 @@ void UIControl_ClearInputs(uint8 buttonID)
 
 void UIControl_ProcessInputs(void)
 {
+    int32 i;
     RSDK_THIS(UIControl);
 
     UIControl_HandlePosition();
 
     if (!UIControl->inputLocked) {
-        for (int32 i = 0; i < PLAYER_COUNT; ++i) {
+        for (i = 0; i < PLAYER_COUNT; ++i) {
             UIControl->upPress[i]    = ControllerInfo[CONT_P1 + i].keyUp.press || AnalogStickInfoL[CONT_P1 + i].keyUp.press;
             UIControl->downPress[i]  = ControllerInfo[CONT_P1 + i].keyDown.press || AnalogStickInfoL[CONT_P1 + i].keyDown.press;
             UIControl->leftPress[i]  = ControllerInfo[CONT_P1 + i].keyLeft.press || AnalogStickInfoL[CONT_P1 + i].keyLeft.press;
@@ -343,7 +346,8 @@ void UIControl_ProcessInputs(void)
 
 int32 UIControl_GetButtonID(EntityUIControl *control, EntityUIButton *entity)
 {
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    int32 i;
+    for (i = 0; i < control->buttonCount; ++i) {
         if (entity == control->buttons[i])
             return i;
     }
@@ -353,8 +357,9 @@ int32 UIControl_GetButtonID(EntityUIControl *control, EntityUIButton *entity)
 
 void UIControl_MenuChangeButtonInit(EntityUIControl *control)
 {
+    int32 i;
     Entity *storeEntity = SceneInfo->entity;
-    for (int32 i = 0; i < SCENEENTITY_COUNT; ++i) {
+    for (i = 0; i < SCENEENTITY_COUNT; ++i) {
         EntityUIButton *entity = RSDK_GET_ENTITY(i, UIButton);
 
         if (entity) {
@@ -419,12 +424,14 @@ void UIControl_MenuChangeButtonInit(EntityUIControl *control)
 #if MANIA_USE_PLUS
 void UIControl_SetActiveMenuButtonPrompts(EntityUIControl *entity)
 {
-    for (int32 i = 0; i < entity->promptCount; ++i) entity->prompts[i]->active = ACTIVE_NORMAL;
+    int32 i;
+    for (i = 0; i < entity->promptCount; ++i) entity->prompts[i]->active = ACTIVE_NORMAL;
 }
 #endif
 
 void UIControl_SetActiveMenu(EntityUIControl *entity)
 {
+    int32 p;
 #if MANIA_USE_PLUS
     LogHelpers_PrintString(&entity->tag);
 #endif
@@ -463,7 +470,7 @@ void UIControl_SetActiveMenu(EntityUIControl *entity)
 #if MANIA_USE_PLUS
     entity->menuWasSetup = true;
 
-    for (int32 p = 0; p < entity->promptCount; ++p) entity->prompts[p]->active = ACTIVE_NORMAL;
+    for (p = 0; p < entity->promptCount; ++p) entity->prompts[p]->active = ACTIVE_NORMAL;
 #endif
 
     if (entity->menuSetupCB) {
@@ -521,22 +528,25 @@ void UIControl_SetMenuLostFocus(EntityUIControl *entity)
 
 void UIControl_SetInactiveMenu(EntityUIControl *control)
 {
+#if MANIA_USE_PLUS
+    RSDK_THIS(UIControl);
+#endif
     UIControl->hasTouchInput = false;
     control->active          = ACTIVE_NEVER;
     control->visible         = false;
     control->state           = StateMachine_None;
 
 #if MANIA_USE_PLUS
-    RSDK_THIS(UIControl);
-
     if (self->promptCount) {
-        for (int32 p = 0; p < control->promptCount; ++p) control->prompts[p]->active = ACTIVE_BOUNDS;
+        int32 p;
+        for (p = 0; p < control->promptCount; ++p) control->prompts[p]->active = ACTIVE_BOUNDS;
     }
 #endif
 }
 
 void UIControl_SetupButtons(void)
 {
+    int32 i; 
     RSDK_THIS(UIControl);
 
     int32 slotID = RSDK.GetEntitySlot(self);
@@ -571,7 +581,7 @@ void UIControl_SetupButtons(void)
     }
 #endif
 
-    for (int32 i = 0; i < SCENEENTITY_COUNT; ++i) {
+    for (i = 0; i < SCENEENTITY_COUNT; ++i) {
         EntityUIButton *button = RSDK_GET_ENTITY(i, UIButton);
 
         if (button) {
@@ -620,12 +630,14 @@ void UIControl_MatchMenuTag(const char *text)
     INIT_STRING(string);
 
     RSDK.SetString(&string, text);
-    foreach_all(UIControl, entity)
     {
-        if (entity->active == ACTIVE_ALWAYS || !RSDK.CompareStrings(&string, &entity->tag, false))
-            UIControl_SetInactiveMenu(entity);
-        else
-            UIControl_SetActiveMenu(entity);
+        foreach_all(UIControl, entity)
+        {
+            if (entity->active == ACTIVE_ALWAYS || !RSDK.CompareStrings(&string, &entity->tag, false))
+                UIControl_SetInactiveMenu(entity);
+            else
+                UIControl_SetActiveMenu(entity);
+        }
     }
 }
 
@@ -664,13 +676,14 @@ void UIControl_ReturnToParentMenu(void)
 #if MANIA_USE_PLUS
 void UIControl_SetTargetPos(EntityUIControl *entity, int32 x, int32 y)
 {
+    int32 targetY;
     int32 targetX = x;
     if (!x) {
         targetX = entity->position.x;
         x       = entity->position.x;
     }
 
-    int32 targetY = y;
+    targetY = y;
     if (!y) {
         targetY = entity->position.y;
         y       = entity->position.y;
@@ -736,6 +749,7 @@ void UIControl_HandlePosition(void)
 
 void UIControl_ProcessButtonInput(void)
 {
+    int32 i;
     RSDK_THIS(UIControl);
 
     bool32 allowAction = false;
@@ -744,7 +758,7 @@ void UIControl_ProcessButtonInput(void)
         UIControl->hasTouchInput     = TouchInfo->count != 0;
         UIControl->isProcessingInput = true;
 
-        for (int32 i = 0; i < self->buttonCount; ++i) {
+        for (i = 0; i < self->buttonCount; ++i) {
             if (self->buttons[i]) {
                 EntityUIButton *button = self->buttons[i];
 
@@ -774,9 +788,10 @@ void UIControl_ProcessButtonInput(void)
 
         if (TouchInfo->count) {
             if (allowAction) {
+                int32 i;
                 int32 id = -1;
 
-                for (int32 i = 0; i < self->buttonCount; ++i) {
+                for (i = 0; i < self->buttonCount; ++i) {
                     if (activeButton == self->buttons[i]) {
                         id = i;
                         break;

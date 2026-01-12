@@ -37,7 +37,8 @@ void Flipper_Update(void)
                 RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
                 if (player->jumpPress) {
-                    for (int32 i = SLOT_PLAYER1; i < Player->playerCount; ++i) {
+                    int32 i;
+                    for (i = SLOT_PLAYER1; i < Player->playerCount; ++i) {
                         if ((1 << i) & self->activePlayers) {
                             EntityPlayer *playerPtr     = RSDK_GET_ENTITY(i, Player);
                             int32 vel                   = (playerPtr->position.x - self->position.x) - 0x40000;
@@ -92,7 +93,8 @@ void Flipper_Update(void)
                 RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
                 if (player->jumpPress) {
-                    for (int32 i = SLOT_PLAYER1; i < Player->playerCount; ++i) {
+                    int32 i;
+                    for (i = SLOT_PLAYER1; i < Player->playerCount; ++i) {
                         if ((1 << i) & self->activePlayers) {
                             EntityPlayer *playerPtr     = RSDK_GET_ENTITY(i, Player);
                             int32 vel                   = (self->position.x - player->position.x) - 0x40000;

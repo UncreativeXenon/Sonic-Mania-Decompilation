@@ -11,11 +11,12 @@ ObjectMechaBu *MechaBu;
 
 void MechaBu_Update(void)
 {
+    Vector2 offset;
     RSDK_THIS(MechaBu);
 
     StateMachine_Run(self->state);
 
-    Vector2 offset = MechaBu_GetSawOffset();
+    offset = MechaBu_GetSawOffset();
     self->sawPos.x = self->position.x + offset.x;
     self->sawPos.y = self->position.y + offset.y;
 }
@@ -222,10 +223,11 @@ void MechaBu_State_Moving(void)
         }
     }
     else {
+        bool32 collided;
         RSDK.SetSpriteAnimation(MechaBu->aniFrames, 1, &self->badnikAnimator, true, 0);
         self->timer = 0;
 
-        bool32 collided = false;
+        collided = false;
         if (self->velocity.x >= 0)
             collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, -0x10000, 0xF0000, 8);
         else

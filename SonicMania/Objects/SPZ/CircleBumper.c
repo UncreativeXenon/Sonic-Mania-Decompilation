@@ -123,51 +123,56 @@ void CircleBumper_CheckPlayerCollisions(void)
 
     self->position.x = self->drawPos.x;
     self->position.y = self->drawPos.y;
-    foreach_active(Player, player)
     {
-        if (player->animator.animationID != ANI_HURT && Player_CheckBadnikTouch(player, self, &CircleBumper->hitboxBumper)) {
-            self->animator.frameID = 0;
-            self->stateCollide     = CircleBumper_Collide_Bumped;
-            RSDK.PlaySfx(CircleBumper->sfxBumper, false, 0xFF);
-            self->active = ACTIVE_NORMAL;
+        foreach_active(Player, player)
+        {
+            if (player->animator.animationID != ANI_HURT && Player_CheckBadnikTouch(player, self, &CircleBumper->hitboxBumper)) {
+                int32 angle;
+                int32 xVel;
+                int32 yVel;
+                self->animator.frameID = 0;
+                self->stateCollide     = CircleBumper_Collide_Bumped;
+                RSDK.PlaySfx(CircleBumper->sfxBumper, false, 0xFF);
+                self->active = ACTIVE_NORMAL;
 
-            int32 angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
-            int32 xVel  = 0x700 * RSDK.Cos256(angle);
-            int32 yVel  = 0x700 * RSDK.Sin256(angle);
-            if (player->state == Player_State_FlyCarried)
-                RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
+                angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
+                xVel  = 0x700 * RSDK.Cos256(angle);
+                yVel  = 0x700 * RSDK.Sin256(angle);
+                if (player->state == Player_State_FlyCarried)
+                    RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
 
 #if MANIA_USE_PLUS
-            if (player->state == Player_State_MightyHammerDrop) {
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-            }
-            else {
-#endif
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED && player->state != Player_State_TailsFlight) {
-                    if (player->state != Player_State_DropDash)
-                        player->state = Player_State_Air;
-                    if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                        player->animator.animationID = ANI_WALK;
+                if (player->state == Player_State_MightyHammerDrop) {
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
                 }
-#if MANIA_USE_PLUS
-            }
+                else {
 #endif
-            if (player->animator.animationID != ANI_FLY) {
-                player->velocity.x   = xVel;
-                player->groundVel    = xVel;
-                player->applyJumpCap = false;
-            }
+                    int32 anim = player->animator.animationID;
+                    if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED && player->state != Player_State_TailsFlight) {
+                        if (player->state != Player_State_DropDash)
+                            player->state = Player_State_Air;
+                        if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                            player->animator.animationID = ANI_WALK;
+                    }
+#if MANIA_USE_PLUS
+                }
+#endif
+                if (player->animator.animationID != ANI_FLY) {
+                    player->velocity.x   = xVel;
+                    player->groundVel    = xVel;
+                    player->applyJumpCap = false;
+                }
 
-            player->velocity.y     = yVel;
-            player->onGround       = false;
-            player->tileCollisions = TILECOLLISION_DOWN;
+                player->velocity.y     = yVel;
+                player->onGround       = false;
+                player->tileCollisions = TILECOLLISION_DOWN;
 
-            if (self->hitCount) {
-                EntityScoreBonus *bonus = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y);
-                bonus->animator.frameID = 16;
-                Player_GiveScore(player, 10);
-                --self->hitCount;
+                if (self->hitCount) {
+                    EntityScoreBonus *bonus = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y);
+                    bonus->animator.frameID = 16;
+                    Player_GiveScore(player, 10);
+                    --self->hitCount;
+                }
             }
         }
     }
@@ -219,11 +224,12 @@ void CircleBumper_Move_Circular(void)
 
 void CircleBumper_Move_Path(void)
 {
+    Entity *node;
     RSDK_THIS(CircleBumper);
 
     self->drawPos.x += self->velocity.x;
     self->drawPos.y += self->velocity.y;
-    Entity *node = RSDK_GET_ENTITY_GEN(self->speed);
+    node = RSDK_GET_ENTITY_GEN(self->speed);
 
     if (self->velocity.x <= 0) {
         if (self->drawPos.x < node->position.x)

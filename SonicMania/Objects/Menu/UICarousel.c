@@ -66,6 +66,7 @@ void UICarousel_HandleScrolling(void)
     int32 buttonID           = self->buttonID;
 
     if (control->buttonID != buttonID) {
+        int32 scrollOffset;
         int32 max        = control->buttonCount - 1;
         bool32 movedUp   = false;
         bool32 movedDown = false;
@@ -94,7 +95,7 @@ void UICarousel_HandleScrolling(void)
         // find a way to increment by however many buttons we jumped, rather than just by 1
         // this is slightly harder than it sounds due to the virtual scroll & wrapping being applied
 
-        int32 scrollOffset = self->scrollOffset;
+        scrollOffset = self->scrollOffset;
         if (movedUp) {
             --self->virtualIndex;
             self->scrollOffset = self->virtualIndex - (control->buttonCount >> 1);
@@ -139,6 +140,7 @@ void UICarousel_HandleScrolling(void)
 
 void UICarousel_HandleButtonPositions(void)
 {
+    int32 i;
     RSDK_THIS(UICarousel);
 
     EntityUIControl *control = (EntityUIControl *)self->parent;
@@ -146,12 +148,12 @@ void UICarousel_HandleButtonPositions(void)
     Vector2 positions[0x10];
     memset(positions, 0, sizeof(positions));
 
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    for (i = 0; i < control->buttonCount; ++i) {
         positions[i].x = self->position.x;
         positions[i].y = self->position.y - (self->shift.y * i);
     }
 
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    for (i = 0; i < control->buttonCount; ++i) {
         EntityUIButton *item = control->buttons[i];
 
         int32 id = (i - self->scrollOffset) % control->buttonCount;

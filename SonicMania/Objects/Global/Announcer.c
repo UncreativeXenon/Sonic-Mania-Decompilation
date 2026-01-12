@@ -95,8 +95,9 @@ void Announcer_StageLoad(void)
 
 void Announcer_StartCountdown(void)
 {
+    EntityAnnouncer *announcer;
     Announcer->finishedCountdown = false;
-    EntityAnnouncer *announcer   = CREATE_ENTITY(Announcer, NULL, 0, 0);
+    announcer   = CREATE_ENTITY(Announcer, NULL, 0, 0);
     announcer->state             = Announcer_State_Countdown;
     announcer->stateDraw         = Announcer_Draw_Countdown;
     announcer->playerID          = 3;
@@ -124,10 +125,12 @@ void Announcer_Draw_Countdown(void)
     RSDK.DrawSprite(&self->animator, &drawPos, true);
 
     if (self->playerID > 0) {
+        EntityCompetitionSession *session;
+        int32 frame;
         self->inkEffect                   = INK_NONE;
-        EntityCompetitionSession *session = CompetitionSession_GetSession();
+        session = CompetitionSession_GetSession();
 
-        int32 frame = 0;
+        frame = 0;
         switch (session->playerID[SceneInfo->currentScreenID]) {
             default:
             case ID_SONIC: frame = 0; break;
@@ -169,12 +172,13 @@ void Announcer_State_Countdown(void)
             destroyEntity(self);
         }
         else {
+            int32 timer; 
             if (!self->timer) {
                 RSDK.PlaySfx(Announcer->sfxGo, false, 255);
                 RSDK.SetSpriteAnimation(Announcer->aniFrames, 1, &self->animator, true, 3);
             }
 
-            int32 timer = 0;
+            timer = 0;
             if (self->timer - 15 > 0)
                 timer = (self->timer - 15) << 9;
             self->alpha = 0x200 - timer / 45;
@@ -244,9 +248,11 @@ void Announcer_State_Finished(void)
         }
     }
     else {
+        int32 t;
+        int32 xOffset; 
         self->visible = true;
-        int32 t       = 16 * self->timer;
-        int32 xOffset = -TO_FIXED(1) * ScreenInfo->size.x;
+        t       = 16 * self->timer;
+        xOffset = -TO_FIXED(1) * ScreenInfo->size.x;
         if (t > 0) {
             if (t < 256)
                 self->drawOffset.x = xOffset + t * (-xOffset >> 8);

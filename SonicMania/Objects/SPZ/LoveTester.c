@@ -11,12 +11,13 @@ ObjectLoveTester *LoveTester;
 
 void LoveTester_Update(void)
 {
+    int32 i;
     RSDK_THIS(LoveTester);
 
     StateMachine_Run(self->state);
     StateMachine_Run(self->stateLights);
 
-    for (int32 i = 0; i < 10; ++i) RSDK.ProcessAnimation(&self->lightAnimator[i]);
+    for (i = 0; i < 10; ++i) RSDK.ProcessAnimation(&self->lightAnimator[i]);
 }
 
 void LoveTester_LateUpdate(void) {}
@@ -122,6 +123,7 @@ void LoveTester_SetupLightOffsets(void)
 
 void LoveTester_DrawSprites(void)
 {
+    int32 i;
     RSDK_THIS(LoveTester);
 
     int32 storeX = self->position.x;
@@ -131,7 +133,7 @@ void LoveTester_DrawSprites(void)
         RSDK.SetSpriteAnimation(LoveTester->aniFrames, 1, &self->mainAnimator, true, 0);
         RSDK.DrawSprite(&self->mainAnimator, NULL, false);
 
-        for (int32 i = 0; i < 10; ++i) {
+        for (i = 0; i < 10; ++i) {
             self->position.x = storeX + LoveTester->lightOffset[i].x;
             self->position.y = storeY + LoveTester->lightOffset[i].y;
             RSDK.DrawSprite(&self->lightAnimator[i], NULL, false);
@@ -274,9 +276,11 @@ void LoveTester_GiveScore(EntityPlayer *player)
 
 void LoveTester_CreateHeartParticles(void)
 {
+    int32 velX;
+    int32 frame;
     RSDK_THIS(LoveTester);
 
-    for (int32 velX = 0, frame = 0; velX < 0x10000; velX += 0x4000, ++frame) {
+    for (velX = 0, frame = 0; velX < 0x10000; velX += 0x4000, ++frame) {
         EntityLoveTester *child = CREATE_ENTITY(LoveTester, INT_TO_VOID(true), self->position.x, self->position.y);
         RSDK.SetSpriteAnimation(LoveTester->aniFrames, 4, &child->mainAnimator, true, frame & 1);
         child->velocity.x = velX - 0x6000;
@@ -285,9 +289,10 @@ void LoveTester_CreateHeartParticles(void)
 
 void LoveTester_State_Init(void)
 {
+    int32 i;
     RSDK_THIS(LoveTester);
 
-    for (int32 i = 0; i < 10; ++i) RSDK.SetSpriteAnimation(LoveTester->aniFrames, 2, &self->lightAnimator[i], true, 5);
+    for (i = 0; i < 10; ++i) RSDK.SetSpriteAnimation(LoveTester->aniFrames, 2, &self->lightAnimator[i], true, 5);
 
     self->playerPtr        = NULL;
     self->matchingFinished = false;
@@ -357,7 +362,7 @@ void LoveTester_State_SetupMatching(void)
     LoveTester_CheckPlayerCollisions_Entry(true);
 
     if (self->timer < 168) {
-        int32 timer = self->timer & 0b10000000000000000000000000000011;
+        int32 timer = self->timer & 0x80000003;
 
         bool32 shouldChangeDisplay = !timer;
         if (timer < 0)
@@ -522,12 +527,14 @@ void LoveTester_State_ReleasePlayers(void)
 
     LoveTester_CheckPlayerCollisions_Solid();
 
-    foreach_active(Player, player)
-    {
-        if (player == self->playerPtr) {
-            if (!Player_CheckCollisionTouch(player, self, &LoveTester->hitboxEntry)) {
-                self->activePlayers = 0;
-                self->state         = LoveTester_State_Init;
+{
+        foreach_active(Player, player)
+        {
+            if (player == self->playerPtr) {
+                if (!Player_CheckCollisionTouch(player, self, &LoveTester->hitboxEntry)) {
+                    self->activePlayers = 0;
+                    self->state         = LoveTester_State_Init;
+                }
             }
         }
     }

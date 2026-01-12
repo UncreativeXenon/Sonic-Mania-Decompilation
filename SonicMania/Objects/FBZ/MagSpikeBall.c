@@ -22,21 +22,25 @@ void MagSpikeBall_Update(void)
         self->direction = FLIP_NONE;
     }
     else {
+        bool32 collided;
         self->velocity.y += 0x3800;
         if (self->velocity.y <= 0 && RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_ROOF, 0, 0, -0xC0000, true))
             self->velocity.y = 0;
 
-        bool32 collided = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0xC0000, true);
+        collided = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0xC0000, true);
 
-        foreach_all(MagPlatform, platform)
         {
-            platform->position.x = platform->drawPos.x - platform->collisionOffset.x;
-            platform->position.y = platform->drawPos.y - platform->collisionOffset.y;
-            Hitbox *hitbox       = RSDK.GetHitbox(&platform->animator, 0);
-            collided |= RSDK.CheckObjectCollisionPlatform(platform, hitbox, self, &MagSpikeBall->hitboxSpikeBall, true);
+            foreach_all(MagPlatform, platform)
+            {
+                Hitbox *hitbox;
+                platform->position.x = platform->drawPos.x - platform->collisionOffset.x;
+                platform->position.y = platform->drawPos.y - platform->collisionOffset.y;
+                hitbox       = RSDK.GetHitbox(&platform->animator, 0);
+                collided |= RSDK.CheckObjectCollisionPlatform(platform, hitbox, self, &MagSpikeBall->hitboxSpikeBall, true);
 
-            platform->position.x = platform->centerPos.x;
-            platform->position.y = platform->centerPos.y;
+                platform->position.x = platform->centerPos.x;
+                platform->position.y = platform->centerPos.y;
+            }
         }
 
         if (collided) {
@@ -45,13 +49,15 @@ void MagSpikeBall_Update(void)
         }
     }
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &MagSpikeBall->hitboxSpikeBall)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &MagSpikeBall->hitboxSpikeBall)) {
 #if MANIA_USE_PLUS
-            if (player->onGround && (self->velocity.y > 0 || !Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer)))
+                if (player->onGround && (self->velocity.y > 0 || !Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer)))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 }

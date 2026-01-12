@@ -54,6 +54,7 @@ void UICreditsText_Create(void *data)
     RSDK.SetSpriteAnimation(UICreditsText->aniFrames, self->listID, &self->animator, true, 0);
 
     if (!SceneInfo->inEditor) {
+        bool32 isHeading;
         self->active        = ACTIVE_BOUNDS;
         self->updateRange.x = 0x800000;
         self->updateRange.y = 0x800000;
@@ -63,7 +64,7 @@ void UICreditsText_Create(void *data)
         if (!self->text.chars)
             RSDK.InitString(&self->text, "UNTITLED", 0);
 
-        bool32 isHeading = self->isHeading;
+        isHeading = self->isHeading;
         UICreditsText_SetText(self->animator.animationID, self, &self->text);
         self->isHeading = isHeading;
     }
@@ -73,6 +74,7 @@ void UICreditsText_StageLoad(void) { UICreditsText->aniFrames = RSDK.LoadSpriteA
 
 void UICreditsText_SetText(int32 animID, EntityUICreditsText *label, String *text)
 {
+    SpriteFrame *frame;
     RSDK.SetSpriteAnimation(UICreditsText->aniFrames, animID, &label->animator, true, 0);
 
     label->listID    = animID;
@@ -81,7 +83,7 @@ void UICreditsText_SetText(int32 animID, EntityUICreditsText *label, String *tex
 
     RSDK.SetSpriteString(UICreditsText->aniFrames, label->listID, &label->text);
 
-    SpriteFrame *frame = RSDK.GetFrame(UICreditsText->aniFrames, animID, 0);
+    frame = RSDK.GetFrame(UICreditsText->aniFrames, animID, 0);
     if (frame)
         label->clipY2 = frame->pivotY + frame->height + 2;
 }
@@ -112,12 +114,14 @@ void UICreditsText_State_Init(void)
 
 void UICreditsText_State_SetupCharPos(void)
 {
+    int32 yOffset;
+    int32 c;
     RSDK_THIS(UICreditsText);
 
     self->visible = true;
 
-    int32 yOffset = 0x280000;
-    for (int32 c = 0; c < self->text.length; ++c) {
+    yOffset = 0x280000;
+    for (c = 0; c < self->text.length; ++c) {
         self->charPositions[c].y = yOffset;
         self->charOffsets[c]     = -0x80000;
         yOffset += 0x100000;
@@ -130,9 +134,10 @@ void UICreditsText_State_SetupCharPos(void)
 
 void UICreditsText_State_MoveChars(void)
 {
+    int32 c;
     RSDK_THIS(UICreditsText);
 
-    for (int32 c = 0; c < self->text.length; ++c) {
+    for (c = 0; c < self->text.length; ++c) {
         if (self->charPositions[c].y < 0)
             self->charOffsets[c] += 0x28000;
 
@@ -197,7 +202,8 @@ void UICreditsText_SetupIdleDelay(void)
             self->state  = UICreditsText_State_ScaleOut;
         }
         else if (self->isHeading) {
-            for (int32 c = 0; c < self->text.length; ++c) {
+            int32 c;
+            for (c = 0; c < self->text.length; ++c) {
                 self->charTimers[c]  = 2 * (self->text.length - c - 1);
                 self->charOffsets[c] = -0x80000;
             }
@@ -212,9 +218,10 @@ void UICreditsText_SetupIdleDelay(void)
 
 void UICreditsText_State_Idle(void)
 {
+    int32 c;
     RSDK_THIS(UICreditsText);
 
-    for (int32 c = 0; c < self->text.length; ++c) {
+    for (c = 0; c < self->text.length; ++c) {
         if (self->charTimers[c] <= 0) {
             self->charOffsets[c] += 0x28000;
             self->charPositions[c].y += self->charOffsets[c];

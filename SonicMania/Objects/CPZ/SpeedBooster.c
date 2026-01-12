@@ -11,11 +11,12 @@ ObjectSpeedBooster *SpeedBooster;
 
 void SpeedBooster_Update(void)
 {
+    int32 i;
     RSDK_THIS(SpeedBooster);
 
     StateMachine_Run(self->state);
 
-    for (int32 i = 0; i < PLAYER_COUNT; i++) {
+    for (i = 0; i < PLAYER_COUNT; i++) {
         if (self->playerTimer[i])
             self->playerTimer[i]--;
     }
@@ -132,13 +133,14 @@ void SpeedBooster_HandleInteractions(void)
             self->playerPos[playerID] = player->position.x;
         }
         else {
+            bool32 flipFlag;
             self->velocity.x       = 2 * (player->position.x < self->position.x) - 1;
             self->state            = SpeedBooster->defaultState;
             self->animator.frameID = 0;
             RSDK.PlaySfx(SpeedBooster->sfxSpeedBooster, false, 255);
             self->active = ACTIVE_NORMAL;
 
-            bool32 flipFlag = isSSZ ? self->playerPos[playerID] <= self->position.x : !self->direction;
+            flipFlag = isSSZ ? self->playerPos[playerID] <= self->position.x : !self->direction;
             if (flipFlag) {
                 if (player->groundVel < self->groundVel)
                     player->groundVel = self->groundVel;
@@ -163,14 +165,16 @@ void SpeedBooster_HandleInteractions(void)
 
 void SpeedBooster_State_SSZFire(void)
 {
+    EntitySpeedBooster *child;
+    int32 newVel;
     RSDK_THIS(SpeedBooster);
 
     self->velocity.x = 0x55550 * self->velocity.x;
     self->drawPos.x  = self->position.x;
     self->drawPos.y  = self->position.y;
 
-    EntitySpeedBooster *child = CREATE_ENTITY(SpeedBooster, INT_TO_VOID(true), self->position.x, self->position.y);
-    int32 newVel              = 0x10000;
+    child = CREATE_ENTITY(SpeedBooster, INT_TO_VOID(true), self->position.x, self->position.y);
+    newVel              = 0x10000;
     child->velocity.y         = -0x70000;
     if (self->velocity.x > 0)
         newVel = -0x10000;

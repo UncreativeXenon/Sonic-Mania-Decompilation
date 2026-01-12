@@ -135,8 +135,9 @@ void FBZMissile_StateLauncherV_Launch(void)
         case 9:
         case 25:
         case 41: {
+            EntityFBZMissile *missile;
             RSDK.PlaySfx(FBZMissile->sfxPush, false, 255);
-            EntityFBZMissile *missile = CREATE_ENTITY(FBZMissile, INT_TO_VOID(FBZMISSILE_VERTICAL), self->position.x, self->position.y);
+            missile = CREATE_ENTITY(FBZMissile, INT_TO_VOID(FBZMISSILE_VERTICAL), self->position.x, self->position.y);
             missile->isPermanent      = true;
             missile->velocity.y       = -0x60000;
             missile->drawGroup        = self->drawGroup - 1;
@@ -154,9 +155,10 @@ void FBZMissile_StateLauncherH_Fire(void)
     RSDK_THIS(FBZMissile);
 
     if (!((Zone->timer + self->intervalOffset) % self->interval)) {
+        EntityFBZMissile *missile;
         RSDK.PlaySfx(FBZMissile->sfxPush2, false, 255);
 
-        EntityFBZMissile *missile = CREATE_ENTITY(FBZMissile, INT_TO_VOID(FBZMISSILE_HORIZONTAL), self->position.x, self->position.y);
+        missile = CREATE_ENTITY(FBZMissile, INT_TO_VOID(FBZMISSILE_HORIZONTAL), self->position.x, self->position.y);
         missile->drawGroup        = self->drawGroup;
         missile->direction        = self->direction;
         if (self->direction) {
@@ -279,13 +281,15 @@ void FBZMissile_StateHorizontal_Move(void)
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &FBZMissile->hitboxMissileH)) {
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &FBZMissile->hitboxMissileH)) {
 #if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(player, 0x300, 2, &player->uncurlTimer))
+                    if (!Player_CheckMightyUnspin(player, 0x300, 2, &player->uncurlTimer))
 #endif
-                    Player_Hurt(player, self);
+                        Player_Hurt(player, self);
+                }
             }
         }
     }
@@ -302,18 +306,21 @@ void FBZMissile_State_Hull(void)
     RSDK.ProcessAnimation(&self->animator);
 
 #if MANIA_USE_PLUS
-    foreach_active(Player, player)
     {
-        int32 velY = player->velocity.y;
-        if (Player_CheckCollisionBox(player, self, &FBZMissile->hitboxHull) && player->state == Player_State_MightyHammerDrop && !player->sidekick) {
-            RSDK.PlaySfx(FBZMissile->sfxExplosion, false, 255);
-            RSDK.PlaySfx(Player->sfxRelease, false, 255);
+        foreach_active(Player, player)
+        {
+            int32 velY = player->velocity.y;
+            if (Player_CheckCollisionBox(player, self, &FBZMissile->hitboxHull) && player->state == Player_State_MightyHammerDrop
+                && !player->sidekick) {
+                RSDK.PlaySfx(FBZMissile->sfxExplosion, false, 255);
+                RSDK.PlaySfx(Player->sfxRelease, false, 255);
 
-            player->velocity.y = velY - 0x10000;
-            player->onGround   = false;
+                player->velocity.y = velY - 0x10000;
+                player->onGround   = false;
 
-            destroyEntity(self);
-            foreach_break;
+                destroyEntity(self);
+                foreach_break;
+            }
         }
     }
 #endif

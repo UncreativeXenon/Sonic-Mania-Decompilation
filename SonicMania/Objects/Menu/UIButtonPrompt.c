@@ -11,6 +11,7 @@ ObjectUIButtonPrompt *UIButtonPrompt;
 
 void UIButtonPrompt_Update(void)
 {
+    int32 button;
     RSDK_THIS(UIButtonPrompt);
 
     bool32 textChanged = false;
@@ -45,7 +46,7 @@ void UIButtonPrompt_Update(void)
         self->prevPrompt = self->promptID;
     }
 
-    int32 button = self->buttonID;
+    button = self->buttonID;
     if (self->prevButton != button) {
         UIButtonPrompt_SetButtonSprites();
         button           = self->buttonID;
@@ -98,15 +99,18 @@ void UIButtonPrompt_LateUpdate(void)
 
 void UIButtonPrompt_StaticUpdate(void)
 {
+    int32 id;
+    int32 gamepadType;
+    int32 deviceType;
     UIButtonPrompt->type = UIButtonPrompt_GetGamepadType();
 
 #if MANIA_USE_PLUS
-    int32 id = API_GetFilteredInputDeviceID(false, false, 0);
+    id = API_GetFilteredInputDeviceID(false, false, 0);
 #else
-    int32 id = API_GetFilteredInputDeviceID(INPUT_NONE);
+    id = API_GetFilteredInputDeviceID(INPUT_NONE);
 #endif
-    int32 gamepadType = API_GetInputDeviceType(id);
-    int32 deviceType  = (gamepadType >> 8) & 0xFF;
+    gamepadType = API_GetInputDeviceType(id);
+    deviceType  = (gamepadType >> 8) & 0xFF;
 
     UIButtonPrompt->inputSlot = deviceType == DEVICE_TYPE_KEYBOARD ? (gamepadType & 0xFF) : CONT_P1;
 }
@@ -448,13 +452,14 @@ bool32 UIButtonPrompt_CheckTouch(void)
     EntityUIControl *control = (EntityUIControl *)self->parent;
     if (control && !control->dialogHasFocus && !control->selectionDisabled) {
         if (TouchInfo->count) {
+            int32 i;
             int32 screenX = (ScreenInfo->position.x << 16);
             int32 screenY = (ScreenInfo->position.y << 16);
             int32 sizeX   = self->touchSize.x >> 1;
             int32 sizeY   = self->touchSize.y >> 1;
 
             bool32 wasTouched = false;
-            for (int32 i = 0; i < TouchInfo->count; ++i) {
+            for (i = 0; i < TouchInfo->count; ++i) {
                 int32 x = screenX - ((TouchInfo->x[i] * ScreenInfo->size.x) * -65536.0f);
                 int32 y = screenY - ((TouchInfo->y[i] * ScreenInfo->size.y) * -65536.0f);
 
@@ -503,11 +508,12 @@ void UIButtonPrompt_State_Selected(void)
     self->scaleMax = 0x280;
 
     if (++self->timer == 16) {
+        int32 buttonID;
         self->timer       = 0;
         self->textVisible = true;
         self->state       = UIButtonPrompt_State_CheckIfSelected;
 
-        int32 buttonID = self->buttonID;
+        buttonID = self->buttonID;
         if (API_GetConfirmButtonFlip() && buttonID <= 1)
             buttonID ^= 1;
 

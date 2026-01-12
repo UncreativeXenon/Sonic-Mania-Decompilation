@@ -11,6 +11,9 @@ ObjectDebugMode *DebugMode;
 
 void DebugMode_Update(void)
 {
+    bool32 moved;
+    bool32 keySpawn;
+    bool32 keyBack;
     RSDK_THIS(DebugMode);
 
     API_SetAchievementsEnabled(false);
@@ -18,7 +21,7 @@ void DebugMode_Update(void)
     if (Zone)
         Zone->stageFinishCallback = StateMachine_None;
 
-    bool32 moved = false;
+    moved = false;
 
 #if MANIA_USE_PLUS
     if (ControllerInfo[CONT_P1].keyUp.down || (AnalogStickInfoL[CONT_P1].vDelta > 0.3)) {
@@ -68,11 +71,11 @@ void DebugMode_Update(void)
     }
 
 #if GAME_VERSION != VER_100
-    bool32 keySpawn = ControllerInfo[CONT_P1].keyY.press;
-    bool32 keyBack  = ControllerInfo[CONT_P1].keyX.press;
+    keySpawn = ControllerInfo[CONT_P1].keyY.press;
+    keyBack  = ControllerInfo[CONT_P1].keyX.press;
 #else
-    bool32 keySpawn = ControllerInfo[CONT_P1].keyX.press;
-    bool32 keyBack  = ControllerInfo[CONT_P1].keyY.press;
+    keySpawn = ControllerInfo[CONT_P1].keyX.press;
+    keyBack  = ControllerInfo[CONT_P1].keyY.press;
 #endif
 
     if (ControllerInfo[CONT_P1].keyA.press) {
@@ -145,11 +148,12 @@ void DebugMode_Create(void *data)
 
 void DebugMode_StageLoad(void)
 {
+    int32 i;
     DebugMode->itemID      = 0;
     DebugMode->itemCount   = 0;
     DebugMode->debugActive = false;
 
-    for (int32 i = 0; i < DEBUGMODE_OBJECT_COUNT; ++i) {
+    for (i = 0; i < DEBUGMODE_OBJECT_COUNT; ++i) {
         DebugMode->classIDs[i] = TYPE_BLANK;
         DebugMode->draw[i]     = StateMachine_None;
         DebugMode->spawn[i]    = DebugMode_NullState;

@@ -27,27 +27,29 @@ void LRZConvDropper_Update(void)
 
             self->position.x += self->detectOffset.x;
             self->position.y += self->detectOffset.y;
-            foreach_active(Player, player)
             {
-                int32 playerID = RSDK.GetEntitySlot(player);
+                foreach_active(Player, player)
+                {
+                    int32 playerID = RSDK.GetEntitySlot(player);
 
-                bool32 triggered = false;
-                if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
-                    triggered = true;
-                }
+                    bool32 triggered = false;
+                    if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+                        triggered = true;
+                    }
 
-                if (!((1 << playerID) & self->activePlayers) && triggered) {
-                    if (!player->sidekick)
-                        playerEntered = true;
-                    self->activePlayers |= 1 << playerID;
-                }
+                    if (!((1 << playerID) & self->activePlayers) && triggered) {
+                        if (!player->sidekick)
+                            playerEntered = true;
+                        self->activePlayers |= 1 << playerID;
+                    }
 
-                if ((1 << playerID) & self->activePlayers) {
-                    if (!player->sidekick)
-                        shouldDrop = true;
+                    if ((1 << playerID) & self->activePlayers) {
+                        if (!player->sidekick)
+                            shouldDrop = true;
 
-                    if (!triggered)
-                        self->activePlayers &= ~(1 << playerID);
+                        if (!triggered)
+                            self->activePlayers &= ~(1 << playerID);
+                    }
                 }
             }
             self->position.x -= self->detectOffset.x;
@@ -116,10 +118,11 @@ void LRZConvDropper_StageLoad(void) { LRZConvDropper->aniFrames = RSDK.LoadSprit
 
 void LRZConvDropper_SetupDropperChildren(void)
 {
+    int32 i; 
     RSDK_THIS(LRZConvDropper);
 
     int32 slot = RSDK.GetEntitySlot(self) - self->seqCount;
-    for (int32 i = 0; i < self->seqCount; ++i) {
+    for (i = 0; i < self->seqCount; ++i) {
         EntityLRZConvItem *child = RSDK_GET_ENTITY(slot++, LRZConvItem);
         child->active            = ACTIVE_NEVER;
         child->visible           = false;

@@ -19,11 +19,12 @@ void FBZSinkTrash_Update(void)
             {
                 if (Player_CheckCollisionTouch(player, self, &self->hitboxTrash)) {
                     if (player->velocity.y >= 0) {
+                        int32 speed;
 #if MANIA_USE_PLUS
                         if (player->state == Player_State_MightyHammerDrop) {
                             player->velocity.y = player->velocity.y - (player->velocity.y >> 5) - (player->velocity.y >> 4);
                             if (player->velocity.y >= 0x30000) {
-                                int32 speed = abs(player->velocity.y + player->velocity.x);
+                                speed = abs(player->velocity.y + player->velocity.x);
                                 if (speed > 0x10000 && !(Zone->timer & 7)) {
                                     int32 x              = player->position.x + RSDK.Rand(-0x40000, 0x40000);
                                     int32 y              = player->position.y + 0x40000 + RSDK.Rand(-0x40000, 0x40000);
@@ -45,7 +46,7 @@ void FBZSinkTrash_Update(void)
                                 player->collisionMode = CMODE_FLOOR;
                                 player->angle         = 0;
                                 player->position.y += 0x10000;
-                                int32 speed = abs(player->velocity.y + player->velocity.x);
+                                speed = abs(player->velocity.y + player->velocity.x);
                                 if (speed > 0x10000 && !(Zone->timer & 7)) {
                                     int32 x              = player->position.x + RSDK.Rand(-0x40000, 0x40000);
                                     int32 y              = player->position.y + 0x40000 + RSDK.Rand(-0x40000, 0x40000);
@@ -68,7 +69,7 @@ void FBZSinkTrash_Update(void)
                             player->collisionMode = CMODE_FLOOR;
                             player->angle         = 0;
                             player->position.y += 0x10000;
-                            int32 speed = abs(player->velocity.y + player->velocity.x);
+                            speed = abs(player->velocity.y + player->velocity.x);
                             if (speed > 0x10000 && !(Zone->timer & 7)) {
                                 int32 x              = player->position.x + RSDK.Rand(-0x40000, 0x40000);
                                 int32 y              = player->position.y + 0x40000 + RSDK.Rand(-0x40000, 0x40000);
@@ -122,15 +123,17 @@ void FBZSinkTrash_Update(void)
         case FBZSINKTRASH_SOLID: {
             foreach_active(Player, player) { Player_CheckCollisionPlatform(player, self, &self->hitboxTrash); }
 
-            foreach_active(SignPost, signPost)
             {
-                if (signPost->state == SignPost_State_Falling && signPost->position.y + 0x180000 > self->position.y - (self->size.y >> 1)) {
-                    RSDK.PlaySfx(SignPost->sfxSlide, false, 255);
-                    signPost->spinCount  = 4;
-                    signPost->position.y = self->position.y - (self->size.y >> 1) - 0x180000;
-                    signPost->velocity.y = 0;
-                    Music_FadeOut(0.025);
-                    signPost->state = SignPost_State_Spin;
+                foreach_active(SignPost, signPost)
+                {
+                    if (signPost->state == SignPost_State_Falling && signPost->position.y + 0x180000 > self->position.y - (self->size.y >> 1)) {
+                        RSDK.PlaySfx(SignPost->sfxSlide, false, 255);
+                        signPost->spinCount  = 4;
+                        signPost->position.y = self->position.y - (self->size.y >> 1) - 0x180000;
+                        signPost->velocity.y = 0;
+                        Music_FadeOut(0.025);
+                        signPost->state = SignPost_State_Spin;
+                    }
                 }
             }
             break;
@@ -146,17 +149,20 @@ void FBZSinkTrash_StaticUpdate(void) {}
 
 void FBZSinkTrash_Draw(void)
 {
-    RSDK_THIS(FBZSinkTrash);
     Vector2 drawPos;
+    int32 drawX;
+    SpriteFrame *frame;
+    int32 i;
+    RSDK_THIS(FBZSinkTrash);
 
     self->direction = FLIP_NONE;
-    int32 drawX     = self->position.x - (self->size.x >> 1);
+    drawX     = self->position.x - (self->size.x >> 1);
 
-    SpriteFrame *frame = RSDK.GetFrame(FBZSinkTrash->aniFrames, 11, 0);
+    frame = RSDK.GetFrame(FBZSinkTrash->aniFrames, 11, 0);
     drawPos.x          = self->position.x - (self->size.x >> 1);
     drawPos.y          = self->position.y - (self->size.y >> 1);
     frame->width       = 64;
-    for (int32 i = 0; i < self->size.x; i += 0x400000) {
+    for (i = 0; i < self->size.x; i += 0x400000) {
         if (self->size.x - i < 0x400000)
             frame->width = (self->size.x - i) >> 16;
 
@@ -167,14 +173,15 @@ void FBZSinkTrash_Draw(void)
 
     frame         = RSDK.GetFrame(FBZSinkTrash->aniFrames, 11, 1);
     frame->height = 64;
-    for (int32 i = 0; i < self->size.y; i += 0x400000) {
+    for (i = 0; i < self->size.y; i += 0x400000) {
+        int32 x;
         drawPos.x = drawX;
 
         frame->width = 64;
         if (self->size.y - i < 0x400000)
             frame->height = (self->size.y - i) >> 16;
 
-        for (int32 x = 0; x < self->size.x; x += 0x400000) {
+        for (x = 0; x < self->size.x; x += 0x400000) {
             if (self->size.x - x < 0x400000)
                 frame->width = (self->size.x - x) >> 16;
 
@@ -190,7 +197,7 @@ void FBZSinkTrash_Draw(void)
     drawPos.x       = drawX;
     frame->width    = 64;
 
-    for (int32 i = 0; i < self->size.x; i += 0x400000) {
+    for (i = 0; i < self->size.x; i += 0x400000) {
         if (self->size.x - i < 0x400000)
             frame->width = (self->size.x - i) >> 16;
 
@@ -200,7 +207,8 @@ void FBZSinkTrash_Draw(void)
     }
 
     if (self->type < FBZSINKTRASH_SOLID) {
-        for (int32 i = 0; i < 64; ++i) {
+        int32 i; 
+        for (i = 0; i < 64; ++i) {
             drawPos.x                   = self->position.x + self->trashPos[i].x;
             drawPos.y                   = self->position.y + self->trashPos[i].y;
             self->trashAnimator.frameID = self->trashFrame[i];
@@ -216,6 +224,7 @@ void FBZSinkTrash_Create(void *data)
 {
     RSDK_THIS(FBZSinkTrash);
     if (!SceneInfo->inEditor) {
+        int32 i; 
         self->updateRange.x = self->size.x >> 1;
         self->updateRange.y = (self->size.y >> 1) + 0x400000;
         self->active        = ACTIVE_BOUNDS;
@@ -237,7 +246,7 @@ void FBZSinkTrash_Create(void *data)
         RSDK.SetSpriteAnimation(FBZSinkTrash->aniFrames, 11, &self->topAnimator, true, 0);
         RSDK.SetSpriteAnimation(FBZSinkTrash->aniFrames, 11, &self->mainAnimator, true, 1);
 
-        for (int32 i = 0; i < 64; ++i) {
+        for (i = 0; i < 64; ++i) {
             self->trashPos[i].x = RSDK.Rand(-(self->size.x >> 1), self->size.x >> 1);
             self->trashPos[i].y = RSDK.Rand(-(self->size.y >> 1), self->size.y >> 1);
             self->trashFrame[i] = RSDK.Rand(0, 22);

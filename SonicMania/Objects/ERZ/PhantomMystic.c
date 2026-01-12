@@ -96,23 +96,26 @@ void PhantomMystic_CheckPlayerCollisions(void)
     self->position.x = self->mysticPos.x;
     self->position.y = self->mysticPos.y;
 
-    foreach_active(Player, player)
     {
-        if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self)) {
-            PhantomMystic_Hit();
-        }
+        foreach_active(Player, player)
+        {
+            if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self)) {
+                PhantomMystic_Hit();
+            }
 
-        if (self->cupBlastAnimator.frameID > 8 && self->cupBlastAnimator.frameID < 26) {
-            for (int32 i = 0; i < 3; ++i) {
-                if (i != self->correctCup) {
-                    self->position.x = storeX + self->cupPos[i];
-                    if (abs(self->position.x - player->position.x) < 0x400000 && player->position.y > self->position.y)
-                        Player_Hurt(player, self);
+            if (self->cupBlastAnimator.frameID > 8 && self->cupBlastAnimator.frameID < 26) {
+                int32 i;
+                for (i = 0; i < 3; ++i) {
+                    if (i != self->correctCup) {
+                        self->position.x = storeX + self->cupPos[i];
+                        if (abs(self->position.x - player->position.x) < 0x400000 && player->position.y > self->position.y)
+                            Player_Hurt(player, self);
+                    }
                 }
             }
-        }
 
-        self->position.x = self->mysticPos.x;
+            self->position.x = self->mysticPos.x;
+        }
     }
 
     self->position.x = storeX;
@@ -148,11 +151,12 @@ void PhantomMystic_SetupNewCupSwap(void)
 
 void PhantomMystic_Draw_CupSetup(void)
 {
+    int32 i;
     RSDK_THIS(PhantomMystic);
 
     RSDK.DrawSprite(&self->mysticAnimator, &self->mysticPos, false);
 
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         Vector2 drawPos;
         drawPos.x = self->position.x + self->cupPos[i];
         if (i == 1) {
@@ -184,6 +188,7 @@ void PhantomMystic_Draw_CupSetup(void)
 
 void PhantomMystic_Draw_CupSwap(void)
 {
+    int32 i;
     RSDK_THIS(PhantomMystic);
 
     Vector2 drawPos = self->position;
@@ -198,7 +203,7 @@ void PhantomMystic_Draw_CupSwap(void)
         RSDK.DrawSprite(&self->mysticAnimator, &self->mysticPos, false);
     }
 
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         drawPos.x       = self->position.x + self->cupPos[i];
         self->direction = FLIP_X;
         RSDK.DrawSprite(&self->cupAnimator, &drawPos, false);
@@ -350,6 +355,10 @@ void PhantomMystic_State_PrepareCupSwap(void)
 
 void PhantomMystic_State_CupSwapping(void)
 {
+    int32 cup1;
+    int32 cup2;
+    int32 cup1Pos;
+    int32 cup2Pos;
     RSDK_THIS(PhantomMystic);
 
     if (abs(self->swapCup2Pos - self->swapCup1Pos) <= 0x800000)
@@ -357,11 +366,11 @@ void PhantomMystic_State_CupSwapping(void)
     else
         self->timer += 8;
 
-    int32 cup1 = self->swapCup1;
-    int32 cup2 = self->swapCup2;
+    cup1 = self->swapCup1;
+    cup2 = self->swapCup2;
 
     // Use Lerp Math to move each cup to the other's initial position
-    int32 cup1Pos = self->swapCup1Pos;
+    cup1Pos = self->swapCup1Pos;
     if (self->timer > 0) {
         if (self->timer < 256)
             cup1Pos += ((self->swapCup2Pos - cup1Pos) >> 8) * ((RSDK.Sin512(self->timer + 0x180) >> 2) + 0x80);
@@ -370,7 +379,7 @@ void PhantomMystic_State_CupSwapping(void)
     }
     self->cupPos[cup1] = cup1Pos;
 
-    int32 cup2Pos = self->swapCup2Pos;
+    cup2Pos = self->swapCup2Pos;
     if (self->timer > 0) {
         if (self->timer < 256)
             cup2Pos += ((self->swapCup1Pos - cup2Pos) >> 8) * ((RSDK.Sin512(self->timer + 0x180) >> 2) + 0x80);

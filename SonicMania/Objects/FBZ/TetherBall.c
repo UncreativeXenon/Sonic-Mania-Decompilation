@@ -104,62 +104,64 @@ void TetherBall_State_CheckPlayerAttach(void)
 
     self->position = self->ballPos;
     self->rotation = self->angle << 16;
-    foreach_active(Player, player)
     {
-        if (!player->sidekick) {
-            if (Player_CheckCollisionTouch(player, self, &TetherBall->hitbox)) {
-                switch ((self->angle >> 8) & 3) {
-                    case 0:
-                        if (!player->onGround && player->groundedStore) {
-                            if (player->rotation > 0x70 && player->rotation < 0x90) {
-                                self->swingSpeed        = 8 * player->velocity.y / self->chainCount;
-                                self->player            = player;
-                                player->state           = Player_State_Static;
-                                player->nextGroundState = StateMachine_None;
-                                player->nextAirState    = StateMachine_None;
-                                self->state             = TetherBall_State_SwingBall;
+        foreach_active(Player, player)
+        {
+            if (!player->sidekick) {
+                if (Player_CheckCollisionTouch(player, self, &TetherBall->hitbox)) {
+                    switch ((self->angle >> 8) & 3) {
+                        case 0:
+                            if (!player->onGround && player->groundedStore) {
+                                if (player->rotation > 0x70 && player->rotation < 0x90) {
+                                    self->swingSpeed        = 8 * player->velocity.y / self->chainCount;
+                                    self->player            = player;
+                                    player->state           = Player_State_Static;
+                                    player->nextGroundState = StateMachine_None;
+                                    player->nextAirState    = StateMachine_None;
+                                    self->state             = TetherBall_State_SwingBall;
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                    case 1:
-                        if (!player->onGround && player->groundedStore) {
-                            if (player->rotation > 0xF0 && player->rotation < 0x110) {
-                                self->swingSpeed        = 8 * -player->velocity.x / self->chainCount;
-                                self->player            = player;
-                                player->state           = Player_State_Static;
-                                player->nextGroundState = StateMachine_None;
-                                player->nextAirState    = StateMachine_None;
-                                self->state             = TetherBall_State_SwingBall;
+                        case 1:
+                            if (!player->onGround && player->groundedStore) {
+                                if (player->rotation > 0xF0 && player->rotation < 0x110) {
+                                    self->swingSpeed        = 8 * -player->velocity.x / self->chainCount;
+                                    self->player            = player;
+                                    player->state           = Player_State_Static;
+                                    player->nextGroundState = StateMachine_None;
+                                    player->nextAirState    = StateMachine_None;
+                                    self->state             = TetherBall_State_SwingBall;
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                    case 2:
-                        if (!player->onGround && player->groundedStore) {
-                            if (player->rotation > 0x170 && player->rotation < 0x190) {
-                                self->swingSpeed        = 8 * -player->velocity.y / self->chainCount;
-                                self->player            = player;
-                                player->state           = Player_State_Static;
-                                player->nextGroundState = StateMachine_None;
-                                player->nextAirState    = StateMachine_None;
-                                self->state             = TetherBall_State_SwingBall;
+                        case 2:
+                            if (!player->onGround && player->groundedStore) {
+                                if (player->rotation > 0x170 && player->rotation < 0x190) {
+                                    self->swingSpeed        = 8 * -player->velocity.y / self->chainCount;
+                                    self->player            = player;
+                                    player->state           = Player_State_Static;
+                                    player->nextGroundState = StateMachine_None;
+                                    player->nextAirState    = StateMachine_None;
+                                    self->state             = TetherBall_State_SwingBall;
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                    case 3:
-                        if (!player->onGround && player->groundedStore) {
-                            if (player->rotation < 0x10 || player->rotation > 0x1F0) {
-                                self->swingSpeed        = 8 * player->velocity.x / self->chainCount;
-                                self->player            = player;
-                                player->state           = Player_State_Static;
-                                player->nextGroundState = StateMachine_None;
-                                player->nextAirState    = StateMachine_None;
-                                self->state             = TetherBall_State_SwingBall;
+                        case 3:
+                            if (!player->onGround && player->groundedStore) {
+                                if (player->rotation < 0x10 || player->rotation > 0x1F0) {
+                                    self->swingSpeed        = 8 * player->velocity.x / self->chainCount;
+                                    self->player            = player;
+                                    player->state           = Player_State_Static;
+                                    player->nextGroundState = StateMachine_None;
+                                    player->nextAirState    = StateMachine_None;
+                                    self->state             = TetherBall_State_SwingBall;
+                                }
                             }
-                        }
-                        break;
+                            break;
+                    }
                 }
             }
         }
@@ -170,6 +172,7 @@ void TetherBall_State_CheckPlayerAttach(void)
 }
 void TetherBall_State_SwingBall(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(TetherBall);
 
     self->rotation += self->swingSpeed;
@@ -197,7 +200,7 @@ void TetherBall_State_SwingBall(void)
         }
     }
 
-    EntityPlayer *player = self->player;
+    player = self->player;
     if (player) {
         if (Player_CheckValidState(player)) {
             Hitbox *playerHitbox    = Player_GetHitbox(player);

@@ -58,11 +58,12 @@ void SeltzerWater_StageLoad(void) { SeltzerWater->aniFrames = RSDK.LoadSpriteAni
 
 void SeltzerWater_State_Sprayed(void)
 {
+    EntityPlatformNode *node;
     RSDK_THIS(SeltzerWater);
 
     RSDK.ProcessAnimation(&self->animator);
 
-    EntityPlatformNode *node = RSDK_GET_ENTITY(self->nodeSlot, PlatformNode);
+    node = RSDK_GET_ENTITY(self->nodeSlot, PlatformNode);
     if (node->classID == PlatformNode->classID) {
         int32 x = (self->position.x - node->position.x) >> 16;
         int32 y = (self->position.y - node->position.y) >> 16;

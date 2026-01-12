@@ -165,6 +165,7 @@ void HotaruMKII_HandleDistances(EntityPlayer *player)
     RSDK_THIS(HotaruMKII);
 
     if (Player_CheckValidState(player)) {
+        int32 angle;
         int32 distX = self->curOffset.x;
         switch (self->offsetID) {
             case 0:
@@ -197,7 +198,7 @@ void HotaruMKII_HandleDistances(EntityPlayer *player)
             self->curOffset.y = 0xB0010000;
         }
 
-        int32 angle =
+        angle =
             RSDK.ATan2(self->curOffset.x + player->position.x - self->position.x, self->curOffset.y + player->position.y - self->position.y);
         self->moveAcceleration.x = 0x300 * RSDK.Cos256(angle);
         self->moveAcceleration.y = 0x300 * RSDK.Sin256(angle);
@@ -237,15 +238,17 @@ void HotaruMKII_State_CheckPlayerInRange(void)
         if (Player_CheckCollisionTouch(player, self, &self->hitboxTrigger)) {
             self->playerPtr = player;
             if (!player->sidekick) {
+                int32 screenID;
+                RSDKScreenInfo *screen;
                 foundTargetPlayer = true;
 
-                int32 screenID = 0;
+                screenID = 0;
                 if (player->camera)
                     screenID = player->camera->screenID;
 
                 self->position.x       = RSDK.Cos256(self->origin) << 17;
                 self->position.y       = RSDK.Sin256(self->origin) << 17;
-                RSDKScreenInfo *screen = &ScreenInfo[screenID];
+                screen = &ScreenInfo[screenID];
 
                 if (self->position.x > (int32)(screen->size.x & 0xFFFFFFFE) << 15)
                     self->position.x = (int32)(screen->size.x & 0xFFFFFFFE) << 15;
@@ -312,6 +315,7 @@ void HotaruMKII_State_FlyOnScreen(void)
         HotaruMKII_HandleDistances(player);
     }
     else {
+        int32 moveFinished;
         if (!(Zone->timer & 7)) {
             EntityHotaruMKII *flash = CREATE_ENTITY(HotaruMKII, INT_TO_VOID(HOTARUMKII_FLASH), self->position.x, self->position.y);
             flash->playerPtr        = self->playerPtr;
@@ -319,7 +323,7 @@ void HotaruMKII_State_FlyOnScreen(void)
             flash->curOffset.y      = self->position.y - player->position.y;
         }
 
-        int32 moveFinished = 0;
+        moveFinished = 0;
         if (self->moveAcceleration.x < 0) {
             int32 x = player->position.x + self->curOffset.x;
             if (self->position.x <= x) {
@@ -362,9 +366,10 @@ void HotaruMKII_State_FlyOnScreen(void)
             self->state = HotaruMKII_State_AttackDelay;
         }
         else {
+            int32 angle;
             RSDK.ProcessAnimation(&self->mainAnimator);
 
-            int32 angle =
+            angle =
                 RSDK.ATan2(player->position.x + self->curOffset.x - self->position.x, player->position.y + self->curOffset.y - self->position.y);
             self->moveAcceleration.x = 0x300 * RSDK.Cos256(angle);
             self->moveAcceleration.y = 0x300 * RSDK.Sin256(angle);
@@ -493,10 +498,12 @@ void HotaruMKII_State_Laser(void)
     RSDK_THIS(HotaruMKII);
 
     self->position.y += 0x40000;
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &HotaruMKII->hitboxLaser)) {
-            Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &HotaruMKII->hitboxLaser)) {
+                Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+            }
         }
     }
 

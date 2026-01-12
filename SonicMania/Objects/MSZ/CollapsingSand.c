@@ -133,10 +133,12 @@ void CollapsingSand_State_CollapseLeft(void)
     }
     else {
         if (self->collapseDuration.x > 0 || self->collapseDuration.y > 0) {
+            int32 x;
+            int32 y;
             int32 tx = self->tilePos.x;
             int32 ty = self->tilePos.y;
 
-            for (int32 x = (tx << 20) + 0x80000, y = (ty << 20) + 0x80000; tx >= self->tileEndPos.x && ty >= self->tileEndPos.y; --tx, --ty) {
+            for (x = (tx << 20) + 0x80000, y = (ty << 20) + 0x80000; tx >= self->tileEndPos.x && ty >= self->tileEndPos.y; --tx, --ty) {
                 bool32 spawnSand = false;
 
                 uint16 tile = RSDK.GetTile(Zone->fgLayer[0], tx, ty);
@@ -159,7 +161,7 @@ void CollapsingSand_State_CollapseLeft(void)
                     if (self->collapseDuration.x > 0) {
                         // Replace ground tile with a flat one
                         if (ty == self->tilePos.y)
-                            RSDK.SetTile(Zone->fgLayer[0], tx, ty, (168 + (self->collapseDuration.x & 1)) | 0b1111000000000000);
+                            RSDK.SetTile(Zone->fgLayer[0], tx, ty, (168 + (self->collapseDuration.x & 1)) | 0xF000);
                     }
                 }
 
@@ -200,10 +202,12 @@ void CollapsingSand_State_CollapseRight(void)
     }
     else {
         if (self->collapseDuration.x > 0 || self->collapseDuration.y > 0) {
+            int32 x;
+            int32 y;
             int32 tx = self->tilePos.x;
             int32 ty = self->tilePos.y;
 
-            for (int32 x = (tx << 20) + 0x80000, y = (ty << 20) + 0x80000; tx <= self->tileEndPos.x && ty >= self->tileEndPos.y; ++tx, --ty) {
+            for (x = (tx << 20) + 0x80000, y = (ty << 20) + 0x80000; tx <= self->tileEndPos.x && ty >= self->tileEndPos.y; ++tx, --ty) {
                 bool32 spawnSand = false;
 
                 uint16 tile = RSDK.GetTile(Zone->fgLayer[0], tx, ty);
@@ -226,7 +230,7 @@ void CollapsingSand_State_CollapseRight(void)
                     if (self->collapseDuration.x > 0) {
                         // Replace ground tile with a flat one
                         if (ty == self->tilePos.y)
-                            RSDK.SetTile(Zone->fgLayer[0], tx, ty, (169 - (self->collapseDuration.x & 1)) | 0b1111000000000000);
+                            RSDK.SetTile(Zone->fgLayer[0], tx, ty, (169 - (self->collapseDuration.x & 1)) | 0xF000);
                     }
                 }
 

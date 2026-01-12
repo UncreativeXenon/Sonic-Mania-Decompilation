@@ -56,6 +56,7 @@ void Tornado_Create(void *data)
     RSDK_THIS(Tornado);
 
     if (!SceneInfo->inEditor) {
+        EntityPlayer *player2;
         self->visible       = true;
         self->updateRange.x = 0x1000000;
         self->updateRange.y = 0x1000000;
@@ -88,7 +89,7 @@ void Tornado_Create(void *data)
         if (GET_CHARACTER_ID(1) != ID_KNUCKLES && !StarPost->postIDs[0])
             RSDK.SetSpriteAnimation(Tornado->knuxFrames, 6, &self->animatorKnux, false, 0);
 
-        EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+        player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
         if (player2->classID == Player->classID)
             player2->state = MSZSetup_PlayerState_Pilot;
     }
@@ -164,7 +165,9 @@ void Tornado_State_MSZ1Intro(void)
         RSDK.SetSpriteAnimation(Tornado->knuxFrames, 4, &self->animatorKnux, false, 0);
         self->state = Tornado_State_KnuxKnockedOff;
 
-        foreach_active(Player, player) { player->stateInput = Player_Input_P1; }
+        {
+            foreach_active(Player, player) { player->stateInput = Player_Input_P1; }
+        }
     }
 }
 
@@ -187,6 +190,8 @@ void Tornado_State_KnuxKnockedOff(void)
 
 void Tornado_HandlePlayerCollisions(void)
 {
+    int32 velY;
+    EntityCamera *camera;
     RSDK_THIS(Tornado);
 
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
@@ -200,7 +205,7 @@ void Tornado_HandlePlayerCollisions(void)
     self->position.y    = self->prevPosY;
     self->isStood       = false;
 
-    int32 velY = player1->velocity.y;
+    velY = player1->velocity.y;
     if (Player_CheckCollisionPlatform(player1, self, hitbox)) {
         player1->position.x += TornadoPath->moveVel.x;
         player1->position.y += self->moveVelocityY;
@@ -214,13 +219,14 @@ void Tornado_HandlePlayerCollisions(void)
         }
     }
 
-    EntityCamera *camera = TornadoPath->camera;
+    camera = TornadoPath->camera;
     if (camera) {
+        int32 screenY;
         int32 screenX = camera->position.x - (ScreenInfo->center.x << 16) + 0xC0000;
         if (player1->position.x < screenX)
             player1->position.x = screenX;
 
-        int32 screenY = ((ScreenInfo->center.x - 12) << 16) + camera->position.x;
+        screenY = ((ScreenInfo->center.x - 12) << 16) + camera->position.x;
         if (player1->position.x > screenY)
             player1->position.x = screenY;
 
@@ -234,6 +240,12 @@ void Tornado_HandlePlayerCollisions(void)
 
 void Tornado_State_PlayerControlled(void)
 {
+    int32 storeX;
+    int32 storeY;
+    int32 velY;
+    int32 posX;
+    EntityCamera *camera;
+    int32 offsetX;
     RSDK_THIS(Tornado);
 
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
@@ -333,14 +345,14 @@ void Tornado_State_PlayerControlled(void)
     if (self->position.y > (ScreenInfo->size.y + ScreenInfo->position.y - 32) << 16)
         self->position.y = (ScreenInfo->size.y + ScreenInfo->position.y - 32) << 16;
 
-    int32 storeX  = self->position.x;
-    int32 storeY  = self->position.y + self->velocity.y;
+    storeX  = self->position.x;
+    storeY  = self->position.y + self->velocity.y;
     self->isStood = false;
     self->prevPosY &= 0xFFFF0000;
     self->moveVelocityY = (storeY & 0xFFFF0000) - self->prevPosY;
     self->position.y    = self->prevPosY;
-    int32 velY          = player1->velocity.y;
-    int32 posX          = self->position.x;
+    velY          = player1->velocity.y;
+    posX          = self->position.x;
 
     if (Player_CheckCollisionPlatform(player1, self, hitbox)) {
         player1->position.x += TornadoPath->moveVel.x;
@@ -358,15 +370,16 @@ void Tornado_State_PlayerControlled(void)
         player1->position.x += TornadoPath->moveVel.x;
     }
 
-    int32 offsetX = 0;
+    offsetX = 0;
     self->position.x += 0x1E0000;
 
     if (abs(posX + 0x1E0000 - player1->position.x) > 0x100000) {
         offsetX = self->offsetX;
 
         if (player1->position.x <= posX + 0x1E0000) {
+            int32 pos;
             offsetX   = -offsetX;
-            int32 pos = player1->position.x - (posX + 0x1E0000) + 0x100000;
+            pos = player1->position.x - (posX + 0x1E0000) + 0x100000;
             if (pos > offsetX)
                 offsetX = pos;
         }
@@ -380,13 +393,14 @@ void Tornado_State_PlayerControlled(void)
     self->position.x = storeX + offsetX;
     self->position.y = storeY;
 
-    EntityCamera *camera = TornadoPath->camera;
+    camera = TornadoPath->camera;
     if (camera) {
+        int32 screenY;
         int32 screenX = camera->position.x - (ScreenInfo->center.x << 16) + 0xC0000;
         if (player1->position.x < screenX)
             player1->position.x = screenX;
 
-        int32 screenY = ((ScreenInfo->center.x - 12) << 16) + camera->position.x;
+        screenY = ((ScreenInfo->center.x - 12) << 16) + camera->position.x;
         if (player1->position.x > screenY)
             player1->position.x = screenY;
 

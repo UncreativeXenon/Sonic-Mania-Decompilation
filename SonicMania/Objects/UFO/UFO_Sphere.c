@@ -69,6 +69,7 @@ void UFO_Sphere_Create(void *data)
         self->height <<= 16;
 
         switch (self->behavior) {
+            Matrix matrix;
             default:
             case UFO_SPHERE_B_NONE: // static
                 self->state = UFO_Sphere_State_Fixed;
@@ -87,7 +88,6 @@ void UFO_Sphere_Create(void *data)
                 self->startHeight = self->height;
                 self->state       = UFO_Sphere_State_Moving;
 
-                Matrix matrix;
                 RSDK.MatrixRotateX(&matrix, self->matAngle.x);
                 RSDK.MatrixRotateY(&self->matrix, self->matAngle.y);
                 RSDK.MatrixMultiply(&self->matrix, &matrix, &self->matrix);

@@ -20,12 +20,14 @@ void HPZEmerald_Update(void)
             foreach_active(Player, player) { Player_CheckCollisionPlatform(player, self, self->hitbox); }
         }
 
-        foreach_active(HeavyKing, king)
         {
-            if (king->bodyAnimator.animationID != 5 && !king->onGround
-                && RSDK.CheckObjectCollisionPlatform(self, self->hitbox, king, &HeavyKing->hitboxBody, true)) {
-                Camera_ShakeScreen(0, 0, 3);
-                RSDK.PlaySfx(HeavyKing->sfxImpact2, false, 255);
+            foreach_active(HeavyKing, king)
+            {
+                if (king->bodyAnimator.animationID != 5 && !king->onGround
+                    && RSDK.CheckObjectCollisionPlatform(self, self->hitbox, king, &HeavyKing->hitboxBody, true)) {
+                    Camera_ShakeScreen(0, 0, 3);
+                    RSDK.PlaySfx(HeavyKing->sfxImpact2, false, 255);
+                }
             }
         }
     }

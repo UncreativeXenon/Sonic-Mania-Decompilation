@@ -17,6 +17,7 @@ void DirectorChair_StaticUpdate(void) {}
 
 void DirectorChair_Draw(void)
 {
+    int32 i;
     RSDK_THIS(DirectorChair);
 
     Vector2 drawPos;
@@ -44,7 +45,7 @@ void DirectorChair_Draw(void)
     self->direction = FLIP_NONE;
     self->rotation  = 0x100 - self->rotation;
 
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         RSDK.DrawSprite(&self->scissorAnimator, &drawPos, false);
 
         self->direction = FLIP_X;
@@ -118,53 +119,55 @@ void DirectorChair_Collide_Chair(void)
     int32 playerID     = 0;
     self->stoodPlayers = 0;
 
-    foreach_active(Player, player)
     {
-        bool32 prevOnGround = player->onGround;
-        if (Player_CheckCollisionPlatform(player, self, &DirectorChair->hitboxChair)) {
+        foreach_active(Player, player)
+        {
+            Hitbox hitbox;
+            bool32 prevOnGround = player->onGround;
+            if (Player_CheckCollisionPlatform(player, self, &DirectorChair->hitboxChair)) {
 #if MANIA_USE_PLUS
-            if (self->state == DirectorChair_State_Idle && player->state == Player_State_MightyHammerDrop)
-                player->state = Player_State_Air;
+                if (self->state == DirectorChair_State_Idle && player->state == Player_State_MightyHammerDrop)
+                    player->state = Player_State_Air;
 #endif
-            self->timer = 0;
-            if (!prevOnGround) {
-                self->stoodPlayers |= 1 << playerID;
-                self->stood = true;
-                player->position.x += self->collisionOffset.x;
-                player->position.y += self->collisionOffset.y;
-                player->position.y &= 0xFFFF0000;
+                self->timer = 0;
+                if (!prevOnGround) {
+                    self->stoodPlayers |= 1 << playerID;
+                    self->stood = true;
+                    player->position.x += self->collisionOffset.x;
+                    player->position.y += self->collisionOffset.y;
+                    player->position.y &= 0xFFFF0000;
+                }
             }
-        }
 
-        if (Player_CheckCollisionBox(player, self, &DirectorChair->hitboxL) == C_TOP) {
-            self->timer = 0;
-            if (!prevOnGround) {
-                self->stoodPlayers |= 1 << playerID;
-                player->position.x += self->collisionOffset.x;
-                player->position.y += self->collisionOffset.y;
-                player->position.y &= 0xFFFF0000;
+            if (Player_CheckCollisionBox(player, self, &DirectorChair->hitboxL) == C_TOP) {
+                self->timer = 0;
+                if (!prevOnGround) {
+                    self->stoodPlayers |= 1 << playerID;
+                    player->position.x += self->collisionOffset.x;
+                    player->position.y += self->collisionOffset.y;
+                    player->position.y &= 0xFFFF0000;
+                }
             }
-        }
 
-        if (Player_CheckCollisionBox(player, self, &DirectorChair->hitboxR) == C_TOP) {
-            self->timer = 0;
-            if (!prevOnGround) {
-                self->stoodPlayers |= 1 << playerID;
-                player->position.x += self->collisionOffset.x;
-                player->position.y += self->collisionOffset.y;
-                player->position.y &= 0xFFFF0000;
+            if (Player_CheckCollisionBox(player, self, &DirectorChair->hitboxR) == C_TOP) {
+                self->timer = 0;
+                if (!prevOnGround) {
+                    self->stoodPlayers |= 1 << playerID;
+                    player->position.x += self->collisionOffset.x;
+                    player->position.y += self->collisionOffset.y;
+                    player->position.y &= 0xFFFF0000;
+                }
             }
+
+            // Extend Hitbox
+            hitbox.right  = (RSDK.Cos512(self->rotation) >> 5) + 8;
+            hitbox.bottom = (self->centerPos.y - self->drawPos.y) >> 16;
+            hitbox.left   = -hitbox.right;
+            hitbox.top    = 0;
+            Player_CheckCollisionBox(player, self, &hitbox);
+
+            ++playerID;
         }
-
-        // Extend Hitbox
-        Hitbox hitbox;
-        hitbox.right  = (RSDK.Cos512(self->rotation) >> 5) + 8;
-        hitbox.bottom = (self->centerPos.y - self->drawPos.y) >> 16;
-        hitbox.left   = -hitbox.right;
-        hitbox.top    = 0;
-        Player_CheckCollisionBox(player, self, &hitbox);
-
-        ++playerID;
     }
 }
 
@@ -193,6 +196,7 @@ void DirectorChair_State_Idle(void)
 
 void DirectorChair_State_StartExtend(void)
 {
+    int32 sin;
     RSDK_THIS(DirectorChair);
 
     self->angle += self->extendVel;
@@ -208,13 +212,14 @@ void DirectorChair_State_StartExtend(void)
         self->state = DirectorChair_State_Extend;
     }
 
-    int32 sin       = RSDK.Sin512(self->rotation);
+    sin       = RSDK.Sin512(self->rotation);
     self->drawPos.x = self->centerPos.x;
     self->drawPos.y = self->centerPos.y + (sin << 8) + (sin << 12) * (self->size + 1);
 }
 
 void DirectorChair_State_Extend(void)
 {
+    int32 sin;
     RSDK_THIS(DirectorChair);
 
     self->angle -= self->extendVel;
@@ -247,13 +252,14 @@ void DirectorChair_State_Extend(void)
         }
     }
 
-    int32 sin       = RSDK.Sin512(self->rotation);
+    sin       = RSDK.Sin512(self->rotation);
     self->drawPos.x = self->centerPos.x;
     self->drawPos.y = self->centerPos.y + (sin << 8) + (sin << 12) * (self->size + 1);
 }
 
 void DirectorChair_State_StartRetract(void)
 {
+    int32 sin;
     RSDK_THIS(DirectorChair);
 
     if (++self->timer >= 60) {
@@ -272,13 +278,14 @@ void DirectorChair_State_StartRetract(void)
         }
     }
 
-    int32 sin       = RSDK.Sin512(self->rotation);
+    sin       = RSDK.Sin512(self->rotation);
     self->drawPos.x = self->centerPos.x;
     self->drawPos.y = self->centerPos.y + (sin << 8) + (sin << 12) * (self->size + 1);
 }
 
 void DirectorChair_State_Retract(void)
 {
+    int32 sin;
     RSDK_THIS(DirectorChair);
 
     self->angle += self->extendVel;
@@ -311,7 +318,7 @@ void DirectorChair_State_Retract(void)
         }
     }
 
-    int32 sin       = RSDK.Sin512(self->rotation);
+    sin       = RSDK.Sin512(self->rotation);
     self->drawPos.x = self->centerPos.x;
     self->drawPos.y = self->centerPos.y + (sin << 8) + (sin << 12) * (self->size + 1);
 }

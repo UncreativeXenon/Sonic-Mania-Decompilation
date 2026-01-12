@@ -150,6 +150,7 @@ void Firework_CheckPlayerCollisions(void)
 
         if ((1 << playerID) & self->activePlayers) {
             if (player->state == Player_State_Static) {
+                int32 power;
                 player->velocity.x = 0;
                 player->velocity.y = 0;
                 player->groundVel  = 0;
@@ -163,7 +164,7 @@ void Firework_CheckPlayerCollisions(void)
                 player->position.x = self->position.x;
                 player->position.y = self->position.y;
 
-                int32 power = player->direction == FLIP_NONE ? 16 : -16;
+                power = player->direction == FLIP_NONE ? 16 : -16;
 
                 player->position.x += power * (RSDK.Sin1024(self->angle) << 6);
                 player->position.y -= power * (RSDK.Cos1024(self->angle) << 6);
@@ -267,6 +268,8 @@ void Firework_HandlePlayerControl(void)
 
 void Firework_HandleMoveDir(void)
 {
+    int32 rx;
+    int32 ry;
     RSDK_THIS(Firework);
 
     if (self->moveVelocity < 0x80000)
@@ -280,8 +283,8 @@ void Firework_HandleMoveDir(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    int32 rx = abs(self->lastPosition.x - self->position.x) >> 16;
-    int32 ry = abs(self->lastPosition.y - self->position.y) >> 16;
+    rx = abs(self->lastPosition.x - self->position.x) >> 16;
+    ry = abs(self->lastPosition.y - self->position.y) >> 16;
     self->ridePos += MathHelpers_SquareRoot(rx * rx + ry * ry);
 
     self->lastPosition.x = self->position.x;
@@ -332,9 +335,10 @@ void Firework_HandleRideEnd(bool32 crashed)
         self->state = Firework_State_Explode;
     }
     else {
+        int32 i;
         int32 angle = 0;
 
-        for (int32 i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             int32 x = (RSDK.Cos1024(angle) << 6) * self->innerRadius + self->position.x;
             int32 y = (RSDK.Sin1024(angle) << 6) * self->innerRadius + self->position.y;
 

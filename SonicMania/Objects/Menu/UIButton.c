@@ -11,6 +11,8 @@ ObjectUIButton *UIButton;
 
 void UIButton_Update(void)
 {
+    EntityUIButton *choice;
+    EntityUIControl *parent;
     RSDK_THIS(UIButton);
 
     self->touchPosSizeS.x   = self->size.x;
@@ -32,13 +34,13 @@ void UIButton_Update(void)
         self->isDisabled   = self->disabled;
     }
 
-    EntityUIButton *choice = UIButton_GetChoicePtr(self, self->selection);
+    choice = UIButton_GetChoicePtr(self, self->selection);
     if (choice)
         choice->visible = true;
 
     StateMachine_Run(self->state);
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
     if (parent && self->state == UIButton_State_HandleButtonEnter
         && (parent->state != UIControl_ProcessInputs || parent->buttons[parent->buttonID] != self)) {
         self->isSelected = false;
@@ -98,6 +100,8 @@ void UIButton_Create(void *data)
     RSDK_THIS(UIButton);
 
     if (!SceneInfo->inEditor) {
+        int32 slot;
+        int32 i;
         self->drawGroup     = 2;
         self->visible       = !self->invisible;
         self->active        = ACTIVE_BOUNDS;
@@ -121,8 +125,8 @@ void UIButton_Create(void *data)
         self->startListID  = self->listID;
         self->startFrameID = self->frameID;
 
-        int32 slot = RSDK.GetEntitySlot(self) - self->choiceCount;
-        for (int32 i = 0; i < self->choiceCount; ++i) {
+        slot = RSDK.GetEntitySlot(self) - self->choiceCount;
+        for (i = 0; i < self->choiceCount; ++i) {
             EntityUIButton *item = RSDK_GET_ENTITY(slot + i, UIButton);
 
             if ((UIChoice && item->classID == UIChoice->classID) || (UIVsRoundPicker && item->classID == UIVsRoundPicker->classID)
@@ -150,7 +154,8 @@ void UIButton_StageLoad(void) {}
 
 void UIButton_ManageChoices(EntityUIButton *button)
 {
-    for (int32 i = 0; i < button->choiceCount; ++i) {
+    int32 i;
+    for (i = 0; i < button->choiceCount; ++i) {
         EntityUIButton *choice = RSDK_GET_ENTITY(i % button->choiceCount - button->choiceCount + RSDK.GetEntitySlot(button), UIButton);
         if (button->choiceCount > 0
             && (choice->classID == UIChoice->classID || choice->classID == UIVsRoundPicker->classID
@@ -167,10 +172,11 @@ void UIButton_ManageChoices(EntityUIButton *button)
 
 EntityUIButton *UIButton_GetChoicePtr(EntityUIButton *button, int32 selection)
 {
+    EntityUIButton *choice;
     if (button->choiceCount <= 0)
         return NULL;
 
-    EntityUIButton *choice = RSDK_GET_ENTITY(RSDK.GetEntitySlot(button) - button->choiceCount + (selection % button->choiceCount), UIButton);
+    choice = RSDK_GET_ENTITY(RSDK.GetEntitySlot(button) - button->choiceCount + (selection % button->choiceCount), UIButton);
     if (choice->classID == UIChoice->classID || choice->classID == UIVsRoundPicker->classID
 #if GAME_VERSION != VER_100
         || choice->classID == UIResPicker->classID || choice->classID == UIWinSize->classID
@@ -185,7 +191,7 @@ EntityUIButton *UIButton_GetChoicePtr(EntityUIButton *button, int32 selection)
 void UIButton_SetChoiceSelectionWithCB(EntityUIButton *button, int32 selection)
 {
     if (button->choiceCount) {
-
+        EntityUIChoice *newChoice;
         EntityUIButton *curChoice = UIButton_GetChoicePtr(button, button->selection);
         if (curChoice) {
             if (curChoice->classID == UIChoice->classID) {
@@ -212,7 +218,7 @@ void UIButton_SetChoiceSelectionWithCB(EntityUIButton *button, int32 selection)
 
         button->selection = selection;
 
-        EntityUIChoice *newChoice = (EntityUIChoice *)UIButton_GetChoicePtr(button, selection);
+        newChoice = (EntityUIChoice *)UIButton_GetChoicePtr(button, selection);
         if (newChoice) {
             if (button->state == UIButton_State_HandleButtonEnter || button->state == UIButton_State_Selected) {
                 UIChoice_SetChoiceActive(newChoice);
@@ -240,7 +246,7 @@ void UIButton_SetChoiceSelectionWithCB(EntityUIButton *button, int32 selection)
 void UIButton_SetChoiceSelection(EntityUIButton *button, int32 selection)
 {
     if (button->choiceCount) {
-
+        EntityUIButton *newChoice;
         EntityUIButton *choicePtr = UIButton_GetChoicePtr(button, button->selection);
         if (choicePtr) {
             if (choicePtr->classID == UIChoice->classID) {
@@ -266,7 +272,7 @@ void UIButton_SetChoiceSelection(EntityUIButton *button, int32 selection)
         }
 
         button->selection         = selection;
-        EntityUIButton *newChoice = UIButton_GetChoicePtr(button, selection);
+        newChoice = UIButton_GetChoicePtr(button, selection);
         newChoice->active         = ACTIVE_NORMAL;
     }
 }
@@ -300,6 +306,7 @@ void UIButton_ProcessButtonCB_Scroll(void)
 #endif
 
     if (!UIControl_isMoving(control)) {
+        bool32 changedSelection;
         int32 rowID = 0;
         int32 colID = 0;
 
@@ -309,7 +316,7 @@ void UIButton_ProcessButtonCB_Scroll(void)
         if (control->columnCount)
             colID = control->buttonID % control->columnCount;
 
-        bool32 changedSelection = false;
+        changedSelection = false;
         if (control->rowCount > 1) {
             if (UIControl->anyUpPress) {
                 --rowID;
@@ -333,6 +340,7 @@ void UIButton_ProcessButtonCB_Scroll(void)
         }
 
         if (changedSelection) {
+            int32 id;
 #if MANIA_USE_PLUS
             if (control->noWrap) {
                 int32 rowCount = control->rowCount;
@@ -377,7 +385,7 @@ void UIButton_ProcessButtonCB_Scroll(void)
             }
 #endif
 
-            int32 id = control->buttonCount - 1;
+            id = control->buttonCount - 1;
             if (colID + rowID * control->columnCount < id)
                 id = colID + rowID * control->columnCount;
 
@@ -415,6 +423,7 @@ void UIButton_ProcessButtonCB_Scroll(void)
 
 bool32 UIButton_ProcessTouchCB_Multi(void)
 {
+    int32 i;
     RSDK_THIS(UIButton);
 
     EntityUIControl *control = (EntityUIControl *)self->parent;
@@ -423,15 +432,16 @@ bool32 UIButton_ProcessTouchCB_Multi(void)
     int32 lastTouchID    = -1;
     uint32 lastTouchDist = 0xFFFFFFFF;
 
-    for (int32 i = 0; i < self->touchPosCount; ++i) {
+    for (i = 0; i < self->touchPosCount; ++i) {
         Vector2 touchPosSize   = self->touchPosSizeM[i];
         Vector2 touchPosOffset = self->touchPosOffsetM[i];
 
         if (TouchInfo->count) {
+            int32 t;
             int32 screenX = ScreenInfo->position.x << 16;
             int32 screenY = ScreenInfo->position.y << 16;
 
-            for (int32 t = 0; t < TouchInfo->count; ++t) {
+            for (t = 0; t < TouchInfo->count; ++t) {
                 int32 x  = abs(touchPosOffset.x + self->position.x - (screenX - (int32)((TouchInfo->x[t] * ScreenInfo->size.x) * -65536.0f)));
                 int32 y  = abs(touchPosOffset.y + self->position.y - (screenY - (int32)((TouchInfo->y[t] * ScreenInfo->size.y) * -65536.0f)));
                 int32 x1 = touchPosSize.x >> 1;
@@ -464,6 +474,7 @@ bool32 UIButton_ProcessTouchCB_Multi(void)
 
 bool32 UIButton_ProcessTouchCB_Single(void)
 {
+    bool32 childTouched;
     RSDK_THIS(UIButton);
 
     EntityUIControl *control = (EntityUIControl *)self->parent;
@@ -471,12 +482,13 @@ bool32 UIButton_ProcessTouchCB_Single(void)
     bool32 touched = false;
     if (self->classID != UIButton->classID || !self->invisible) {
         if (TouchInfo->count) {
+            int32 i;
             int32 screenX = (ScreenInfo->position.x << 16);
             int32 screenY = (ScreenInfo->position.y << 16);
             int32 sizeX   = self->touchPosSizeS.x >> 1;
             int32 sizeY   = self->touchPosSizeS.y >> 1;
 
-            for (int32 i = 0; i < TouchInfo->count; ++i) {
+            for (i = 0; i < TouchInfo->count; ++i) {
                 int32 x = screenX - ((TouchInfo->x[i] * ScreenInfo->size.x) * -65536.0f);
                 int32 y = screenY - ((TouchInfo->y[i] * ScreenInfo->size.y) * -65536.0f);
 
@@ -492,8 +504,9 @@ bool32 UIButton_ProcessTouchCB_Single(void)
                     StateMachine_Run(self->failCB);
                 }
                 else {
+                    StateMachine(actionCB);
                     self->isSelected       = false;
-                    StateMachine(actionCB) = NULL;
+                    actionCB = NULL;
 
                     if (self->classID == UIButton->classID)
                         actionCB = UIButton_GetActionCB();
@@ -510,7 +523,8 @@ bool32 UIButton_ProcessTouchCB_Single(void)
 
     if (!touched) {
         if (!self->touchPressed && self->checkButtonEnterCB()) {
-            for (int32 i = 0; i < control->buttonCount; ++i) {
+            int32 i;
+            for (i = 0; i < control->buttonCount; ++i) {
                 if (self == control->buttons[i] && control->buttonID != i) {
                     self->isSelected = false;
                     StateMachine_Run(self->buttonLeaveCB);
@@ -521,7 +535,7 @@ bool32 UIButton_ProcessTouchCB_Single(void)
         }
     }
 
-    bool32 childTouched = false;
+    childTouched = false;
     self->touchPressed  = touched;
     if (self->classID == UIButton->classID && self->choiceCount > 0) {
         EntityUIButton *entPtr = UIButton_GetChoicePtr(self, self->selection);
@@ -539,6 +553,9 @@ bool32 UIButton_ProcessTouchCB_Single(void)
 
 void UIButton_ProcessButtonCB(void)
 {
+    bool32 movedV;
+    int32 selection;
+    bool32 movedH;
     RSDK_THIS(UIButton);
 
     EntityUIControl *control = (EntityUIControl *)self->parent;
@@ -551,7 +568,7 @@ void UIButton_ProcessButtonCB(void)
     if (control->columnCount)
         columnID = control->buttonID % control->columnCount;
 
-    bool32 movedV = false;
+    movedV = false;
     if (control->rowCount > 1) {
         if (UIControl->anyUpPress) {
             movedV = true;
@@ -564,8 +581,8 @@ void UIButton_ProcessButtonCB(void)
         }
     }
 
-    int32 selection = self->selection;
-    bool32 movedH   = 0;
+    selection = self->selection;
+    movedH   = 0;
 
     if (choice && self->choiceCount == 1 && choice->processButtonCB && !self->choiceDir && !self->disabled) {
         Entity *entStore  = SceneInfo->entity;
@@ -643,6 +660,7 @@ void UIButton_ProcessButtonCB(void)
     }
 
     if (movedV) {
+        int32 id;
 #if MANIA_USE_PLUS
         if (control->noWrap) {
             int32 count = control->rowCount;
@@ -680,7 +698,7 @@ void UIButton_ProcessButtonCB(void)
         }
 #endif
 
-        int32 id = columnID + control->columnCount * rowID;
+        id = columnID + control->columnCount * rowID;
 
         if (id >= control->buttonCount - 1)
             id = control->buttonCount - 1;

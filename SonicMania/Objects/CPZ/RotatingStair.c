@@ -24,6 +24,7 @@ void RotatingStair_Draw(void)
 
 void RotatingStair_Create(void *data)
 {
+    int32 typeStore;
     RSDK_THIS(RotatingStair);
 
     self->frameID   = 2;
@@ -36,7 +37,7 @@ void RotatingStair_Create(void *data)
     if (self->mode & 1)
         self->amplitude.x = -self->amplitude.x;
 
-    int32 typeStore = self->mode;
+    typeStore = self->mode;
     self->mode      = (RotatingStairModes)PLATFORM_LINEAR;
     Platform_Create(NULL);
     self->mode = typeStore;
@@ -95,6 +96,7 @@ void RotatingStair_State_Move(void)
 
 void RotatingStair_State_Move_Intervals(void)
 {
+    int32 dir; 
     RSDK_THIS(RotatingStair);
 
     int32 drawX = -self->drawPos.x;
@@ -104,7 +106,7 @@ void RotatingStair_State_Move_Intervals(void)
     if (self->speed * (Zone->timer + self->oscOff) % self->interval >= self->duration)
         angle = self->speed * (Zone->timer + self->oscOff) % self->interval - self->duration;
 
-    int32 dir = 0;
+    dir = 0;
     if (self->mode & 1)
         dir = self->mode - ((self->speed * (Zone->timer + self->oscOff) / self->interval) & 3) - 2;
     else
@@ -139,6 +141,8 @@ void RotatingStair_State_Move_Intervals(void)
 #if GAME_INCLUDE_EDITOR
 void RotatingStair_EditorDraw(void)
 {
+    int32 typeStore;
+    Vector2 amplitude;
     RSDK_THIS(RotatingStair);
 
     self->frameID   = 2;
@@ -149,14 +153,14 @@ void RotatingStair_EditorDraw(void)
     if (self->mode & 1)
         self->amplitude.x = -self->amplitude.x;
 
-    int32 typeStore = self->mode;
+    typeStore = self->mode;
     self->mode      = (RotatingStairModes)PLATFORM_LINEAR;
     Platform_Create(NULL);
     self->mode = typeStore;
 
     // self->drawPos = self->position;
 
-    Vector2 amplitude = self->amplitude;
+    amplitude = self->amplitude;
 
     if (self->direction)
         self->amplitude.x = -self->amplitude.x;
@@ -175,9 +179,11 @@ void RotatingStair_EditorDraw(void)
     RotatingStair_Draw();
 
     if (showGizmos()) {
+        int32 s;
+        int32 i;
         RSDK_DRAWING_OVERLAY(true);
 
-        for (int32 s = SceneInfo->entitySlot + 1, i = 0; i < self->childCount; ++i) {
+        for (s = SceneInfo->entitySlot + 1, i = 0; i < self->childCount; ++i) {
             Entity *child = RSDK_GET_ENTITY_GEN(s + i);
             if (!child)
                 continue;

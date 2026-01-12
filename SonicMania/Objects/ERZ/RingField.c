@@ -25,9 +25,15 @@ void RingField_Update(void)
         if (inRange) {
             if (self->timer <= 0) {
                 Vector2 pos;
+                EntityRing *ring;
+                int32 sx;
+                int32 sy;
+                int32 x;
+                int32 y;
+                int32 angle;
                 RingField_GetRingSpawnPos(&pos);
 
-                EntityRing *ring     = CREATE_ENTITY(Ring, &pos, pos.x, pos.y);
+                ring     = CREATE_ENTITY(Ring, &pos, pos.x, pos.y);
                 ring->animator.speed = 512;
                 ring->state          = Ring_State_Normal;
                 ring->drawGroup      = Zone->objectDrawGroup[0];
@@ -35,12 +41,12 @@ void RingField_Update(void)
                 ring->moveType       = RING_MOVE_FIXED;
                 RSDK.SetSpriteAnimation(RingField->aniFrames, 0, &ring->animator, true, 0);
 
-                int32 sx = (ScreenInfo->center.x + ScreenInfo->position.x) << 16;
-                int32 sy = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-                int32 x  = sx + (RSDK.Rand(-ScreenInfo->center.x, ScreenInfo->center.x) << 15);
-                int32 y  = sy + (RSDK.Rand(-ScreenInfo->center.y, ScreenInfo->center.y) << 15);
+                sx = (ScreenInfo->center.x + ScreenInfo->position.x) << 16;
+                sy = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+                x  = sx + (RSDK.Rand(-ScreenInfo->center.x, ScreenInfo->center.x) << 15);
+                y  = sy + (RSDK.Rand(-ScreenInfo->center.y, ScreenInfo->center.y) << 15);
 
-                int32 angle      = RSDK.ATan2(x - pos.x, y - pos.y);
+                angle      = RSDK.ATan2(x - pos.x, y - pos.y);
                 ring->velocity.x = RSDK.Cos256(angle) << 9;
                 ring->velocity.y = RSDK.Sin256(angle) << 9;
                 self->timer      = (self->fluctuation * RSDK.Sin256(Zone->timer) >> 8) + self->frequency;

@@ -96,8 +96,9 @@ void DialogRunner_NotifyAutoSave(void)
     INIT_STRING(string);
     if (DialogRunner->isAutoSaving) {
         if (!UIDialog->activeDialog) {
+            EntityUIDialog *dialog;
             Localization_GetString(&string, STR_AUTOSAVENOTIF);
-            EntityUIDialog *dialog = UIDialog_CreateDialogOk(&string, DialogRunner_NotifyAutoSave_CB, true);
+            dialog = UIDialog_CreateDialogOk(&string, DialogRunner_NotifyAutoSave_CB, true);
             dialog->useAltColor    = true;
         }
     }
@@ -127,6 +128,7 @@ void DialogRunner_PromptSavePreference_CB(void)
     INIT_STRING(string);
     if (API.GetSaveStatus() == STATUS_CONTINUE) {
         if (!UIDialog->activeDialog) {
+            EntityUIDialog *dialog;
             int32 stringID = STR_SAVELOADFAIL;
             switch (self->status) {
                 case STATUS_ERROR:
@@ -138,7 +140,7 @@ void DialogRunner_PromptSavePreference_CB(void)
                 case STATUS_NOSPACE: stringID = (sku_platform == PLATFORM_XB1) + STR_NOSAVESPACE; break;
             }
             Localization_GetString(&string, stringID);
-            EntityUIDialog *dialog = UIDialog_CreateDialogYesNo(&string, DialogRunner_SetNoSaveEnabled, DialogRunner_SetNoSaveDisabled, true, true);
+            dialog = UIDialog_CreateDialogYesNo(&string, DialogRunner_SetNoSaveEnabled, DialogRunner_SetNoSaveDisabled, true, true);
             dialog->useAltColor    = true;
         }
     }
@@ -163,17 +165,20 @@ void DialogRunner_CheckUserAuth_CB()
                 }
                 else if (UFO_Setup) {
                     UFO_Setup->resetToTitle = true;
-                    foreach_all(UFO_Setup, setup)
                     {
-                        setup->fadeColor = 0;
-                        setup->state     = UFO_Setup_State_FinishFadeout;
-                        setup->active    = ACTIVE_ALWAYS;
-                        setup->visible   = true;
+                        foreach_all(UFO_Setup, setup)
+                        {
+                            setup->fadeColor = 0;
+                            setup->state     = UFO_Setup_State_FinishFadeout;
+                            setup->active    = ACTIVE_ALWAYS;
+                            setup->visible   = true;
+                        }
                     }
                 }
                 else if (FXFade) {
+                    EntityFXFade *fxFade; 
                     RSDK.SetScene("Presentation", "Title Screen");
-                    EntityFXFade *fxFade    = CREATE_ENTITY(FXFade, NULL, self->position.x, self->position.y);
+                    fxFade   = CREATE_ENTITY(FXFade, NULL, self->position.x, self->position.y);
                     fxFade->active          = ACTIVE_ALWAYS;
                     fxFade->timer           = 0;
                     fxFade->speedIn         = 16;
@@ -191,11 +196,12 @@ void DialogRunner_CheckUserAuth_CB()
         }
         else if (!UIDialog->activeDialog) {
             String string;
+            EntityUIDialog *dialog;
             int32 id = STR_SIGNOUTDETECTED;
             if (self->useGenericText)
                 id = STR_RETRURNINGTOTITLE;
             Localization_GetString(&string, id);
-            EntityUIDialog *dialog = UIDialog_CreateDialogOk(&string, DialogRunner_CheckUserAuth_OK, true);
+            dialog = UIDialog_CreateDialogOk(&string, DialogRunner_CheckUserAuth_OK, true);
             dialog->useAltColor    = true;
         }
     }
@@ -224,9 +230,10 @@ void DialogRunner_ManageNotifs(void)
         String string;
         INIT_STRING(string);
         if (!UIDialog->activeDialog) {
+            EntityUIDialog *dialog;
             int32 str = GameProgress_GetNotifStringID(GameProgress_GetNextNotif());
             Localization_GetString(&string, str);
-            EntityUIDialog *dialog = UIDialog_CreateDialogOk(&string, DialogRunner_GetNextNotif, true);
+            dialog = UIDialog_CreateDialogOk(&string, DialogRunner_GetNextNotif, true);
             dialog->playEventSfx   = true;
             dialog->useAltColor    = true;
         }
@@ -269,11 +276,12 @@ bool32 DialogRunner_NotifyAutosave(void)
             return false;
     }
     else if (!DialogRunner->isAutoSaving || !DialogRunner->activeCallback) {
+        EntityDialogRunner *dialogRunner;
         UIWaitSpinner_StartWait();
         DialogRunner->isAutoSaving = true;
         globals->notifiedAutosave  = false;
         LogHelpers_Print("DUMMY NotifyAutosave()");
-        EntityDialogRunner *dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_NotifyAutoSave, 0, 0);
+        dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_NotifyAutoSave, 0, 0);
         dialogRunner->active             = ACTIVE_ALWAYS;
         DialogRunner->activeCallback     = dialogRunner;
     }
@@ -283,17 +291,19 @@ bool32 DialogRunner_NotifyAutosave(void)
 void DialogRunner_GetUserAuthStatus(void)
 {
     if (API.GetUserAuthStatus() == STATUS_FORBIDDEN) {
+        EntityDialogRunner *dialogRunner;
         if (DialogRunner->authForbidden)
             return;
 
-        EntityDialogRunner *dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_CheckUserAuth_CB, 0, 0);
+        dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_CheckUserAuth_CB, 0, 0);
         dialogRunner->active             = ACTIVE_ALWAYS;
         DialogRunner->activeCallback     = dialogRunner;
         DialogRunner->authForbidden      = true;
     }
 
     if (API.CheckDLC(DLC_PLUS) != (bool32)globals->lastHasPlus && !DialogRunner->authForbidden) {
-        EntityDialogRunner *dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_CheckUserAuth_CB, 0, 0);
+        EntityDialogRunner *dialogRunner;
+        dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_CheckUserAuth_CB, 0, 0);
         dialogRunner->active             = ACTIVE_ALWAYS;
         dialogRunner->useGenericText     = true;
         DialogRunner->activeCallback     = dialogRunner;
@@ -303,6 +313,7 @@ void DialogRunner_GetUserAuthStatus(void)
 }
 void DialogRunner_PromptSavePreference(int32 id)
 {
+    EntityDialogRunner *dialogRunner;
     if (API.GetNoSave()) {
         LogHelpers_Print("PromptSavePreference() returning due to noSave");
         return;
@@ -315,7 +326,7 @@ void DialogRunner_PromptSavePreference(int32 id)
 
     API.ClearSaveStatus();
 
-    EntityDialogRunner *dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_PromptSavePreference_CB, 0, 0);
+    dialogRunner = CREATE_ENTITY(DialogRunner, DialogRunner_PromptSavePreference_CB, 0, 0);
     dialogRunner->status             = id;
     DialogRunner->activeCallback     = dialogRunner;
 }

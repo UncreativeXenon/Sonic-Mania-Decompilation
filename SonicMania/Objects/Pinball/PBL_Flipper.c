@@ -145,6 +145,7 @@ void PBL_Flipper_HandlePlayerInteractions(void)
     RSDK_THIS(PBL_TargetBumper);
 
     if (self->scale.y >= 0x80) {
+        Vector2 originVel = { 0, 0 };
         int32 angle    = self->angle >> 10;
         int32 negAngle = 0;
         if (self->direction == FLIP_X) {
@@ -156,117 +157,122 @@ void PBL_Flipper_HandlePlayerInteractions(void)
             angle    = angle;
         }
 
-        Vector2 originVel = { 0, 0 };
-        foreach_active(PBL_Player, player)
-        {
-            int32 posX      = player->position.x;
-            int32 posY      = player->position.y;
-            int32 velStoreX = player->velocity.x;
-            int32 velStoreY = player->velocity.y;
+{
+            foreach_active(PBL_Player, player)
+            {
+                int32 velX;
+                int32 velY;
+                int32 distance;
+                int32 force;
+                int32 posX      = player->position.x;
+                int32 posY      = player->position.y;
+                int32 velStoreX = player->velocity.x;
+                int32 velStoreY = player->velocity.y;
 
-            Zone_RotateOnPivot(&player->position, &self->position, angle);
-            Zone_RotateOnPivot(&player->velocity, &originVel, angle);
+                Zone_RotateOnPivot(&player->position, &self->position, angle);
+                Zone_RotateOnPivot(&player->velocity, &originVel, angle);
 
-            int32 velX = player->velocity.x;
-            int32 velY = player->velocity.y;
+                velX = player->velocity.x;
+                velY = player->velocity.y;
 
-            int32 distance = 0;
-            if (self->direction == FLIP_NONE)
-                distance = self->position.x - player->position.x;
-            else
-                distance = player->position.x - self->position.x;
-            int32 force = CLAMP((distance + 0x80000) >> 13, 16, 256);
+                distance = 0;
+                if (self->direction == FLIP_NONE)
+                    distance = self->position.x - player->position.x;
+                else
+                    distance = player->position.x - self->position.x;
+                force = CLAMP((distance + 0x80000) >> 13, 16, 256);
 
-            switch (RSDK.CheckObjectCollisionBox(self, &PBL_Flipper->hitbox, player, &PBL_Player->outerBox, true)) {
-                case C_NONE:
-                    player->position.x = posX;
-                    player->position.y = posY;
-                    player->velocity.x = velStoreX;
-                    player->velocity.y = velStoreY;
-                    break;
-
-                case C_TOP:
-                    if (velY < 0) {
+                switch (RSDK.CheckObjectCollisionBox(self, &PBL_Flipper->hitbox, player, &PBL_Player->outerBox, true)) {
+                    case C_NONE:
+                        player->position.x = posX;
+                        player->position.y = posY;
                         player->velocity.x = velStoreX;
                         player->velocity.y = velStoreY;
-                        Zone_RotateOnPivot(&player->position, &self->position, negAngle);
-                    }
-                    else {
-                        if (velY > 0)
-                            velY >>= 2;
-                        if (velY > 0x80000)
-                            velY = 0x80000;
+                        break;
 
-                        player->onGround = false;
+                    case C_TOP:
+                        if (velY < 0) {
+                            player->velocity.x = velStoreX;
+                            player->velocity.y = velStoreY;
+                            Zone_RotateOnPivot(&player->position, &self->position, negAngle);
+                        }
+                        else {
+                            if (velY > 0)
+                                velY >>= 2;
+                            if (velY > 0x80000)
+                                velY = 0x80000;
 
-                        if (velY > 0x40000)
-                            player->velocity.x >>= 2;
-
-                        if (self->state == PBL_Flipper_State_RiseFlipper && self->velocity.y == 0x2000) {
-                            player->velocity.y -= (0xE0000 * force) >> 8;
                             player->onGround = false;
-                            player->angle    = 0;
+
+                            if (velY > 0x40000)
+                                player->velocity.x >>= 2;
+
+                            if (self->state == PBL_Flipper_State_RiseFlipper && self->velocity.y == 0x2000) {
+                                player->velocity.y -= (0xE0000 * force) >> 8;
+                                player->onGround = false;
+                                player->angle    = 0;
+                            }
+
+                            Zone_RotateOnPivot(&player->position, &self->position, negAngle);
+                            Zone_RotateOnPivot(&player->velocity, &originVel, negAngle);
+                        }
+                        break;
+
+                    case C_LEFT:
+                        if (velX < 0) {
+                            player->velocity.x = velX;
+                        }
+                        else {
+                            player->velocity.x = -(velX >> 2);
+
+                            if (player->velocity.x <= -0x10000) {
+                                if (player->velocity.x < -0x80000)
+                                    player->velocity.x = -0x80000;
+
+                                player->velocity.y -= 0x20000;
+                            }
+                            else {
+                                player->velocity.x = -0x10000;
+                                player->velocity.y -= 0x20000;
+                            }
+
+                            Zone_RotateOnPivot(&player->position, &self->position, negAngle);
+                            Zone_RotateOnPivot(&player->velocity, &originVel, negAngle);
+                        }
+                        break;
+
+                    case C_RIGHT:
+                        if (velX > 0) {
+                            player->velocity.x = velX;
+                        }
+                        else {
+                            player->velocity.x = -(velX >> 2);
+
+                            if (player->velocity.x >= 0x10000) {
+                                if (player->velocity.x > 0x80000)
+                                    player->velocity.x = 0x80000;
+
+                                player->velocity.y -= 0x20000;
+                            }
+                            else {
+                                player->velocity.x = 0x10000;
+                                player->velocity.y -= 0x20000;
+                            }
                         }
 
                         Zone_RotateOnPivot(&player->position, &self->position, negAngle);
                         Zone_RotateOnPivot(&player->velocity, &originVel, negAngle);
-                    }
-                    break;
+                        break;
 
-                case C_LEFT:
-                    if (velX < 0) {
-                        player->velocity.x = velX;
-                    }
-                    else {
-                        player->velocity.x = -(velX >> 2);
-
-                        if (player->velocity.x <= -0x10000) {
-                            if (player->velocity.x < -0x80000)
-                                player->velocity.x = -0x80000;
-
-                            player->velocity.y -= 0x20000;
-                        }
-                        else {
-                            player->velocity.x = -0x10000;
-                            player->velocity.y -= 0x20000;
-                        }
+                    case C_BOTTOM:
+                        player->velocity.y = -(velY >> 2);
 
                         Zone_RotateOnPivot(&player->position, &self->position, negAngle);
                         Zone_RotateOnPivot(&player->velocity, &originVel, negAngle);
-                    }
-                    break;
+                        break;
 
-                case C_RIGHT:
-                    if (velX > 0) {
-                        player->velocity.x = velX;
-                    }
-                    else {
-                        player->velocity.x = -(velX >> 2);
-
-                        if (player->velocity.x >= 0x10000) {
-                            if (player->velocity.x > 0x80000)
-                                player->velocity.x = 0x80000;
-
-                            player->velocity.y -= 0x20000;
-                        }
-                        else {
-                            player->velocity.x = 0x10000;
-                            player->velocity.y -= 0x20000;
-                        }
-                    }
-
-                    Zone_RotateOnPivot(&player->position, &self->position, negAngle);
-                    Zone_RotateOnPivot(&player->velocity, &originVel, negAngle);
-                    break;
-
-                case C_BOTTOM:
-                    player->velocity.y = -(velY >> 2);
-
-                    Zone_RotateOnPivot(&player->position, &self->position, negAngle);
-                    Zone_RotateOnPivot(&player->velocity, &originVel, negAngle);
-                    break;
-
-                default: break;
+                    default: break;
+                }
             }
         }
     }

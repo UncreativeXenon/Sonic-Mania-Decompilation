@@ -111,11 +111,13 @@ void Iwamodoki_HandlePlayerCollisions(void)
     self->position.x = self->preMovePos.x;
     self->position.y = self->preMovePos.y;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionBox(player, self, &Iwamodoki->hitboxBadnik) == C_TOP) {
-            player->position.x += self->moveOffset.x;
-            player->position.y += self->moveOffset.y;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionBox(player, self, &Iwamodoki->hitboxBadnik) == C_TOP) {
+                player->position.x += self->moveOffset.x;
+                player->position.y += self->moveOffset.y;
+            }
         }
     }
 
@@ -208,12 +210,13 @@ void Iwamodoki_State_Explode(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (!--self->timer) {
+        EntityIwamodoki *debris;
         CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
 
         if (self->onScreen == 1)
             RSDK.PlaySfx(Explosion->sfxDestroy, false, 255);
 
-        EntityIwamodoki *debris = CREATE_ENTITY(Iwamodoki, INT_TO_VOID(1), self->position.x, self->position.y);
+        debris = CREATE_ENTITY(Iwamodoki, INT_TO_VOID(1), self->position.x, self->position.y);
         debris->velocity.x      = -0x20000;
         debris->velocity.y      = -0x40000;
 
@@ -247,10 +250,12 @@ void Iwamodoki_State_Debris(void)
     self->position.y += self->velocity.y;
     self->velocity.y += 0x3800;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Iwamodoki->hitboxProjectile)) {
-            Player_ProjectileHurt(player, self);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Iwamodoki->hitboxProjectile)) {
+                Player_ProjectileHurt(player, self);
+            }
         }
     }
 

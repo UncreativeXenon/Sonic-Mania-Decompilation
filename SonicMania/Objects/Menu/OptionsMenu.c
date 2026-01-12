@@ -24,98 +24,106 @@ void OptionsMenu_StageLoad(void) {}
 
 void OptionsMenu_Initialize(void)
 {
+    String tag;
     LogHelpers_Print("ManiaModeMenu_Initialize()");
 
-    String tag;
     INIT_STRING(tag);
 
-    foreach_all(UIControl, control)
-    {
-        RSDK.SetString(&tag, "Options");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->optionsControl = control;
+{
+        foreach_all(UIControl, control)
+        {
+            RSDK.SetString(&tag, "Options");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->optionsControl = control;
 
-        RSDK.SetString(&tag, "Language");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->languageControl = control;
+            RSDK.SetString(&tag, "Language");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->languageControl = control;
 
-        RSDK.SetString(&tag, "Language Old");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->languageControl_Legacy = control;
+            RSDK.SetString(&tag, "Language Old");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->languageControl_Legacy = control;
 
-        RSDK.SetString(&tag, "Video");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->videoControl = control;
+            RSDK.SetString(&tag, "Video");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->videoControl = control;
 
-        RSDK.SetString(&tag, "Video WIN");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->videoControl_Windows = control;
+            RSDK.SetString(&tag, "Video WIN");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->videoControl_Windows = control;
 
-        RSDK.SetString(&tag, "Sound");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->soundControl = control;
+            RSDK.SetString(&tag, "Sound");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->soundControl = control;
 
-        RSDK.SetString(&tag, "Controls WIN");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_Windows = control;
+            RSDK.SetString(&tag, "Controls WIN");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_Windows = control;
 
-        RSDK.SetString(&tag, "Controls KB");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_KB = control;
+            RSDK.SetString(&tag, "Controls KB");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_KB = control;
 
-        RSDK.SetString(&tag, "Controls PS4");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_PS4 = control;
+            RSDK.SetString(&tag, "Controls PS4");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_PS4 = control;
 
-        RSDK.SetString(&tag, "Controls XB1");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_XB1 = control;
+            RSDK.SetString(&tag, "Controls XB1");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_XB1 = control;
 
-        RSDK.SetString(&tag, "Controls NX");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_NX = control;
+            RSDK.SetString(&tag, "Controls NX");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_NX = control;
 
-        RSDK.SetString(&tag, "Controls NX Grip");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_NXGrip = control;
+            RSDK.SetString(&tag, "Controls NX Grip");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_NXGrip = control;
 
-        RSDK.SetString(&tag, "Controls NX Joycon");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_NXJoycon = control;
+            RSDK.SetString(&tag, "Controls NX Joycon");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_NXJoycon = control;
 
-        RSDK.SetString(&tag, "Controls NX Pro");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->controlsControl_NXPro = control;
+            RSDK.SetString(&tag, "Controls NX Pro");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->controlsControl_NXPro = control;
 
-        RSDK.SetString(&tag, "Data Options");
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            OptionsMenu->dataOptionsControl = control;
-    }
-
-    foreach_all(UIButtonPrompt, prompt)
-    {
-        EntityUIControl *controller = OptionsMenu->optionsControl;
-
-        if (UIControl_ContainsPos(controller, &prompt->position) && prompt->buttonID == 3)
-            OptionsMenu->helpPrompt = prompt;
-    }
-
-    foreach_all(UIDiorama, diorama)
-    {
-        EntityUIControl *controller = OptionsMenu->videoControl;
-
-        if (UIControl_ContainsPos(controller, &diorama->position)) {
-            OptionsMenu->diorama = diorama;
-            diorama->parent      = OptionsMenu->videoControl;
+            RSDK.SetString(&tag, "Data Options");
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                OptionsMenu->dataOptionsControl = control;
         }
     }
 
-    foreach_all(UIInfoLabel, label)
-    {
-        EntityUIControl *controller = OptionsMenu->dataOptionsControl;
+{
+        foreach_all(UIButtonPrompt, prompt)
+        {
+            EntityUIControl *controller = OptionsMenu->optionsControl;
 
-        if (UIControl_ContainsPos(controller, &label->position))
-            OptionsMenu->selectDataToEraseLabel = label;
+            if (UIControl_ContainsPos(controller, &prompt->position) && prompt->buttonID == 3)
+                OptionsMenu->helpPrompt = prompt;
+        }
+    }
+
+{
+        foreach_all(UIDiorama, diorama)
+        {
+            EntityUIControl *controller = OptionsMenu->videoControl;
+
+            if (UIControl_ContainsPos(controller, &diorama->position)) {
+                OptionsMenu->diorama = diorama;
+                diorama->parent      = OptionsMenu->videoControl;
+            }
+        }
+    }
+
+{
+        foreach_all(UIInfoLabel, label)
+        {
+            EntityUIControl *controller = OptionsMenu->dataOptionsControl;
+
+            if (UIControl_ContainsPos(controller, &label->position))
+                OptionsMenu->selectDataToEraseLabel = label;
+        }
     }
 }
 
@@ -128,11 +136,12 @@ void OptionsMenu_HandleUnlocks(void)
     control->buttonCount = 6;
 
     if (!API.CheckDLC(DLC_PLUS)) {
+        EntityUIButton *allGameDataButton;
         EntityUIButton *replaysButton = control->buttons[2];
         replaysButton->invisible      = true;
         replaysButton->visible        = false;
 
-        EntityUIButton *allGameDataButton = control->buttons[3];
+        allGameDataButton = control->buttons[3];
         control->buttons[2]               = allGameDataButton;
         allGameDataButton->position.x     = control->buttons[4]->position.x;
         allGameDataButton->size.x         = control->buttons[4]->size.x;
@@ -141,6 +150,8 @@ void OptionsMenu_HandleUnlocks(void)
 
 void OptionsMenu_SetupActions(void)
 {
+    String string;
+    EntityUIInfoLabel *label;
     EntityUIControl *optionsControl      = OptionsMenu->optionsControl;
     EntityUIControl *languageControl     = OptionsMenu->languageControl;
     EntityUIControl *languageControl_Legacy = OptionsMenu->languageControl_Legacy;
@@ -150,74 +161,77 @@ void OptionsMenu_SetupActions(void)
     EntityUIControl *soundControl        = OptionsMenu->soundControl;
     EntityUIControl *dataControl         = OptionsMenu->dataOptionsControl;
 
-    String string;
     INIT_STRING(string);
 
-    foreach_all(UIButton, button)
-    {
-        if (UIControl_ContainsPos(controlsControl_Win, &button->position))
-            button->actionCB = OptionsMenu_KeyboardIDButton_Win_ActionCB;
+{
+        foreach_all(UIButton, button)
+        {
+            if (UIControl_ContainsPos(controlsControl_Win, &button->position))
+                button->actionCB = OptionsMenu_KeyboardIDButton_Win_ActionCB;
 
-        if (UIControl_ContainsPos(optionsControl, &button->position) && button->listID == 3) {
+            if (UIControl_ContainsPos(optionsControl, &button->position) && button->listID == 3) {
 
-            switch (button->frameID) {
-                case 0: button->actionCB = OptionsMenu_VideoMenuButton_ActionCB; break;
-                case 1: button->actionCB = OptionsMenu_SoundMenuButton_ActionCB; break;
+                switch (button->frameID) {
+                    case 0: button->actionCB = OptionsMenu_VideoMenuButton_ActionCB; break;
+                    case 1: button->actionCB = OptionsMenu_SoundMenuButton_ActionCB; break;
 
-                case 2:
-                    button->actionCB = OptionsMenu_ControlsMenuButton_ActionCB;
-                    if (sku_platform == PLATFORM_DEV || sku_platform == PLATFORM_PC)
-                        button->transition = false;
-                    break;
+                    case 2:
+                        button->actionCB = OptionsMenu_ControlsMenuButton_ActionCB;
+                        if (sku_platform == PLATFORM_DEV || sku_platform == PLATFORM_PC)
+                            button->transition = false;
+                        break;
 
-                case 3: button->actionCB = OptionsMenu_LanguageMenuButton_ActionCB; break;
-                case 4: button->actionCB = OptionsMenu_DataOptionsMenuButton_ActionCB; break;
+                    case 3: button->actionCB = OptionsMenu_LanguageMenuButton_ActionCB; break;
+                    case 4: button->actionCB = OptionsMenu_DataOptionsMenuButton_ActionCB; break;
+                }
             }
-        }
 
-        if (UIControl_ContainsPos(languageControl, &button->position))
-            button->actionCB = OptionsMenu_LanguageButton_ActionCB;
+            if (UIControl_ContainsPos(languageControl, &button->position))
+                button->actionCB = OptionsMenu_LanguageButton_ActionCB;
 
-        if (UIControl_ContainsPos(languageControl_Legacy, &button->position))
-            button->actionCB = OptionsMenu_LanguageButton_ActionCB;
+            if (UIControl_ContainsPos(languageControl_Legacy, &button->position))
+                button->actionCB = OptionsMenu_LanguageButton_ActionCB;
 
-        if (UIControl_ContainsPos(videoControl, &button->position) && button->listID == 3 && button->frameID == 0)
-            button->choiceChangeCB = OptionsMenu_ShaderButton_ActionCB;
+            if (UIControl_ContainsPos(videoControl, &button->position) && button->listID == 3 && button->frameID == 0)
+                button->choiceChangeCB = OptionsMenu_ShaderButton_ActionCB;
 
-        if (UIControl_ContainsPos(controlsControl_Win, &button->position) && button->listID == 17 && button->frameID == 1)
-            button->actionCB = OptionsMenu_SetDefaultMappings;
+            if (UIControl_ContainsPos(controlsControl_Win, &button->position) && button->listID == 17 && button->frameID == 1)
+                button->actionCB = OptionsMenu_SetDefaultMappings;
 
-        if (UIControl_ContainsPos(videoControl_Win, &button->position) && button->listID == 17) {
-            switch (button->frameID) {
-                case 2: button->choiceChangeCB = OptionsMenu_ShaderButton_ActionCB; break;
-                case 7: button->choiceChangeCB = OptionsMenu_WindowScaleButton_ActionCB; break;
-                case 13: button->choiceChangeCB = OptionsMenu_BorderlessButton_ActionCB; break;
-                case 14: button->choiceChangeCB = OptionsMenu_FullScreenButton_ActionCB; break;
-                case 15: button->choiceChangeCB = OptionsMenu_VSyncButton_ActionCB; break;
-                case 16: button->choiceChangeCB = OptionsMenu_TripleBufferButton_ActionCB; break;
+            if (UIControl_ContainsPos(videoControl_Win, &button->position) && button->listID == 17) {
+                switch (button->frameID) {
+                    case 2: button->choiceChangeCB = OptionsMenu_ShaderButton_ActionCB; break;
+                    case 7: button->choiceChangeCB = OptionsMenu_WindowScaleButton_ActionCB; break;
+                    case 13: button->choiceChangeCB = OptionsMenu_BorderlessButton_ActionCB; break;
+                    case 14: button->choiceChangeCB = OptionsMenu_FullScreenButton_ActionCB; break;
+                    case 15: button->choiceChangeCB = OptionsMenu_VSyncButton_ActionCB; break;
+                    case 16: button->choiceChangeCB = OptionsMenu_TripleBufferButton_ActionCB; break;
+                }
             }
-        }
 
-        if (UIControl_ContainsPos(dataControl, &button->position) && button->listID == 18) {
-            switch (button->frameID) {
-                case 0: button->actionCB = OptionsMenu_EraseSaveGameButton_ActionCB; break;
-                case 1: button->actionCB = OptionsMenu_EraseMedallionsButton_ActionCB; break;
-                case 2: button->actionCB = OptionsMenu_EraseTimeAttackButton_ActionCB; break;
-                case 3: button->actionCB = OptionsMenu_EraseReplaysButton_ActionCB; break;
-                case 4: button->actionCB = OptionsMenu_EraseAllButton_ActionCB; break;
+            if (UIControl_ContainsPos(dataControl, &button->position) && button->listID == 18) {
+                switch (button->frameID) {
+                    case 0: button->actionCB = OptionsMenu_EraseSaveGameButton_ActionCB; break;
+                    case 1: button->actionCB = OptionsMenu_EraseMedallionsButton_ActionCB; break;
+                    case 2: button->actionCB = OptionsMenu_EraseTimeAttackButton_ActionCB; break;
+                    case 3: button->actionCB = OptionsMenu_EraseReplaysButton_ActionCB; break;
+                    case 4: button->actionCB = OptionsMenu_EraseAllButton_ActionCB; break;
+                }
             }
         }
     }
 
-    foreach_all(UISlider, slider)
     {
-        if (UIControl_ContainsPos(soundControl, &slider->position) && slider->listID == 5)
-            slider->sliderChangedCB = OptionsMenu_UISlider_ChangedCB;
+        foreach_all(UISlider, slider)
+        {
+            if (UIControl_ContainsPos(soundControl, &slider->position) && slider->listID == 5)
+                slider->sliderChangedCB = OptionsMenu_UISlider_ChangedCB;
+        }
     }
 
     optionsControl->menuSetupCB = OptionsMenu_MenuSetupCB;
 
-    EntityUIInfoLabel *label = OptionsMenu->selectDataToEraseLabel;
+    label = OptionsMenu->selectDataToEraseLabel;
     Localization_GetString(&string, STR_SELECTDATATOERASE);
     UIInfoLabel_SetString(label, &string);
 
@@ -236,6 +250,9 @@ void OptionsMenu_SetupActions(void)
 
 void OptionsMenu_HandleMenuReturn(void)
 {
+    EntityUIButton *button;
+    EntityUISlider *musSlider;
+    EntityUISlider *sfxSlider;
     EntityUIControl *languageControl     = OptionsMenu->languageControl;
     EntityUIControl *languageControl_old = OptionsMenu->languageControl_Legacy;
     EntityUIControl *videoControl        = OptionsMenu->videoControl;
@@ -244,13 +261,13 @@ void OptionsMenu_HandleMenuReturn(void)
     if (sku_platform == PLATFORM_PC || sku_platform == PLATFORM_DEV)
         OptionsMenu_InitVideoOptionsMenu();
 
-    EntityUIButton *button = videoControl->buttons[0];
+    button = videoControl->buttons[0];
     UIButton_SetChoiceSelection(button, RSDK.GetVideoSetting(VIDEOSETTING_SHADERID));
 
-    EntityUISlider *musSlider = (EntityUISlider *)soundControl->buttons[0];
+    musSlider = (EntityUISlider *)soundControl->buttons[0];
     musSlider->sliderPos      = RSDK.GetVideoSetting(VIDEOSETTING_STREAM_VOL);
 
-    EntityUISlider *sfxSlider = (EntityUISlider *)soundControl->buttons[1];
+    sfxSlider = (EntityUISlider *)soundControl->buttons[1];
     sfxSlider->sliderPos      = RSDK.GetVideoSetting(VIDEOSETTING_SFX_VOL);
 
     languageControl->startingID = Localization->language;
@@ -262,12 +279,12 @@ void OptionsMenu_HandleMenuReturn(void)
 void OptionsMenu_InitVideoOptionsMenu(void)
 {
     if (sku_platform == PLATFORM_PC || sku_platform == PLATFORM_DEV) {
+        int32 options[7];
+        int32 i;
         EntityUIControl *videoControl_Win = OptionsMenu->videoControl_Windows;
         OptionsRAM *optionsRAM            = Options_GetOptionsRAM();
 
         Options_GetWinSize();
-
-        int32 options[7];
 
         options[0] = RSDK.GetVideoSetting(VIDEOSETTING_SHADERID); // filter
         options[1] = optionsRAM->windowSize;                      // window size
@@ -282,7 +299,7 @@ void OptionsMenu_InitVideoOptionsMenu(void)
         options[5] = RSDK.GetVideoSetting(VIDEOSETTING_VSYNC);          // vsync
         options[6] = RSDK.GetVideoSetting(VIDEOSETTING_TRIPLEBUFFERED); // triple buffered
 
-        for (int32 i = 0; i < videoControl_Win->buttonCount; ++i) {
+        for (i = 0; i < videoControl_Win->buttonCount; ++i) {
             EntityUIButton *button = videoControl_Win->buttons[i];
 
             if (i == 4) {
@@ -308,10 +325,11 @@ void OptionsMenu_VideoControl_Win_YPressCB(void)
     INIT_STRING(message);
 
     if (RSDK.GetVideoSetting(VIDEOSETTING_CHANGED)) {
+        EntityUIDialog *dialog;
         RSDK.UpdateWindow();
 
         Localization_GetString(&message, STR_VIDEOCHANGESAPPLIED);
-        EntityUIDialog *dialog =
+        dialog =
             UIDialog_CreateDialogYesNo(&message, OptionsMenu_ApplyChangesDlg_Win_YesCB, OptionsMenu_ApplyChangesDlg_Win_NoCB, true, true);
         if (dialog)
             dialog->closeDelay = 15 * 60; // 15 seconds at 60 FPS
@@ -320,6 +338,7 @@ void OptionsMenu_VideoControl_Win_YPressCB(void)
 void OptionsMenu_DlgRunnerCB_RevertVideoChanges(void)
 {
     String message;
+    EntityUIDialog *dialog;
     INIT_STRING(message);
 
     RSDK.UpdateWindow();
@@ -327,7 +346,7 @@ void OptionsMenu_DlgRunnerCB_RevertVideoChanges(void)
     Localization_GetString(&message, STR_VIDEOCHANGESAPPLIED);
     // This is bugged! Using `OptionsMenu_ApplyChangesDlg_BackPress_NoCB` causes the settings to be reverted instead of saved!
     // This should have called a modified version of `OptionsMenu_ApplyChangesDlg_Win_YesCB` which also transitions to the previous menu!
-    EntityUIDialog *dialog = UIDialog_CreateDialogYesNo(&message, OptionsMenu_ApplyChangesDlg_BackPress_NoCB, OptionsMenu_ApplyChangesDlg_NoCB, true, true);
+    dialog = UIDialog_CreateDialogYesNo(&message, OptionsMenu_ApplyChangesDlg_BackPress_NoCB, OptionsMenu_ApplyChangesDlg_NoCB, true, true);
     if (dialog)
         dialog->closeDelay = 15 * 60; // 15 seconds at 60 FPS
 }
@@ -335,11 +354,12 @@ void OptionsMenu_DlgRunnerCB_RevertVideoChanges(void)
 bool32 OptionsMenu_VideoControl_Win_BackPressCB(void)
 {
     String message;
+    EntityUIDialog *dialog;
     INIT_STRING(message);
 
     if (RSDK.GetVideoSetting(VIDEOSETTING_CHANGED)) {
         Localization_GetString(&message, STR_APPLYCHANGEDSETTINGS);
-        EntityUIDialog *dialog =
+        dialog =
             UIDialog_CreateDialogYesNo(&message, OptionsMenu_ApplyChangesDlg_BackPress_YesCB, OptionsMenu_ApplyChangesDlg_BackPress_NoCB, true, true);
         if (dialog)
             return true;
@@ -485,6 +505,7 @@ void OptionsMenu_SetDefaultMappings(void)
 
 void OptionsMenu_SetupKBControlsMenu(int32 playerID)
 {
+    int32 b;
     EntityUIControl *control = OptionsMenu->controlsControl_KB;
 
     foreach_all(UISubHeading, subHeading)
@@ -495,7 +516,7 @@ void OptionsMenu_SetupKBControlsMenu(int32 playerID)
         }
     }
 
-    for (int32 b = 0; b < control->buttonCount; ++b) {
+    for (b = 0; b < control->buttonCount; ++b) {
         EntityUIKeyBinder *binder = (EntityUIKeyBinder *)control->buttons[b];
 
         if (binder->classID == UIKeyBinder->classID)
@@ -505,11 +526,12 @@ void OptionsMenu_SetupKBControlsMenu(int32 playerID)
 
 void OptionsMenu_KeyboardIDButton_Win_ActionCB(void)
 {
+    int32 i;
     RSDK_THIS(UIButton);
 
     EntityUIControl *control = OptionsMenu->controlsControl_Windows;
 
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    for (i = 0; i < control->buttonCount; ++i) {
         if (self == control->buttons[i]) {
             OptionsMenu_SetupKBControlsMenu(i);
             UIControl_MatchMenuTag("Controls KB");
@@ -519,14 +541,17 @@ void OptionsMenu_KeyboardIDButton_Win_ActionCB(void)
 
 void OptionsMenu_MenuSetupCB(void)
 {
+    EntityUIControl *control;
+
+    EntityUIButton *eraseDataButton;
     if (Options->changed) {
         UIWaitSpinner_StartWait();
         Options_SaveFile(OptionsMenu_SaveOptionsCB_Load);
     }
 
-    EntityUIControl *control = OptionsMenu->optionsControl;
+    control = OptionsMenu->optionsControl;
 
-    EntityUIButton *eraseDataButton = control->buttons[4];
+    eraseDataButton = control->buttons[4];
     if (eraseDataButton)
         eraseDataButton->disabled = API_GetNoSave();
 }
@@ -543,11 +568,12 @@ void OptionsMenu_TransitionCB_ReloadScene(void)
 
 void OptionsMenu_SaveOptionsCB_Action(bool32 success)
 {
+    EntityUIControl *control;
     EntityMenuParam *param = MenuParam_GetParam();
 
     UIWaitSpinner_FinishWait();
 
-    EntityUIControl *control = OptionsMenu->languageControl;
+    control = OptionsMenu->languageControl;
     control->startingID      = control->buttonID;
 
     TimeAttackData_Clear();
@@ -730,19 +756,20 @@ void OptionsMenu_EraseSaveDataCB(bool32 success)
 
 void OptionsMenu_AreYouSureDlg_YesCB_EraseSaveGame(void)
 {
+    int32 i;
     // Bug Details(?):
     // sizeof(globals->noSaveSlot) and sizeof(saveData) is 4096 (sizeof(int32) * 0x400)
     // but the memset size is only 1024 (sizeof(uint8) * 0x400)
     // so only about 1/4th of the save slot is cleared, though nothin uses the extra space so it's not a big deal
 
     // Mania Mode Slots
-    for (int32 i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         int32 *saveRAM = SaveGame_GetDataPtr(i, false);
         memset(saveRAM, 0, 0x400);
     }
 
     // Encore Slots
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         int32 *saveRAM = SaveGame_GetDataPtr(i, true);
         memset(saveRAM, 0, 0x400);
     }
@@ -755,14 +782,15 @@ void OptionsMenu_AreYouSureDlg_YesCB_EraseSaveGame(void)
 
 void OptionsMenu_AreYouSureDlg_YesCB_EraseAllData(void)
 {
+    int32 i;
     // Mania Mode Slots
-    for (int32 i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         int32 *saveRAM = SaveGame_GetDataPtr(i, false);
         memset(saveRAM, 0, 0x400);
     }
 
     // Encore Slots
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         int32 *saveRAM = SaveGame_GetDataPtr(i, true);
         memset(saveRAM, 0, 0x400);
     }

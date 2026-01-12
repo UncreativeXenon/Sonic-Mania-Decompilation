@@ -11,6 +11,9 @@ ObjectRotatingSpikes *RotatingSpikes;
 
 void RotatingSpikes_Update(void)
 {
+    Hitbox *hitbox;
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(RotatingSpikes);
 
     RSDK.ProcessAnimation(&self->pivotAnimator);
@@ -18,23 +21,26 @@ void RotatingSpikes_Update(void)
 
     self->angle = (self->angle + self->rotSpeed) & 0x3FF;
 
-    Hitbox *hitbox = RSDK.GetHitbox(&self->spikeBallAnimator, 0);
-    int32 storeX   = self->position.x;
-    int32 storeY   = self->position.y;
+    hitbox = RSDK.GetHitbox(&self->spikeBallAnimator, 0);
+    storeX   = self->position.x;
+    storeY   = self->position.y;
 
-    foreach_active(Player, player)
     {
-        int32 radius = self->spikeRadius + self->pivotRadius;
-        for (int32 i = 0; i < self->spikeCount; ++i) {
-            self->position.x = storeX + ((radius * RSDK.Cos1024(self->angle + self->angleOffset)) << 6);
-            self->position.y = storeY + ((radius * RSDK.Sin1024(self->angle + self->angleOffset)) << 6);
-            if (Player_CheckCollisionTouch(player, self, hitbox)) {
+        foreach_active(Player, player)
+        {
+            int32 i;
+            int32 radius = self->spikeRadius + self->pivotRadius;
+            for (i = 0; i < self->spikeCount; ++i) {
+                self->position.x = storeX + ((radius * RSDK.Cos1024(self->angle + self->angleOffset)) << 6);
+                self->position.y = storeY + ((radius * RSDK.Sin1024(self->angle + self->angleOffset)) << 6);
+                if (Player_CheckCollisionTouch(player, self, hitbox)) {
 #if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(player, 0x400, 2, &player->uncurlTimer))
+                    if (!Player_CheckMightyUnspin(player, 0x400, 2, &player->uncurlTimer))
 #endif
-                    Player_Hurt(player, self);
+                        Player_Hurt(player, self);
+                }
+                radius += 2 * self->spikeRadius;
             }
-            radius += 2 * self->spikeRadius;
         }
     }
 
@@ -48,12 +54,13 @@ void RotatingSpikes_StaticUpdate(void) {}
 
 void RotatingSpikes_Draw(void)
 {
+    int32 i;
     RSDK_THIS(RotatingSpikes);
 
     int32 radius = self->spikeRadius + self->pivotRadius;
     RSDK.DrawSprite(&self->pivotAnimator, NULL, false);
 
-    for (int32 i = 0; i < self->spikeCount; ++i) {
+    for (i = 0; i < self->spikeCount; ++i) {
         Vector2 drawPos;
         drawPos.x = ((radius * RSDK.Cos1024(self->angleOffset + self->angle)) << 6) + self->position.x;
         drawPos.y = ((radius * RSDK.Sin1024(self->angleOffset + self->angle)) << 6) + self->position.y;

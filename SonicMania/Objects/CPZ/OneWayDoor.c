@@ -80,53 +80,57 @@ void OneWayDoor_StageLoad(void)
 
 void OneWayDoor_HandlePlayerInteractions(void)
 {
+    bool32 isMMZ1;
+    bool32 isBehind; 
     RSDK_THIS(OneWayDoor);
 
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
     self->state = OneWayDoor_State_MoveDown;
 
-    bool32 isMMZ1 = false;
+    isMMZ1 = false;
     if (RSDK.CheckSceneFolder("MMZ") && Zone->actID == 1)
         isMMZ1 = true;
 
-    bool32 isBehind = false;
+    isBehind = false;
     if (self->direction == FLIP_X)
         isBehind = player1->position.x >= self->position.x;
     else if (!self->direction)
         isBehind = player1->position.x <= self->position.x;
 
-    foreach_active(Player, currentPlayer)
     {
-        if (self->stateDraw != OneWayDoor_Draw_MMZ)
-            self->position.y -= 2 * self->offsetY;
-        else
-            self->position.y -= self->offsetY;
-
-        Player_CheckCollisionBox(currentPlayer, self, &OneWayDoor->hitboxTop);
-        if (self->stateDraw == OneWayDoor_Draw_MMZ)
-            self->position.y += 2 * self->offsetY;
-
-        Player_CheckCollisionBox(currentPlayer, self, &OneWayDoor->hitboxBottom);
-        if (self->stateDraw == OneWayDoor_Draw_MMZ)
-            self->position.y -= self->offsetY;
-        else
-            self->position.y += 2 * self->offsetY;
-
-        if (currentPlayer->velocity.x < 0x60000)
-            OneWayDoor->hitboxRange.left = -64;
-        else
-            OneWayDoor->hitboxRange.left = -88;
-
-        if (Player_CheckCollisionTouch(currentPlayer, self, &OneWayDoor->hitboxRange)) {
-            if (isMMZ1 && currentPlayer->sidekick && !isBehind) {
-#if MANIA_USE_PLUS
-                Player->cantSwap = true;
-                NoSwap->counter++;
-#endif
-            }
+        foreach_active(Player, currentPlayer)
+        {
+            if (self->stateDraw != OneWayDoor_Draw_MMZ)
+                self->position.y -= 2 * self->offsetY;
             else
-                self->state = OneWayDoor_State_MoveUp;
+                self->position.y -= self->offsetY;
+
+            Player_CheckCollisionBox(currentPlayer, self, &OneWayDoor->hitboxTop);
+            if (self->stateDraw == OneWayDoor_Draw_MMZ)
+                self->position.y += 2 * self->offsetY;
+
+            Player_CheckCollisionBox(currentPlayer, self, &OneWayDoor->hitboxBottom);
+            if (self->stateDraw == OneWayDoor_Draw_MMZ)
+                self->position.y -= self->offsetY;
+            else
+                self->position.y += 2 * self->offsetY;
+
+            if (currentPlayer->velocity.x < 0x60000)
+                OneWayDoor->hitboxRange.left = -64;
+            else
+                OneWayDoor->hitboxRange.left = -88;
+
+            if (Player_CheckCollisionTouch(currentPlayer, self, &OneWayDoor->hitboxRange)) {
+                if (isMMZ1 && currentPlayer->sidekick && !isBehind) {
+#if MANIA_USE_PLUS
+                    Player->cantSwap = true;
+                    NoSwap->counter++;
+#endif
+                }
+                else
+                    self->state = OneWayDoor_State_MoveUp;
+            }
         }
     }
 }

@@ -11,9 +11,12 @@ ObjectHangPoint *HangPoint;
 
 void HangPoint_Update(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(HangPoint);
 
     if (self->length > 0) {
+        int32 i;
         bool32 isActive = true;
         if (self->activePlayers == 2) {
             EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
@@ -21,7 +24,7 @@ void HangPoint_Update(void)
                 isActive = false;
         }
 
-        for (int32 i = 0; i < PLAYER_COUNT; ++i) {
+        for (i = 0; i < PLAYER_COUNT; ++i) {
             if (self->moveDistance[i])
                 isActive = false;
         }
@@ -104,204 +107,217 @@ void HangPoint_Update(void)
         }
     }
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
     self->position.y += self->pullPos;
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (self->playerTimer[playerID] > 0)
-            self->playerTimer[playerID]--;
+            if (self->playerTimer[playerID] > 0)
+                self->playerTimer[playerID]--;
 
-        if (!((1 << playerID) & self->activePlayers)) {
-            if (player->state != Player_State_Static && !self->playerTimer[playerID]) {
-                Hitbox *playerHitbox = Player_GetHitbox(player);
-
-                Hitbox hitboxPlayer;
-                hitboxPlayer.left   = playerHitbox->left;
-                hitboxPlayer.top    = playerHitbox->top;
-                hitboxPlayer.right  = playerHitbox->right;
-                hitboxPlayer.bottom = hitboxPlayer.top + 4;
-                if (RSDK.CheckObjectCollisionTouchBox(self, &HangPoint->hitboxGrab, player, &hitboxPlayer)) {
-                    player->velocity.x = 0;
-                    player->velocity.y = 0;
-                    player->groundVel  = 0;
-                    player->onGround   = false;
-                    player->angle      = 0;
-                    player->rotation   = 0;
-                    player->position.x = self->position.x;
-                    player->position.y = self->position.y;
-                    player->position.y += ((HangPoint->hitboxGrab.top - playerHitbox->top) << 16)
-                                          + (((HangPoint->hitboxGrab.bottom - HangPoint->hitboxGrab.top) << 15) & 0xFFFF0000);
-                    player->tileCollisions       = TILECOLLISION_NONE;
-                    self->moveDistance[playerID] = 0;
-
-                    if (!self->activePlayers) {
-                        if (self->direction == FLIP_X) {
-                            if (self->pullPos <= self->length)
-                                self->velocity.y = 0x20000;
-                        }
-                        else {
-                            self->velocity.y = 0;
-                        }
-                    }
-                    self->activePlayers |= 1 << playerID;
-
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, false, 0);
-                    player->nextAirState     = StateMachine_None;
-                    player->nextGroundState  = StateMachine_None;
-                    player->state            = Player_State_Static;
-                    player->abilityValues[0] = RSDK.Rand(0, 2);
-                    RSDK.PlaySfx(Player->sfxGrab, false, 255);
-                    self->active = ACTIVE_NORMAL;
-                }
-            }
-        }
-        else {
-            if (player->state == Player_State_Hurt) {
-                player->tileCollisions = TILECOLLISION_DOWN;
-                self->activePlayers &= ~(1 << playerID) & ~(1 << (playerID + PLAYER_COUNT));
-                self->moveDistance[playerID] = 0;
-                if (player->left || player->right || player->down || player->state == Player_State_Hurt)
-                    self->playerTimer[playerID] = 64;
-                else
-                    self->playerTimer[playerID] = 16;
-            }
-            else {
-                if (player->state != Player_State_Static || self->playerTimer[playerID]) {
-                    self->activePlayers &= ~(1 << playerID);
-
-                    if (player->classID == Player->classID && Player_CheckValidState(player))
-                        player->tileCollisions = TILECOLLISION_DOWN;
-                }
-                else {
+            if (!((1 << playerID) & self->activePlayers)) {
+                if (player->state != Player_State_Static && !self->playerTimer[playerID]) {
                     Hitbox *playerHitbox = Player_GetHitbox(player);
-                    player->velocity.x   = 0;
-                    player->velocity.y   = 0;
-                    player->groundVel    = 0;
-                    player->angle        = 0;
-                    player->rotation     = 0;
-                    player->position.x   = self->position.x;
-                    player->position.y   = self->position.y;
-                    player->position.y += (((HangPoint->hitboxGrab.bottom - HangPoint->hitboxGrab.top) << 15) & 0xFFFF0000)
-                                          + ((HangPoint->hitboxGrab.top - playerHitbox->top) << 16);
 
-                    if (!self->moveDistance[playerID]) {
-                        if (player->left)
-                            player->direction = FLIP_X;
+                    Hitbox hitboxPlayer;
+                    hitboxPlayer.left   = playerHitbox->left;
+                    hitboxPlayer.top    = playerHitbox->top;
+                    hitboxPlayer.right  = playerHitbox->right;
+                    hitboxPlayer.bottom = hitboxPlayer.top + 4;
+                    if (RSDK.CheckObjectCollisionTouchBox(self, &HangPoint->hitboxGrab, player, &hitboxPlayer)) {
+                        player->velocity.x = 0;
+                        player->velocity.y = 0;
+                        player->groundVel  = 0;
+                        player->onGround   = false;
+                        player->angle      = 0;
+                        player->rotation   = 0;
+                        player->position.x = self->position.x;
+                        player->position.y = self->position.y;
+                        player->position.y += ((HangPoint->hitboxGrab.top - playerHitbox->top) << 16)
+                                              + (((HangPoint->hitboxGrab.bottom - HangPoint->hitboxGrab.top) << 15) & 0xFFFF0000);
+                        player->tileCollisions       = TILECOLLISION_NONE;
+                        self->moveDistance[playerID] = 0;
 
-                        if (player->right)
-                            player->direction = FLIP_NONE;
-
-                        if (player->jumpPress) {
-                            player->velocity.y = -0x40000;
-                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                            player->animator.speed   = 48;
-                            player->applyJumpCap     = false;
-                            player->jumpAbilityState = 1;
-                            player->state            = Player_State_Air;
-                            player->tileCollisions   = TILECOLLISION_DOWN;
-                            self->activePlayers &= ~(1 << playerID) & ~(1 << (playerID + PLAYER_COUNT));
-
-                            if (player->left || player->right || player->down || player->state == Player_State_Hurt) {
-                                self->playerTimer[playerID] = 64;
-                                HangPoint_HandlePlayerMovement(self, player, playerID);
+                        if (!self->activePlayers) {
+                            if (self->direction == FLIP_X) {
+                                if (self->pullPos <= self->length)
+                                    self->velocity.y = 0x20000;
                             }
                             else {
-                                self->playerTimer[playerID] = 16;
-                                HangPoint_HandlePlayerMovement(self, player, playerID);
+                                self->velocity.y = 0;
                             }
                         }
-                        else if ((!((1 << (playerID + 4)) & self->activePlayers) && (self->direction != FLIP_NONE || self->pullPos >= self->length)
-                                  && (self->direction != FLIP_X || self->pullPos <= 0))
-                                 || player->sidekick) {
+                        self->activePlayers |= 1 << playerID;
 
-                            bool32 changedHangPoint = false;
-                            if (player->left) {
-                                foreach_active(HangPoint, point)
-                                {
-                                    if (self != point) {
-                                        int32 distance = self->position.x - point->position.x;
-                                        if (distance < 0x220000 && distance > 0) {
-                                            if (abs(self->position.y - point->position.y - point->pullPos) < 0x40000) {
-                                                self->activePlayers &= ~(1 << playerID);
-                                                self->playerTimer[playerID] = 16;
-                                                point->activePlayers |= 1 << playerID;
-                                                point->moveDistance[playerID] = 0x200000;
-                                                point->playerTimer[playerID]  = 0;
-#if MANIA_USE_PLUS
-                                                if (player->characterID == ID_RAY) {
-                                                    if (player->abilityValues[0])
-                                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 6);
-                                                    else
-                                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 1);
-                                                }
-                                                else {
-#endif
-                                                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 3);
-#if MANIA_USE_PLUS
-                                                }
-#endif
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, false, 0);
+                        player->nextAirState     = StateMachine_None;
+                        player->nextGroundState  = StateMachine_None;
+                        player->state            = Player_State_Static;
+                        player->abilityValues[0] = RSDK.Rand(0, 2);
+                        RSDK.PlaySfx(Player->sfxGrab, false, 255);
+                        self->active = ACTIVE_NORMAL;
+                    }
+                }
+            }
+            else {
+                if (player->state == Player_State_Hurt) {
+                    player->tileCollisions = TILECOLLISION_DOWN;
+                    self->activePlayers &= ~(1 << playerID) & ~(1 << (playerID + PLAYER_COUNT));
+                    self->moveDistance[playerID] = 0;
+                    if (player->left || player->right || player->down || player->state == Player_State_Hurt)
+                        self->playerTimer[playerID] = 64;
+                    else
+                        self->playerTimer[playerID] = 16;
+                }
+                else {
+                    if (player->state != Player_State_Static || self->playerTimer[playerID]) {
+                        self->activePlayers &= ~(1 << playerID);
 
-                                                player->position.x = point->position.x;
+                        if (player->classID == Player->classID && Player_CheckValidState(player))
+                            player->tileCollisions = TILECOLLISION_DOWN;
+                    }
+                    else {
+                        Hitbox *playerHitbox = Player_GetHitbox(player);
+                        player->velocity.x   = 0;
+                        player->velocity.y   = 0;
+                        player->groundVel    = 0;
+                        player->angle        = 0;
+                        player->rotation     = 0;
+                        player->position.x   = self->position.x;
+                        player->position.y   = self->position.y;
+                        player->position.y += (((HangPoint->hitboxGrab.bottom - HangPoint->hitboxGrab.top) << 15) & 0xFFFF0000)
+                                              + ((HangPoint->hitboxGrab.top - playerHitbox->top) << 16);
 
-                                                if (RSDK.GetEntitySlot(point) < SceneInfo->entitySlot)
-                                                    HangPoint_HandlePlayerMovement(point, player, playerID);
-                                                HangPoint_HandlePlayerMovement(self, player, playerID);
+                        if (!self->moveDistance[playerID]) {
+                            if (player->left)
+                                player->direction = FLIP_X;
 
-                                                changedHangPoint = true;
-                                                foreach_break;
-                                            }
-                                        }
-                                    }
+                            if (player->right)
+                                player->direction = FLIP_NONE;
+
+                            if (player->jumpPress) {
+                                player->velocity.y = -0x40000;
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                                player->animator.speed   = 48;
+                                player->applyJumpCap     = false;
+                                player->jumpAbilityState = 1;
+                                player->state            = Player_State_Air;
+                                player->tileCollisions   = TILECOLLISION_DOWN;
+                                self->activePlayers &= ~(1 << playerID) & ~(1 << (playerID + PLAYER_COUNT));
+
+                                if (player->left || player->right || player->down || player->state == Player_State_Hurt) {
+                                    self->playerTimer[playerID] = 64;
+                                    HangPoint_HandlePlayerMovement(self, player, playerID);
+                                }
+                                else {
+                                    self->playerTimer[playerID] = 16;
+                                    HangPoint_HandlePlayerMovement(self, player, playerID);
                                 }
                             }
-                            else if (player->right) {
-                                foreach_active(HangPoint, point)
-                                {
-                                    if (self != point) {
-                                        int32 distance = point->position.x - self->position.x;
-                                        if (distance < 0x220000 && distance > 0) {
-                                            if (abs(self->position.y - point->position.y - point->pullPos) < 0x40000) {
-                                                self->activePlayers &= ~(1 << playerID);
-                                                self->playerTimer[playerID] = 16;
-                                                point->activePlayers |= 1 << playerID;
-                                                point->moveDistance[playerID] = -0x200000;
-                                                point->playerTimer[playerID]  = 0;
+                            else if ((!((1 << (playerID + 4)) & self->activePlayers)
+                                      && (self->direction != FLIP_NONE || self->pullPos >= self->length)
+                                      && (self->direction != FLIP_X || self->pullPos <= 0))
+                                     || player->sidekick) {
 
+                                bool32 changedHangPoint = false;
+                                if (player->left) {
+                                    foreach_active(HangPoint, point)
+                                    {
+                                        if (self != point) {
+                                            int32 distance = self->position.x - point->position.x;
+                                            if (distance < 0x220000 && distance > 0) {
+                                                if (abs(self->position.y - point->position.y - point->pullPos) < 0x40000) {
+                                                    self->activePlayers &= ~(1 << playerID);
+                                                    self->playerTimer[playerID] = 16;
+                                                    point->activePlayers |= 1 << playerID;
+                                                    point->moveDistance[playerID] = 0x200000;
+                                                    point->playerTimer[playerID]  = 0;
 #if MANIA_USE_PLUS
-                                                if (player->characterID == ID_RAY) {
-                                                    if (!player->abilityValues[0]) {
-                                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 0);
+                                                    if (player->characterID == ID_RAY) {
+                                                        if (player->abilityValues[0])
+                                                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 6);
+                                                        else
+                                                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 1);
                                                     }
                                                     else {
-                                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 6);
-                                                    }
-                                                }
-                                                else {
 #endif
-                                                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 3);
+                                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 3);
 #if MANIA_USE_PLUS
-                                                }
+                                                    }
 #endif
 
-                                                player->position.x = point->position.x;
+                                                    player->position.x = point->position.x;
 
-                                                if (RSDK.GetEntitySlot(point) < SceneInfo->entitySlot)
-                                                    HangPoint_HandlePlayerMovement(point, player, playerID);
-                                                HangPoint_HandlePlayerMovement(self, player, playerID);
+                                                    if (RSDK.GetEntitySlot(point) < SceneInfo->entitySlot)
+                                                        HangPoint_HandlePlayerMovement(point, player, playerID);
+                                                    HangPoint_HandlePlayerMovement(self, player, playerID);
 
-                                                changedHangPoint = true;
-                                                foreach_break;
+                                                    changedHangPoint = true;
+                                                    foreach_break;
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
+                                else if (player->right) {
+                                    foreach_active(HangPoint, point)
+                                    {
+                                        if (self != point) {
+                                            int32 distance = point->position.x - self->position.x;
+                                            if (distance < 0x220000 && distance > 0) {
+                                                if (abs(self->position.y - point->position.y - point->pullPos) < 0x40000) {
+                                                    self->activePlayers &= ~(1 << playerID);
+                                                    self->playerTimer[playerID] = 16;
+                                                    point->activePlayers |= 1 << playerID;
+                                                    point->moveDistance[playerID] = -0x200000;
+                                                    point->playerTimer[playerID]  = 0;
 
-                            if (!changedHangPoint) {
+#if MANIA_USE_PLUS
+                                                    if (player->characterID == ID_RAY) {
+                                                        if (!player->abilityValues[0]) {
+                                                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 0);
+                                                        }
+                                                        else {
+                                                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 6);
+                                                        }
+                                                    }
+                                                    else {
+#endif
+                                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG_MOVE, &player->animator, false, 3);
+#if MANIA_USE_PLUS
+                                                    }
+#endif
+
+                                                    player->position.x = point->position.x;
+
+                                                    if (RSDK.GetEntitySlot(point) < SceneInfo->entitySlot)
+                                                        HangPoint_HandlePlayerMovement(point, player, playerID);
+                                                    HangPoint_HandlePlayerMovement(self, player, playerID);
+
+                                                    changedHangPoint = true;
+                                                    foreach_break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (!changedHangPoint) {
+#if MANIA_USE_PLUS
+                                    if (player->characterID == ID_RAY && player->abilityValues[0] == 1)
+                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG2, &player->animator, false, 0);
+                                    else
+#endif
+                                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, false, 0);
+
+                                    HangPoint_HandlePlayerMovement(self, player, playerID);
+                                }
+                            }
+                            else {
 #if MANIA_USE_PLUS
                                 if (player->characterID == ID_RAY && player->abilityValues[0] == 1)
                                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG2, &player->animator, false, 0);
@@ -313,18 +329,8 @@ void HangPoint_Update(void)
                             }
                         }
                         else {
-#if MANIA_USE_PLUS
-                            if (player->characterID == ID_RAY && player->abilityValues[0] == 1)
-                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG2, &player->animator, false, 0);
-                            else
-#endif
-                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, false, 0);
-
                             HangPoint_HandlePlayerMovement(self, player, playerID);
                         }
-                    }
-                    else {
-                        HangPoint_HandlePlayerMovement(self, player, playerID);
                     }
                 }
             }
@@ -350,12 +356,15 @@ void HangPoint_Draw(void)
     RSDK.DrawSprite(&HangPoint->animator, &drawPos, false);
 
     if (self->length) {
+        int32 length;
+        SpriteFrame *frame;
+        int32 extraLength;
         HangPoint->animator.frameID = 1;
-        int32 length                = (self->pullPos >> 16) & 0xFF00;
+        length                = (self->pullPos >> 16) & 0xFF00;
 
-        SpriteFrame *frame = RSDK.GetFrame(HangPoint->aniFrames, 0, HangPoint->animator.frameID);
+        frame = RSDK.GetFrame(HangPoint->aniFrames, 0, HangPoint->animator.frameID);
 
-        int32 extraLength = (self->pullPos >> 16) & 0x00FF;
+        extraLength = (self->pullPos >> 16) & 0x00FF;
         frame->pivotY     = -(self->pullPos >> 16);
         frame->height     = extraLength;
         frame->sprY       = 257 - extraLength;
@@ -394,12 +403,13 @@ void HangPoint_Create(void *data)
 
 void HangPoint_StageLoad(void)
 {
+    Hitbox *hitbox;
     if (RSDK.CheckSceneFolder("FBZ"))
         HangPoint->aniFrames = RSDK.LoadSpriteAnimation("FBZ/HangPoint.bin", SCOPE_STAGE);
 
     RSDK.SetSpriteAnimation(HangPoint->aniFrames, 0, &HangPoint->animator, true, 0);
 
-    Hitbox *hitbox               = RSDK.GetHitbox(&HangPoint->animator, 0);
+    hitbox               = RSDK.GetHitbox(&HangPoint->animator, 0);
     HangPoint->hitboxGrab.top    = hitbox->top;
     HangPoint->hitboxGrab.left   = hitbox->left;
     HangPoint->hitboxGrab.bottom = hitbox->bottom;

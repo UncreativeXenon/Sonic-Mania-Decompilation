@@ -29,11 +29,14 @@ void UIDialog_StaticUpdate(void) {}
 
 void UIDialog_Draw(void)
 {
+    int32 w;
+    int32 count;
+    Vector2 drawPos;
+    int32 i;
     RSDK_THIS(UIDialog);
 
     UIDialog_DrawBGShapes();
 
-    Vector2 drawPos;
     switch (self->lineCount) {
         case 0:
         case 1:
@@ -57,10 +60,11 @@ void UIDialog_Draw(void)
     drawPos.x += self->dialogPos.x;
     drawPos.y += self->dialogPos.y;
 
-    int32 w     = 0;
-    int32 count = self->lineCount + 1;
+    w     = 0;
+    count = self->lineCount + 1;
     if (count > 0) {
-        for (int32 i = 0; i < count; ++i) {
+        int32 i;
+        for (i = 0; i < count; ++i) {
             int32 start = !i ? 0 : self->lineLength[i - 1] + 1;
             int32 len   = i >= self->lineCount ? self->textInfo.length : self->lineLength[i];
 
@@ -70,7 +74,7 @@ void UIDialog_Draw(void)
         }
     }
 
-    for (int32 i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
         int32 offset = -0x8000 * w;
 
         int32 start = !i ? 0 : self->lineLength[i - 1] + 1;
@@ -118,9 +122,10 @@ EntityUIDialog *UIDialog_CreateActiveDialog(String *msg)
             LogHelpers_Print("Can't create UIDialog (%d), entity already exists in slot (class ID: %d)", UIDialog->classID, id);
         }
         else {
+            EntityUIDialog *dialog;
             RSDK.ResetEntitySlot(SLOT_DIALOG, UIDialog->classID, msg);
 
-            EntityUIDialog *dialog = RSDK_GET_ENTITY(SLOT_DIALOG, UIDialog);
+            dialog = RSDK_GET_ENTITY(SLOT_DIALOG, UIDialog);
             dialog->position.x     = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
             dialog->position.y     = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
             UIDialog->activeDialog = dialog;
@@ -135,10 +140,12 @@ EntityUIDialog *UIDialog_CreateActiveDialog(String *msg)
 void UIDialog_SetupText(EntityUIDialog *dialog, String *text)
 {
     if (text) {
+        int32 i;
+        int32 charPos;
         dialog->lineCount = 0;
-        int32 charPos     = 0;
+        charPos     = 0;
 
-        for (int32 i = 0; i < text->length; ++i) {
+        for (i = 0; i < text->length; ++i) {
             if (text->chars[charPos] == '\n' && dialog->lineCount < 3) {
                 dialog->lineLength[dialog->lineCount] = charPos;
                 ++dialog->lineCount;
@@ -158,13 +165,15 @@ void UIDialog_AddButton(uint8 frame, EntityUIDialog *dialog, void (*callback)(vo
     int32 id = dialog->buttonCount;
 
     if (dialog->buttonCount < UIDIALOG_OPTION_COUNT) {
+        EntityUIButton *button;
+        EntityUIControl *parent;
         dialog->buttonFrames[dialog->buttonCount]  = frame;
         dialog->callbacks[dialog->buttonCount]     = callback;
         dialog->closeOnSelect[dialog->buttonCount] = closeOnSelect;
 
         RSDK.ResetEntitySlot(SLOT_DIALOG_BUTTONS + dialog->buttonCount, UIButton->classID, NULL);
 
-        EntityUIButton *button = RSDK_GET_ENTITY(SLOT_DIALOG_BUTTONS + dialog->buttonCount, UIButton);
+        button = RSDK_GET_ENTITY(SLOT_DIALOG_BUTTONS + dialog->buttonCount, UIButton);
         button->position.x     = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
         button->position.y     = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
         RSDK.SetSpriteAnimation(UIWidgets->textFrames, 9, &button->animator, true, frame);
@@ -182,7 +191,7 @@ void UIDialog_AddButton(uint8 frame, EntityUIDialog *dialog, void (*callback)(vo
         button->drawGroup                      = dialog->drawGroup;
         dialog->buttons[dialog->buttonCount++] = button;
 
-        EntityUIControl *parent = dialog->parent;
+        parent = dialog->parent;
         if (parent) {
             button->parent      = (Entity *)parent;
             parent->buttons[id] = button;
@@ -194,55 +203,58 @@ void UIDialog_AddButton(uint8 frame, EntityUIDialog *dialog, void (*callback)(vo
 void UIDialog_Setup(EntityUIDialog *dialog)
 {
     if (dialog) {
+        Vector2 size;
         bool32 tookFocus = false;
 
-        Vector2 size;
         size.x = ScreenInfo->size.x << 16;
         size.y = ScreenInfo->size.y << 16;
-        foreach_all(UIControl, control)
         {
-            if (control->active == ACTIVE_ALWAYS) {
-                tookFocus                   = true;
-                control->dialogHasFocus     = true;
-                UIDialog->controlStore      = control;
-                UIDialog->controlStateStore = control->state;
-                foreach_break;
+            int32 i;
+            foreach_all(UIControl, control)
+            {
+                if (control->active == ACTIVE_ALWAYS) {
+                    tookFocus                   = true;
+                    control->dialogHasFocus     = true;
+                    UIDialog->controlStore      = control;
+                    UIDialog->controlStateStore = control->state;
+                    foreach_break;
+                }
             }
-        }
 
-        control = NULL;
-        RSDK.ResetEntitySlot(SLOT_DIALOG_UICONTROL, UIControl->classID, &size);
+            control = NULL;
+            RSDK.ResetEntitySlot(SLOT_DIALOG_UICONTROL, UIControl->classID, &size);
 
-        control = RSDK_GET_ENTITY(SLOT_DIALOG_UICONTROL, UIControl);
+            control = RSDK_GET_ENTITY(SLOT_DIALOG_UICONTROL, UIControl);
 #if MANIA_USE_PLUS
-        control->menuWasSetup = true;
+            control->menuWasSetup = true;
 #endif
-        control->position.x        = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
-        control->position.y        = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-        control->rowCount          = 1;
-        control->columnCount       = dialog->buttonCount;
-        control->buttonID          = 0;
-        control->backPressCB       = UIDialog_HandleAutoClose;
-        control->selectionDisabled = true;
+            control->position.x        = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
+            control->position.y        = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+            control->rowCount          = 1;
+            control->columnCount       = dialog->buttonCount;
+            control->buttonID          = 0;
+            control->backPressCB       = UIDialog_HandleAutoClose;
+            control->selectionDisabled = true;
 
-        dialog->parent = control;
-        if (!tookFocus) {
-            UIDialog->controlStore      = NULL;
-            UIDialog->controlStateStore = StateMachine_None;
+            dialog->parent = control;
+            if (!tookFocus) {
+                UIDialog->controlStore      = NULL;
+                UIDialog->controlStateStore = StateMachine_None;
+            }
+
+            i = 0;
+            for (; i < UIDIALOG_OPTION_COUNT; ++i) {
+                if (!dialog->buttons[i])
+                    break;
+
+                dialog->buttons[i]->parent = (Entity *)control;
+                control->buttons[i]        = dialog->buttons[i];
+            }
+
+            control->buttonCount = i;
+            dialog->timer        = 0;
+            dialog->state        = UIDialog_State_Appear;
         }
-
-        int32 i = 0;
-        for (; i < UIDIALOG_OPTION_COUNT; ++i) {
-            if (!dialog->buttons[i])
-                break;
-
-            dialog->buttons[i]->parent = (Entity *)control;
-            control->buttons[i]        = dialog->buttons[i];
-        }
-
-        control->buttonCount = i;
-        dialog->timer        = 0;
-        dialog->state        = UIDialog_State_Appear;
     }
 }
 
@@ -270,6 +282,7 @@ void UIDialog_DrawBGShapes(void)
 
 void UIDialog_HandleButtonPositions(void)
 {
+    int32 i;
     RSDK_THIS(UIDialog);
 
     int32 offsets[] = { 0, 0, 0x80, 0x70 };
@@ -278,11 +291,12 @@ void UIDialog_HandleButtonPositions(void)
     int32 x      = self->position.x - 0x240000 + self->dialogPos.x - ((offset * MAX(self->buttonCount - 1, 0)) >> 1);
     int32 y      = self->position.y + 0x2C0000 + self->dialogPos.y;
 
-    for (int32 i = 0; i < UIDIALOG_OPTION_COUNT; ++i) {
+    for (i = 0; i < UIDIALOG_OPTION_COUNT; ++i) {
+        EntityUIButton *button;
         if (!self->buttons[i])
             break;
 
-        EntityUIButton *button = self->buttons[i];
+        button = self->buttons[i];
         button->startPos.x     = x;
         button->startPos.y     = y;
         button->position.x     = x;
@@ -294,6 +308,8 @@ void UIDialog_HandleButtonPositions(void)
 
 void UIDialog_Close(void)
 {
+    int32 i; 
+    EntityUIControl *storedControl;
     RSDK_THIS(UIDialog);
 
     EntityUIControl *control = self->parent;
@@ -303,12 +319,12 @@ void UIDialog_Close(void)
         destroyEntity(control);
     }
 
-    for (int32 i = 0; i < UIDIALOG_OPTION_COUNT; ++i) {
+    for (i = 0; i < UIDIALOG_OPTION_COUNT; ++i) {
         if (self->buttons[i])
             destroyEntity(self->buttons[i]);
     }
 
-    EntityUIControl *storedControl = UIDialog->controlStore;
+    storedControl = UIDialog->controlStore;
     if (storedControl) {
         UIControl_SetMenuLostFocus(UIDialog->controlStore);
         storedControl->state          = UIDialog->controlStateStore;
@@ -325,10 +341,11 @@ void UIDialog_Close(void)
 
 bool32 UIDialog_HandleAutoClose(void)
 {
+    int32 i;
     EntityUIDialog *entity   = UIDialog->activeDialog;
     EntityUIControl *control = entity->parent;
 
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    for (i = 0; i < control->buttonCount; ++i) {
         int32 frame = entity->buttonFrames[i];
         if (frame == DIALOG_NO || frame == DIALOG_CANCEL) {
             if (entity->closeOnSelect[i]) {

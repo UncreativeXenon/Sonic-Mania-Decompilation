@@ -26,13 +26,14 @@ void PimPom_StaticUpdate(void) {}
 
 void PimPom_Draw(void)
 {
+    int32 i;
     RSDK_THIS(PimPom);
 
     Vector2 drawPos = self->drawPos;
     drawPos.x       = self->drawPos.x + self->offset.x;
     drawPos.y       = self->drawPos.y - self->offset.y;
 
-    for (int32 i = self->length; i >= 0; --i) {
+    for (i = self->length; i >= 0; --i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x -= self->moveAmount.x;
         drawPos.y += self->moveAmount.y;
@@ -44,6 +45,8 @@ void PimPom_Create(void *data)
     RSDK_THIS(PimPom);
 
     if (!SceneInfo->inEditor) {
+        int32 offset;
+        int32 len;
         self->active  = ACTIVE_BOUNDS;
         self->visible = true;
 
@@ -55,7 +58,7 @@ void PimPom_Create(void *data)
         self->negAngle      = 0x100 - self->angle;
         self->rotation      = 2 * self->negAngle;
 
-        int32 offset = self->type ? 24 : 8;
+        offset = self->type ? 24 : 8;
 
         self->offset.x = ((self->length * (offset + self->gap)) << 8) * RSDK.Cos256(self->angle);
         self->offset.y = ((self->length * (offset + self->gap)) << 8) * RSDK.Sin256(self->angle);
@@ -146,7 +149,7 @@ void PimPom_Create(void *data)
         self->amplitude.x >>= 10;
         self->amplitude.y >>= 10;
 
-        int32 len = 0;
+        len = 0;
 
         switch (self->moveType) {
             case PIMPOM_MOVE_FIXED:
@@ -197,6 +200,7 @@ void PimPom_StageLoad(void)
 
 void PimPom_State_Single(void)
 {
+    int32 l;
     RSDK_THIS(PimPom);
 
     int32 storeX = self->position.x;
@@ -205,7 +209,7 @@ void PimPom_State_Single(void)
     self->position.x = self->drawPos.x + self->offset.x;
     self->position.y = self->drawPos.y - self->offset.y;
 
-    for (int32 l = 0; l <= self->length; ++l) {
+    for (l = 0; l <= self->length; ++l) {
 
         foreach_active(Player, player)
         {
@@ -248,6 +252,7 @@ void PimPom_State_Single(void)
 
 void PimPom_State_Horizontal(void)
 {
+    int32 l;
     RSDK_THIS(PimPom);
 
     int32 startX = self->position.x;
@@ -261,24 +266,31 @@ void PimPom_State_Horizontal(void)
         len = self->length;
     }
 
-    for (int32 l = 0; l <= len; ++l) {
+    for (l = 0; l <= len; ++l) {
         foreach_active(Player, player)
         {
+            int32 storedVelX;
+            int32 storedVelY;
+
+            Hitbox hitbox;
+            Hitbox *playerHitbox;
+
+            Vector2 originVel = { 0, 0 };
+            uint8 side;
+
             int32 playerX    = player->position.x;
             int32 playerY    = player->position.y;
             int32 playerVelX = player->velocity.x;
             int32 playerVelY = player->velocity.y;
 
-            Vector2 originVel = { 0, 0 };
 
             Zone_RotateOnPivot(&player->position, &self->position, self->negAngle);
             Zone_RotateOnPivot(&player->velocity, &originVel, self->negAngle);
 
-            int32 storedVelX = player->velocity.x;
-            int32 storedVelY = player->velocity.y;
+            storedVelX = player->velocity.x;
+            storedVelY = player->velocity.y;
 
-            Hitbox hitbox;
-            Hitbox *playerHitbox = Player_GetHitbox(player);
+            playerHitbox = Player_GetHitbox(player);
             if ((((self->angle & 0xFF) - 32) & 0x7F) < 0x40) {
                 hitbox.top    = playerHitbox->left;
                 hitbox.bottom = playerHitbox->right;
@@ -289,7 +301,7 @@ void PimPom_State_Horizontal(void)
                 hitbox = *playerHitbox;
             }
 
-            uint8 side = RSDK.CheckObjectCollisionBox(self, &self->hitbox, player, &hitbox, true);
+            side = RSDK.CheckObjectCollisionBox(self, &self->hitbox, player, &hitbox, true);
             switch (side) {
                 case C_NONE:
                     player->position.x = playerX;
@@ -307,6 +319,7 @@ void PimPom_State_Horizontal(void)
             }
 
             if (side != C_NONE) {
+                Vector2 originVel = { 0, 0 };
 #if MANIA_USE_PLUS
                 if (player->characterID == ID_MIGHTY && player->state == Player_State_MightyHammerDrop) {
                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
@@ -315,8 +328,6 @@ void PimPom_State_Horizontal(void)
 #endif
                 player->onGround     = false;
                 player->applyJumpCap = false;
-
-                Vector2 originVel = { 0, 0 };
 
                 Zone_RotateOnPivot(&player->position, &self->position, self->angle);
                 Zone_RotateOnPivot(&player->velocity, &originVel, self->angle);
@@ -367,17 +378,21 @@ void PimPom_Move_Fixed(void)
 
 void PimPom_Move_Normal(void)
 {
+    int32 moveX;
+    int32 moveY;
+    int32 slot;
+    int32 i;
     RSDK_THIS(PimPom);
 
     int32 drawX     = self->drawPos.x;
     int32 drawY     = self->drawPos.y;
     self->drawPos.x = self->position.x + self->amplitude.x * RSDK.Sin1024(self->speed * Zone->timer);
     self->drawPos.y = self->position.y + self->amplitude.y * RSDK.Sin1024(self->speed * Zone->timer);
-    int32 moveX     = self->drawPos.x - drawX;
-    int32 moveY     = self->drawPos.y - drawY;
+    moveX     = self->drawPos.x - drawX;
+    moveY     = self->drawPos.y - drawY;
 
-    int32 slot = SceneInfo->entitySlot + 1;
-    for (int32 i = 0; i < self->numChildren; ++i) {
+    slot = SceneInfo->entitySlot + 1;
+    for (i = 0; i < self->numChildren; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(slot + i);
         child->position.x += moveX;
         child->position.y += moveY;
@@ -386,17 +401,21 @@ void PimPom_Move_Normal(void)
 
 void PimPom_Move_Circle(void)
 {
+    int32 moveX;
+    int32 moveY;
+    int32 slot;
+    int32 i;
     RSDK_THIS(PimPom);
 
     int32 drawX     = self->drawPos.x;
     int32 drawY     = self->drawPos.y;
     self->drawPos.x = self->position.x + self->amplitude.x * RSDK.Cos1024(self->speed * Zone->timer + 4 * self->angleM);
     self->drawPos.y = self->position.y + self->amplitude.y * RSDK.Sin1024(self->speed * Zone->timer + 4 * self->angleM);
-    int32 moveX     = self->drawPos.x - drawX;
-    int32 moveY     = self->drawPos.y - drawY;
+    moveX     = self->drawPos.x - drawX;
+    moveY     = self->drawPos.y - drawY;
 
-    int32 slot = SceneInfo->entitySlot + 1;
-    for (int32 i = 0; i < self->numChildren; ++i) {
+    slot = SceneInfo->entitySlot + 1;
+    for (i = 0; i < self->numChildren; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(slot + i);
         child->position.x += moveX;
         child->position.y += moveY;
@@ -405,6 +424,11 @@ void PimPom_Move_Circle(void)
 
 void PimPom_Move_Path(void)
 {
+    Entity *target;
+    int32 moveX;
+    int32 moveY;
+    int32 slot;
+    int32 i;
     RSDK_THIS(PimPom);
 
     int32 drawX = self->drawPos.x;
@@ -412,7 +436,7 @@ void PimPom_Move_Path(void)
     self->drawPos.x += self->velocity.x;
     self->drawPos.y += self->velocity.y;
 
-    Entity *target = RSDK_GET_ENTITY_GEN(self->speed);
+    target = RSDK_GET_ENTITY_GEN(self->speed);
 
     if (self->velocity.x <= 0) {
         if (self->drawPos.x < target->position.x)
@@ -428,11 +452,11 @@ void PimPom_Move_Path(void)
     else if (self->drawPos.y > target->position.y)
         self->drawPos.y = target->position.y;
 
-    int32 moveX = self->drawPos.x - drawX;
-    int32 moveY = self->drawPos.y - drawY;
+    moveX = self->drawPos.x - drawX;
+    moveY = self->drawPos.y - drawY;
 
-    int32 slot = SceneInfo->entitySlot + 1;
-    for (int32 i = 0; i < self->numChildren; ++i) {
+    slot = SceneInfo->entitySlot + 1;
+    for (i = 0; i < self->numChildren; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(slot + i);
         child->position.x += moveX;
         child->position.y += moveY;
@@ -441,6 +465,10 @@ void PimPom_Move_Path(void)
 
 void PimPom_Move_Track(void)
 {
+    int32 moveX;
+    int32 moveY;
+    int32 slot;
+    int32 i;
     RSDK_THIS(PimPom);
 
     int32 drawX = self->drawPos.x;
@@ -455,11 +483,11 @@ void PimPom_Move_Track(void)
         self->drawPos.y = self->position.y + (self->amplitude.y << 15) - ((((Zone->timer & 0xFFFF) << 7) * self->amplitude.y) >> 6);
     }
 
-    int32 moveX = self->drawPos.x - drawX;
-    int32 moveY = self->drawPos.y - drawY;
+    moveX = self->drawPos.x - drawX;
+    moveY = self->drawPos.y - drawY;
 
-    int32 slot = SceneInfo->entitySlot + 1;
-    for (int32 i = 0; i < self->numChildren; ++i) {
+    slot = SceneInfo->entitySlot + 1;
+    for (i = 0; i < self->numChildren; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(slot + i);
         child->position.x += moveX;
         child->position.y += moveY;

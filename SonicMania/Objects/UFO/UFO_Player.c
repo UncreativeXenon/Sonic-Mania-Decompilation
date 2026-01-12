@@ -40,9 +40,10 @@ void UFO_Player_Draw(void)
     RSDK_THIS(UFO_Player);
 
     if (self->zdepth >= 1) {
+        int32 anim;
         RSDK.Prepare3DScene(UFO_Player->sceneIndex);
 
-        int32 anim = self->animator.animationID;
+        anim = self->animator.animationID;
         if (anim == 2 || anim == 3) {
             RSDK.MatrixTranslateXYZ(&self->matTransform, self->position.x, self->height + 0x100000, self->position.y, true);
 
@@ -118,6 +119,7 @@ void UFO_Player_Create(void *data)
 
 void UFO_Player_StageLoad(void)
 {
+    EntityUFO_Player *player1;
     if (globals->playerID == ID_NONE)
         globals->playerID = ID_DEFAULT_PLAYER;
 
@@ -172,10 +174,12 @@ void UFO_Player_StageLoad(void)
     RSDK.SetDiffuseIntensity(UFO_Player->sceneIndex, 8, 8, 8);
     RSDK.SetSpecularIntensity(UFO_Player->sceneIndex, 15, 15, 15);
 
-    foreach_all(UFO_Player, player)
     {
-        EntityUFO_Player *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
-        RSDK.CopyEntity(player1, player, true);
+        foreach_all(UFO_Player, player)
+        {
+            EntityUFO_Player *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
+            RSDK.CopyEntity(player1, player, true);
+        }
     }
 
     UFO_Player->sfxJump         = RSDK.GetSfx("Global/Jump.wav");
@@ -188,7 +192,7 @@ void UFO_Player_StageLoad(void)
     UFO_Player->sfxSkid         = RSDK.GetSfx("Special/Skid.wav");
     UFO_Player->sfxGrittyGround = RSDK.GetSfx("Special/GrittyGround.wav");
 
-    EntityUFO_Player *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
     RSDK.ClearCameras();
     RSDK.AddCamera(&player1->position, 0x100000, 0x100000, true);
 }
@@ -277,19 +281,19 @@ void UFO_Player_HandleBumperTiles(void)
 
     uint16 tile = RSDK.GetTile(UFO_Setup->playFieldLayer, (self->position.x - 0x80000) >> 20, (self->position.y - 0x80000) >> 20);
     if (RSDK.GetTileFlags(tile, 0) == UFO_TFLAGS_BUMPER)
-        bumpDirMasks = 0b0001;
+        bumpDirMasks = 0x01;
 
     tile = RSDK.GetTile(UFO_Setup->playFieldLayer, (self->position.x + 0x80000) >> 20, (self->position.y - 0x80000) >> 20);
     if (RSDK.GetTileFlags(tile, 0) == UFO_TFLAGS_BUMPER)
-        bumpDirMasks |= 0b0010;
+        bumpDirMasks |= 0x02;
 
     tile = RSDK.GetTile(UFO_Setup->playFieldLayer, (self->position.x - 0x80000) >> 20, (self->position.y + 0x80000) >> 20);
     if (RSDK.GetTileFlags(tile, 0) == UFO_TFLAGS_BUMPER)
-        bumpDirMasks |= 0b0100;
+        bumpDirMasks |= 0x04;
 
     tile = RSDK.GetTile(UFO_Setup->playFieldLayer, (self->position.x + 0x80000) >> 20, (self->position.y + 0x80000) >> 20);
     if (RSDK.GetTileFlags(tile, 0) == UFO_TFLAGS_BUMPER)
-        bumpDirMasks |= 0b1000;
+        bumpDirMasks |= 0x08;
 
     if (bumpDirMasks) {
         if (!self->bumperTimer)
@@ -298,41 +302,41 @@ void UFO_Player_HandleBumperTiles(void)
         self->bumperTimer = 16;
         switch (bumpDirMasks) {
             default:
-            case 0b0000: break;
+            case 0x00: break;
 
-            case 0b0001:
-            case 0b0110:
-            case 0b0111:
+            case 0x01:
+            case 0x06:
+            case 0x07:
                 self->velocity.y = 0x40000;
                 self->velocity.x = 0x40000;
                 break;
 
-            case 0b0010:
-            case 0b1001:
-            case 0b1011:
+            case 0x02:
+            case 0x09:
+            case 0x0B:
                 self->velocity.x = -0x40000;
                 self->velocity.y = 0x40000;
                 break;
 
-            case 0b0011: self->velocity.y = 0x40000; break;
+            case 0x03: self->velocity.y = 0x40000; break;
 
-            case 0b0100:
-            case 0b1101:
+            case 0x04:
+            case 0x0D:
                 self->velocity.y = -0x40000;
                 self->velocity.x = 0x40000;
                 break;
 
-            case 0b0101: self->velocity.x = 0x40000; break;
+            case 0x05: self->velocity.x = 0x40000; break;
 
-            case 0b1000:
-            case 0b1110:
-            case 0b1111:
+            case 0x08:
+            case 0x0E:
+            case 0x0F:
                 self->velocity.x = -0x40000;
                 self->velocity.y = -0x40000;
                 break;
 
-            case 0b1010: self->velocity.x = -0x40000; break;
-            case 0b1100: self->velocity.y = -0x40000; break;
+            case 0x0A: self->velocity.x = -0x40000; break;
+            case 0x0C: self->velocity.y = -0x40000; break;
         }
     }
 }
@@ -432,10 +436,12 @@ void UFO_Player_State_Run(void)
         UFO_Player_HandleSpeedUp();
     }
     else {
+        int32 x;
+        int32 y;
         UFO_Player_HandleSpeedUp();
 
-        int32 x = (self->groundVel >> 10) * RSDK.Sin1024(self->angle);
-        int32 y = (self->groundVel >> 10) * RSDK.Cos1024(self->angle);
+        x = (self->groundVel >> 10) * RSDK.Sin1024(self->angle);
+        y = (self->groundVel >> 10) * RSDK.Cos1024(self->angle);
 
         self->velocity.x += (x - self->velocity.x) / self->velDivisor;
         self->velocity.y += (-y - self->velocity.y) / self->velDivisor;

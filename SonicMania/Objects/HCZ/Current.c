@@ -83,29 +83,31 @@ void Current_StaticUpdate(void)
         }
     }
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-
-        bool32 active = false;
-        foreach_active(Current, current)
+        foreach_active(Player, player)
         {
-            if (current->activated) {
-                if (current->type < CURRENT_W_LEFT) {
-                    if ((current->planeFilter <= 0 || player->collisionPlane == ((uint8)(current->planeFilter - 1) & 1))
-                        && (!current->waterOnly || player->underwater)) {
-                        if (Player_CheckCollisionTouch(player, current, &current->hitbox)) {
-                            Current->activePlayers |= 1 << playerID;
-                            active = true;
-                            foreach_break;
+            int32 playerID = RSDK.GetEntitySlot(player);
+
+            bool32 active = false;
+            foreach_active(Current, current)
+            {
+                if (current->activated) {
+                    if (current->type < CURRENT_W_LEFT) {
+                        if ((current->planeFilter <= 0 || player->collisionPlane == ((uint8)(current->planeFilter - 1) & 1))
+                            && (!current->waterOnly || player->underwater)) {
+                            if (Player_CheckCollisionTouch(player, current, &current->hitbox)) {
+                                Current->activePlayers |= 1 << playerID;
+                                active = true;
+                                foreach_break;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if (!active)
-            Current->activePlayers &= ~(1 << playerID);
+            if (!active)
+                Current->activePlayers &= ~(1 << playerID);
+        }
     }
 }
 
@@ -183,10 +185,11 @@ void Current_StageLoad(void)
 
 void Current_SetupTagLink(void)
 {
+    EntityButton *taggedButton;
     RSDK_THIS(Current);
 
     self->taggedButton         = NULL;
-    EntityButton *taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
+    taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
 
     if (self->buttonTag > 0) {
         bool32 matchedTag = false;
@@ -231,6 +234,11 @@ void Current_SetupTagLink(void)
 
 Vector2 Current_GetBubbleSpawnPosHorizontal(uint8 right)
 {
+    int32 maxY;
+    int32 screenY;
+    int32 minY;
+    int32 randMax;
+    Vector2 bubblePos;
     RSDK_THIS(Current);
 
     int32 x = 0;
@@ -245,20 +253,19 @@ Vector2 Current_GetBubbleSpawnPosHorizontal(uint8 right)
             x = (ScreenInfo->position.x + 64 + ScreenInfo->size.x) << 16;
     }
 
-    int32 maxY = self->position.y - (self->size.y >> 1) - 0x200000;
+    maxY = self->position.y - (self->size.y >> 1) - 0x200000;
     if ((ScreenInfo->position.y - 64) << 16 > maxY)
         maxY = (ScreenInfo->position.y - 64) << 16;
 
-    int32 screenY = (ScreenInfo->position.y + 64 + ScreenInfo->size.y) << 16;
-    int32 minY    = (self->size.y >> 1) + self->position.y + 0x200000;
+    screenY = (ScreenInfo->position.y + 64 + ScreenInfo->size.y) << 16;
+    minY    = (self->size.y >> 1) + self->position.y + 0x200000;
     if (screenY < minY)
         minY = screenY;
 
-    int32 randMax = (minY - maxY) >> 20;
+    randMax = (minY - maxY) >> 20;
     if (!randMax)
         randMax = 1;
 
-    Vector2 bubblePos;
     bubblePos.x = x;
     if (randMax <= 0)
         bubblePos.y = maxY;
@@ -269,9 +276,15 @@ Vector2 Current_GetBubbleSpawnPosHorizontal(uint8 right)
 
 Vector2 Current_GetBubbleSpawnPosVertical(uint8 down)
 {
+    int32 y;
+    int32 maxX;
+    int32 screenX;
+    int32 minX;
+    int32 max;
+    Vector2 bubblePos;
     RSDK_THIS(Current);
 
-    int32 y = 0;
+    y    = 0;
     if (down) {
         y = self->position.y - (self->size.y >> 1) - 0x200000;
         if ((ScreenInfo->position.y - 64) << 16 > y)
@@ -283,20 +296,19 @@ Vector2 Current_GetBubbleSpawnPosVertical(uint8 down)
             y = (ScreenInfo->position.y + 64 + ScreenInfo->size.y) << 16;
     }
 
-    int32 maxX = self->position.x - (self->size.x >> 1) - 0x200000;
+    maxX = self->position.x - (self->size.x >> 1) - 0x200000;
     if ((ScreenInfo->position.x - 64) << 16 > maxX)
         maxX = (ScreenInfo->position.x - 64) << 16;
 
-    int32 screenX = (ScreenInfo->position.x + 64 + ScreenInfo->size.x) << 16;
-    int32 minX    = (self->size.x >> 1) + self->position.x + 0x200000;
+    screenX = (ScreenInfo->position.x + 64 + ScreenInfo->size.x) << 16;
+    minX    = (self->size.x >> 1) + self->position.x + 0x200000;
     if (screenX < minX)
         minX = screenX;
 
-    int32 max = (minX - maxX) >> 20;
+    max = (minX - maxX) >> 20;
     if (!max)
         max = 1;
 
-    Vector2 bubblePos;
     if (max <= 0) {
         bubblePos.x = maxX;
         bubblePos.y = y;
@@ -321,10 +333,11 @@ void Current_State_WaterLeft(void)
             if (Player_CheckValidState(player)) {
                 if ((1 << playerID) & self->activePlayers) {
                     if (!Player_CheckCollisionTouch(player, self, &self->hitbox) || player->state == Player_State_HoldRespawn) {
+                        int32 x;
                         if (player->state != Player_State_HoldRespawn)
                             player->state = Player_State_Air;
 
-                        int32 x = self->position.x + ((self->hitbox.right - 32) << 16);
+                        x = self->position.x + ((self->hitbox.right - 32) << 16);
                         self->activePlayers &= ~(1 << playerID);
                         if (RSDK.CheckSceneFolder("FBZ") && !player->sidekick && self->fbzAchievement && self->playerPositions[playerID].x >= x
                             && player->position.x < self->position.x) {

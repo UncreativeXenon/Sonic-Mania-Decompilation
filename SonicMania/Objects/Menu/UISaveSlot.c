@@ -11,6 +11,8 @@ ObjectUISaveSlot *UISaveSlot;
 
 void UISaveSlot_Update(void)
 {
+    EntityUIControl *control;
+    int32 i;
     RSDK_THIS(UISaveSlot);
 
     UISaveSlot_SetupButtonElements();
@@ -26,10 +28,10 @@ void UISaveSlot_Update(void)
     if (++self->zoneIconSprX >= 192)
         self->zoneIconSprX -= 192;
 
-    EntityUIControl *control = (EntityUIControl *)self->parent;
+    control = (EntityUIControl *)self->parent;
 
     // ???
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    for (i = 0; i < control->buttonCount; ++i) {
         if (self == (EntityUISaveSlot *)control->buttons[i])
             break;
     }
@@ -171,11 +173,12 @@ void UISaveSlot_Draw(void)
             UISaveSlot_DrawPlayerIcons(drawPos.x, drawPos.y);
         }
         else {
+            int32 i;
             RSDK.DrawRect(self->position.x - 0x2D0000, self->position.y + 0x3D0000, 0x5A0000, 0x100000, 0x000000, 0xFF, INK_NONE, false);
 
             drawPos.x = self->position.x - 0x240000;
             drawPos.y = 0x450000 + self->position.y;
-            for (int32 i = 0; i < 7; ++i) {
+            for (i = 0; i < 7; ++i) {
                 self->emeraldsAnimator.frameID = ((1 << i) & self->saveEmeralds) ? i : 7;
                 RSDK.DrawSprite(&self->emeraldsAnimator, &drawPos, false);
 
@@ -317,6 +320,7 @@ uint8 UISaveSlot_GetIDFromPlayerID(uint8 playerID)
 void UISaveSlot_DrawPlayerIcon_Encore(uint8 playerID, bool32 isSilhouette, uint8 buddyID, uint8 *friendIDs, uint8 friendCount, int32 drawX,
                                       int32 drawY)
 {
+    int32 y;
     RSDK_THIS(UISaveSlot);
 
     Vector2 drawPos;
@@ -334,7 +338,7 @@ void UISaveSlot_DrawPlayerIcon_Encore(uint8 playerID, bool32 isSilhouette, uint8
         case ID_RAY: animator->frameID = 4; break;
     }
 
-    int32 y = drawY;
+    y = drawY;
     if (friendCount)
         y = drawY - 0x80000;
     drawPos.x = drawX + 0x100000;
@@ -364,9 +368,12 @@ void UISaveSlot_DrawPlayerIcon_Encore(uint8 playerID, bool32 isSilhouette, uint8
     self->direction = FLIP_NONE;
     self->drawFX    = FX_NONE;
     if (friendCount && !isSilhouette) {
+        int32 x;
+        int32 offset;
+        int32 f;
         RSDK.SetSpriteAnimation(UISaveSlot->aniFrames, 3, animator, true, 0);
-        int32 x      = drawX;
-        int32 offset = 0x120000;
+        x      = drawX;
+        offset = 0x120000;
         if (self->saveContinues > 0) {
             offset = 0xA0000;
             x      = drawX - 0x160000;
@@ -375,7 +382,7 @@ void UISaveSlot_DrawPlayerIcon_Encore(uint8 playerID, bool32 isSilhouette, uint8
         drawPos.x = x + ((offset * (friendCount - 1)) >> 1);
         drawPos.y = drawY + 0x1A0000;
 
-        for (int32 f = friendCount - 1; f >= 0; --f) {
+        for (f = friendCount - 1; f >= 0; --f) {
             switch (friendIDs[f]) {
                 default:
                 case ID_SONIC: animator->frameID = 0; break;
@@ -396,15 +403,18 @@ void UISaveSlot_DrawPlayerIcons(int32 drawX, int32 drawY)
 {
     RSDK_THIS(UISaveSlot);
     Vector2 drawPos;
+    uint8 friendIDs[3];
+    int32 playerID;
+    int32 buddyID;
+    int32 friendCount;
 
     RSDK.SetSpriteAnimation(UISaveSlot->aniFrames, 1, &self->playersAnimator, true, 3);
     RSDK.SetSpriteAnimation(UISaveSlot->aniFrames, 2, &self->shadowsAnimator, true, 3);
 
 #if MANIA_USE_PLUS
-    uint8 friendIDs[3];
-    int32 playerID    = 0;
-    int32 buddyID     = 0;
-    int32 friendCount = 0;
+    playerID    = 0;
+    buddyID     = 0;
+    friendCount = 0;
 
     if (!self->encoreMode) {
 #endif
@@ -415,10 +425,11 @@ void UISaveSlot_DrawPlayerIcons(int32 drawX, int32 drawY)
     }
     else if (!SceneInfo->inEditor) {
         if (!self->isNewSave && self->type != UISAVESLOT_NOSAVE) {
+            int32 i;
             playerID = self->saveEncorePlayer;
             buddyID  = self->saveEncoreBuddy;
 
-            for (int32 i = 0; i < 3; ++i) {
+            for (i = 0; i < 3; ++i) {
                 friendIDs[i] = 0;
                 if (!self->saveEncoreFriends[i])
                     continue;
@@ -513,6 +524,12 @@ void UISaveSlot_DrawPlayerIcons(int32 drawX, int32 drawY)
 
 void UISaveSlot_DrawPlayerInfo(int32 drawX, int32 drawY)
 {
+    int32 playerID;
+    Animator *animators[2];
+    int32 retries[2];
+    Vector2 positions[2];
+    int32 count;
+    int32 i;
     RSDK_THIS(UISaveSlot);
 
     RSDK.SetSpriteAnimation(UISaveSlot->aniFrames, 3, &self->livesAnimator, true, 0);
@@ -520,7 +537,7 @@ void UISaveSlot_DrawPlayerInfo(int32 drawX, int32 drawY)
     RSDK.SetSpriteAnimation(UISaveSlot->aniFrames, 21, &self->continuesAnimator, true, 0);
 #endif
 
-    int32 playerID = 0;
+    playerID = 0;
 #if MANIA_USE_PLUS
     if (self->encoreMode) {
         if (self->isNewSave || self->type == UISAVESLOT_NOSAVE)
@@ -560,13 +577,11 @@ void UISaveSlot_DrawPlayerInfo(int32 drawX, int32 drawY)
     self->continuesAnimator.frameID = playerID;
 #endif
 
-    Animator *animators[2];
     animators[0] = &self->livesAnimator;
 #if MANIA_USE_PLUS
     animators[1] = &self->continuesAnimator;
 #endif
 
-    int32 retries[2];
     retries[0] = MIN(self->saveLives, 99);
 #if MANIA_USE_PLUS
     retries[1] = MIN(self->saveContinues, 99);
@@ -574,13 +589,12 @@ void UISaveSlot_DrawPlayerInfo(int32 drawX, int32 drawY)
     retries[1] = 0;
 #endif
 
-    Vector2 positions[2];
     positions[0].x = drawX;
     positions[0].y = drawY;
     positions[1].y = drawY;
     positions[1].x = drawX;
 
-    int32 count = 1;
+    count = 1;
     if (retries[1] <= 0) {
         positions[0].x = drawX - 0x20000;
     }
@@ -590,7 +604,7 @@ void UISaveSlot_DrawPlayerInfo(int32 drawX, int32 drawY)
         count          = 2;
     }
 
-    for (int32 i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
         Vector2 drawPos;
 
         drawPos.x = positions[i].x;
@@ -621,6 +635,7 @@ void UISaveSlot_DrawPlayerInfo(int32 drawX, int32 drawY)
 
 void UISaveSlot_SetupButtonElements(void)
 {
+    SaveRAM *saveRAM;
     RSDK_THIS(UISaveSlot);
 
     self->touchCB            = UIButton_ProcessTouchCB_Multi;
@@ -632,9 +647,9 @@ void UISaveSlot_SetupButtonElements(void)
     self->checkSelectedCB    = UISaveSlot_CheckSelectedCB;
 
 #if MANIA_USE_PLUS
-    SaveRAM *saveRAM = (SaveRAM *)SaveGame_GetDataPtr(self->slotID, self->encoreMode);
+    saveRAM = (SaveRAM *)SaveGame_GetDataPtr(self->slotID, self->encoreMode);
 #else
-    SaveRAM *saveRAM = (SaveRAM *)SaveGame_GetDataPtr(self->slotID);
+    saveRAM = (SaveRAM *)SaveGame_GetDataPtr(self->slotID);
 #endif
 
     if (self->type == UISAVESLOT_NOSAVE) {
@@ -740,11 +755,13 @@ void UISaveSlot_LoadSaveInfo(void)
     if (saveState == SAVEGAME_INPROGRESS || saveState == SAVEGAME_COMPLETE) {
 #if MANIA_USE_PLUS
         if (self->encoreMode) {
+            int32 friends;
+            int32 i;
             self->saveEncorePlayer = saveRAM->playerID & 0xFF;
             self->saveEncoreBuddy  = (saveRAM->playerID >> 8) & 0xFF;
 
-            int32 friends = saveRAM->stock;
-            for (int32 i = 0; i < 3; ++i) {
+            friends = saveRAM->stock;
+            for (i = 0; i < 3; ++i) {
                 self->saveEncoreFriends[i] = ID_NONE;
                 if (!friends)
                     continue;
@@ -829,6 +846,7 @@ void UISaveSlot_HandleSaveIcons(void)
 
 void UISaveSlot_DeleteDLG_CB(void)
 {
+    int32 *saveRAM;
     EntityUIDialog *dialog     = (EntityUIDialog *)UIDialog->activeDialog;
     EntityUISaveSlot *saveSlot = (EntityUISaveSlot *)dialog->entityPtr;
 
@@ -837,9 +855,9 @@ void UISaveSlot_DeleteDLG_CB(void)
     UIWaitSpinner_StartWait();
 
 #if MANIA_USE_PLUS
-    int32 *saveRAM = SaveGame_GetDataPtr(saveSlot->slotID % 8, saveSlot->encoreMode);
+    saveRAM = SaveGame_GetDataPtr(saveSlot->slotID % 8, saveSlot->encoreMode);
 #else
-    int32 *saveRAM = SaveGame_GetDataPtr(saveSlot->slotID % 8);
+    saveRAM = SaveGame_GetDataPtr(saveSlot->slotID % 8);
 #endif
     // Bug Details(?):
     // sizeof(globals->noSaveSlot) and sizeof(saveData) is 4096 (sizeof(int32) * 0x400)
@@ -856,12 +874,13 @@ void UISaveSlot_DeleteSaveCB(bool32 success)
 void UISaveSlot_DeleteSaveCB(void)
 #endif
 {
+    Entity *storeEntity;
     EntityUIDialog *dialog     = (EntityUIDialog *)UIDialog->activeDialog;
     EntityUISaveSlot *saveSlot = (EntityUISaveSlot *)dialog->entityPtr;
     UIWaitSpinner_FinishWait();
     UIDialog_CloseOnSel_HandleSelection(dialog, StateMachine_None);
 
-    Entity *storeEntity = SceneInfo->entity;
+    storeEntity = SceneInfo->entity;
     SceneInfo->entity   = (Entity *)saveSlot;
     UISaveSlot_LoadSaveInfo();
     UISaveSlot_HandleSaveIcons();
@@ -887,6 +906,7 @@ void UISaveSlot_ProcessButtonCB(void)
 #endif
 
     if (control->position.x == control->targetPos.x) {
+        String msg;
         if (control->columnCount > 1) {
             if (UIControl->anyLeftPress) {
                 if (control->buttonID > 0) {
@@ -910,7 +930,6 @@ void UISaveSlot_ProcessButtonCB(void)
         StateMachine_Run(self->stateInput);
 #endif
 
-        String msg;
         INIT_STRING(msg);
 
         if (UIControl->anyConfirmPress) {
@@ -927,8 +946,9 @@ void UISaveSlot_ProcessButtonCB(void)
 #endif
         }
         else if (UIControl->anyXPress && saveRAM->saveState != SAVEGAME_BLANK && self->type == UISAVESLOT_REGULAR) {
+            EntityUIDialog *dialog;
             Localization_GetString(&msg, STR_DELETEPOPUP);
-            EntityUIDialog *dialog = UIDialog_CreateDialogYesNo(&msg, UISaveSlot_DeleteDLG_CB, NULL, false, true);
+            dialog = UIDialog_CreateDialogYesNo(&msg, UISaveSlot_DeleteDLG_CB, NULL, false, true);
             if (dialog) {
                 dialog->entityPtr = (Entity *)self;
             }
@@ -947,32 +967,37 @@ void UISaveSlot_SelectedCB(void)
     EntityUIControl *control = (EntityUIControl *)self->parent;
 
     if (control->position.x == control->targetPos.x) {
+        int32 id; 
         control->state          = 0;
         self->state             = UISaveSlot_State_Selected;
         self->isSelected        = false;
         self->currentlySelected = false;
         self->processButtonCB   = NULL;
 
-        foreach_all(UISaveSlot, saveSlot)
         {
-            if (saveSlot != self) {
-                if (saveSlot->position.x >= self->position.x) {
-                    if (saveSlot->position.x > self->position.x)
-                        saveSlot->velocity.x = 0x200000;
+            foreach_all(UISaveSlot, saveSlot)
+            {
+                if (saveSlot != self) {
+                    if (saveSlot->position.x >= self->position.x) {
+                        if (saveSlot->position.x > self->position.x)
+                            saveSlot->velocity.x = 0x200000;
+                    }
+                    else {
+                        saveSlot->velocity.x = -0x200000;
+                    }
+                    saveSlot->state = UISaveSlot_State_OtherWasSelected;
                 }
-                else {
-                    saveSlot->velocity.x = -0x200000;
-                }
-                saveSlot->state = UISaveSlot_State_OtherWasSelected;
             }
         }
 
-        foreach_all(UIButtonPrompt, prompt) { prompt->visible = false; }
+        {
+            foreach_all(UIButtonPrompt, prompt) { prompt->visible = false; }
+        }
 
 #if MANIA_USE_PLUS
-        int32 id = API_GetFilteredInputDeviceID(true, false, 5);
+        id = API_GetFilteredInputDeviceID(true, false, 5);
 #else
-        int32 id = API_GetFilteredInputDeviceID(INPUT_NONE);
+        id = API_GetFilteredInputDeviceID(INPUT_NONE);
 #endif
         API_ResetInputSlotAssignments();
         API_AssignInputSlotToDevice(CONT_P1, id);
@@ -984,15 +1009,17 @@ void UISaveSlot_SelectedCB(void)
 
 void UISaveSlot_NextCharacter(void)
 {
+    int32 player;
+    int32 max;
     RSDK_THIS(UISaveSlot);
 
     ++self->frameID;
-    int32 player = self->frameID;
+    player = self->frameID;
 
 #if MANIA_USE_PLUS
-    int32 max = API.CheckDLC(DLC_PLUS) ? 6 : 4;
+    max = API.CheckDLC(DLC_PLUS) ? 6 : 4;
 #else
-    int32 max = 4;
+    max = 4;
 #endif
     while (player >= max) player -= max;
 
@@ -1007,15 +1034,17 @@ void UISaveSlot_NextCharacter(void)
 
 void UISaveSlot_PrevCharacter(void)
 {
+    int32 player;
+    int32 max;
     RSDK_THIS(UISaveSlot);
 
     --self->frameID;
-    int32 player = self->frameID;
+    player = self->frameID;
 
 #if MANIA_USE_PLUS
-    int32 max = API.CheckDLC(DLC_PLUS) ? 6 : 4;
+    max = API.CheckDLC(DLC_PLUS) ? 6 : 4;
 #else
-    int32 max = 4;
+    max = 4;
 #endif
     while (player < 0) player += max;
 

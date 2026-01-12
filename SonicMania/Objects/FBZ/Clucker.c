@@ -247,6 +247,7 @@ void Clucker_State_ShootDelay(void)
 
 void Clucker_State_Shoot(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Clucker);
 
     --self->timer;
@@ -254,14 +255,16 @@ void Clucker_State_Shoot(void)
         self->xOffset += 0x20000;
     }
     else if (!self->timer) {
+        int32 spawnY;
+        EntityClucker *projectile;
         self->xOffset -= 0x20000;
-        int32 spawnY = self->position.y;
+        spawnY = self->position.y;
         if (self->direction & FLIP_Y)
             spawnY += 0xD0000;
         else
             spawnY -= 0xD0000;
 
-        EntityClucker *projectile = CREATE_ENTITY(Clucker, INT_TO_VOID(true), self->position.x, spawnY);
+        projectile = CREATE_ENTITY(Clucker, INT_TO_VOID(true), self->position.x, spawnY);
         if (self->direction & FLIP_X) {
             projectile->position.x += 0x100000;
             projectile->velocity.x = 0x20000;
@@ -276,7 +279,7 @@ void Clucker_State_Shoot(void)
         RSDK.PlaySfx(Clucker->sfxShot, false, 255);
     }
 
-    EntityPlayer *player = Player_GetNearestPlayer();
+    player = Player_GetNearestPlayer();
     if (player) {
         if (player->position.x >= self->position.x) {
             if (!(self->direction & FLIP_X)) {
@@ -324,11 +327,13 @@ void Clucker_State_Destroyed(void)
         offsetY = platform->collisionOffset.y;
     }
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionBox(player, self, &Clucker->hitboxSolid)) {
-            player->position.x += offsetX;
-            player->position.y += offsetY;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionBox(player, self, &Clucker->hitboxSolid)) {
+                player->position.x += offsetX;
+                player->position.y += offsetY;
+            }
         }
     }
 }
@@ -343,10 +348,12 @@ void Clucker_State_Egg(void)
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Clucker->hitboxEgg))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Clucker->hitboxEgg))
+                    Player_ProjectileHurt(player, self);
+            }
         }
 
         if (RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0, false))

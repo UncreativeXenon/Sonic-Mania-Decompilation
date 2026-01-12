@@ -70,9 +70,10 @@ void FlowerPod_StageLoad(void)
 
 void FlowerPod_SpawnSeeds(void)
 {
+    int32 v;
     RSDK_THIS(FlowerPod);
 
-    for (int32 v = -0x10000; v < 0x18000; v += 0x8000) {
+    for (v = -0x10000; v < 0x18000; v += 0x8000) {
         EntityFlowerPod *seed = CREATE_ENTITY(FlowerPod, INT_TO_VOID(true), self->position.x, self->position.y);
         seed->isPermanent     = true;
         seed->velocity.x      = v;
@@ -87,10 +88,12 @@ void FlowerPod_State_Pod(void)
 
     RSDK.ProcessAnimation(&self->podAnimator);
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckAttackingNoInvTimer(player, self) && Player_CheckBadnikTouch(player, self, &FlowerPod->hitboxPod))
-            self->state = FlowerPod_State_Exploding;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckAttackingNoInvTimer(player, self) && Player_CheckBadnikTouch(player, self, &FlowerPod->hitboxPod))
+                self->state = FlowerPod_State_Exploding;
+        }
     }
 }
 
@@ -163,10 +166,12 @@ void FlowerPod_State_SpawnBeanstalk(void)
         hitboxSeed.top    = -4;
         hitboxSeed.right  = 4;
         hitboxSeed.bottom = 4;
-        foreach_active(Beanstalk, beanstalk)
         {
-            if (!beanstalk->type && RSDK.CheckObjectCollisionTouchBox(beanstalk, &Beanstalk->hitboxSeed, self, &hitboxSeed))
-                beanstalk->startGrowth = true;
+            foreach_active(Beanstalk, beanstalk)
+            {
+                if (!beanstalk->type && RSDK.CheckObjectCollisionTouchBox(beanstalk, &Beanstalk->hitboxSeed, self, &hitboxSeed))
+                    beanstalk->startGrowth = true;
+            }
         }
 
         RSDK.SetSpriteAnimation(FlowerPod->aniFrames, 5, &self->podAnimator, true, 0);

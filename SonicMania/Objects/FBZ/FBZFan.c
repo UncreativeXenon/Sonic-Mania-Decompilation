@@ -19,48 +19,51 @@ void FBZFan_Update(void)
     self->hitboxTrigger.top    = -96;
     self->hitboxTrigger.bottom = -8;
 
-    foreach_active(Player, player)
     {
-        bool32 isFanning = false;
+        foreach_active(Player, player)
+        {
+            bool32 isFanning = false;
 
-        int32 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionBox(player, self, &FBZFan->hitboxSolid);
+            int32 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionBox(player, self, &FBZFan->hitboxSolid);
 
-        if (player->state != Player_State_Static && Player_CheckValidState(player) && player->animator.animationID != ANI_HURT
-            && RSDK.CheckObjectCollisionTouchBox(self, &FBZFan->hitboxFan, player, &FBZFan->hitboxPlayer)) {
-            isFanning = true;
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
-            player->state    = Player_State_Air;
-            player->onGround = false;
+            if (player->state != Player_State_Static && Player_CheckValidState(player) && player->animator.animationID != ANI_HURT
+                && RSDK.CheckObjectCollisionTouchBox(self, &FBZFan->hitboxFan, player, &FBZFan->hitboxPlayer)) {
+                int32 vel;
+                isFanning = true;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
+                player->state    = Player_State_Air;
+                player->onGround = false;
 
-            int32 vel = (self->position.y + (FBZFan->hitboxFan.top << 16) - player->position.y) >> 4;
-            if (player->velocity.y <= vel) {
-                player->velocity.y = vel;
+                vel = (self->position.y + (FBZFan->hitboxFan.top << 16) - player->position.y) >> 4;
+                if (player->velocity.y <= vel) {
+                    player->velocity.y = vel;
+                }
+                else {
+                    player->velocity.y += ((self->position.y + (FBZFan->hitboxFan.top << 16) - player->position.y) >> 6)
+                                          + ((self->position.y + (FBZFan->hitboxFan.top << 16) - player->position.y) >> 5);
+
+                    if (player->velocity.y < vel)
+                        player->velocity.y = vel;
+                }
+
+                if (!((1 << playerID) & FBZFan->activePlayers)) {
+                    if (player->velocity.y > -0x40000 && player->velocity.y < 0)
+                        player->velocity.x += (32 * player->velocity.x / 31) >> 5;
+
+                    FBZFan->activePlayers |= 1 << playerID;
+                }
+            }
+
+            if (RSDK.CheckObjectCollisionTouchBox(self, &self->hitboxTrigger, player, &FBZFan->hitboxPlayer)) {
+                if (!((1 << playerID) & self->activePlayers) && isFanning) {
+                    RSDK.PlaySfx(FBZFan->sfxFan, false, 255);
+                    self->activePlayers |= (1 << playerID);
+                }
             }
             else {
-                player->velocity.y += ((self->position.y + (FBZFan->hitboxFan.top << 16) - player->position.y) >> 6)
-                                      + ((self->position.y + (FBZFan->hitboxFan.top << 16) - player->position.y) >> 5);
-
-                if (player->velocity.y < vel)
-                    player->velocity.y = vel;
+                self->activePlayers &= ~(1 << playerID);
             }
-
-            if (!((1 << playerID) & FBZFan->activePlayers)) {
-                if (player->velocity.y > -0x40000 && player->velocity.y < 0)
-                    player->velocity.x += (32 * player->velocity.x / 31) >> 5;
-
-                FBZFan->activePlayers |= 1 << playerID;
-            }
-        }
-
-        if (RSDK.CheckObjectCollisionTouchBox(self, &self->hitboxTrigger, player, &FBZFan->hitboxPlayer)) {
-            if (!((1 << playerID) & self->activePlayers) && isFanning) {
-                RSDK.PlaySfx(FBZFan->sfxFan, false, 255);
-                self->activePlayers |= (1 << playerID);
-            }
-        }
-        else {
-            self->activePlayers &= ~(1 << playerID);
         }
     }
 }

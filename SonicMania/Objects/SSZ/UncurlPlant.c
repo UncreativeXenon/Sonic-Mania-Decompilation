@@ -11,6 +11,8 @@ ObjectUncurlPlant *UncurlPlant;
 
 void UncurlPlant_Update(void)
 {
+    int32 n;
+    int32 prevStoodNode;
     RSDK_THIS(UncurlPlant);
 
     if (!self->stood) {
@@ -20,16 +22,18 @@ void UncurlPlant_Update(void)
     else {
 
         if (self->uncurlMode <= 0) { // Very Slow uncurl
-            for (int32 n = 0; n < self->stoodNodeID; ++n)
+            int32 n;
+            for (n = 0; n < self->stoodNodeID; ++n)
                 self->targetNodeAngles[n] += (UncurlPlant->targetNodeAnglesStood[n] - self->targetNodeAngles[n]) >> 2;
 
-            for (int32 n = self->stoodNodeID; n < UNCURLPLANT_NODE_COUNT; ++n)
+            for (n = self->stoodNodeID; n < UNCURLPLANT_NODE_COUNT; ++n)
                 self->targetNodeAngles[n] += (UncurlPlant->targetNodeAnglesReleased[n] - self->targetNodeAngles[n]) >> 2;
         }
         else {
-            for (int32 n = 0; n < self->stoodNodeID; ++n) self->targetNodeAngles[n] = UncurlPlant->targetNodeAnglesStood[n];
+            int32 n;
+            for (n = 0; n < self->stoodNodeID; ++n) self->targetNodeAngles[n] = UncurlPlant->targetNodeAnglesStood[n];
 
-            for (int32 n = self->stoodNodeID; n < UNCURLPLANT_NODE_COUNT; ++n) self->targetNodeAngles[n] = UncurlPlant->targetNodeAnglesReleased[n];
+            for (n = self->stoodNodeID; n < UNCURLPLANT_NODE_COUNT; ++n) self->targetNodeAngles[n] = UncurlPlant->targetNodeAnglesReleased[n];
         }
 
         if (self->uncurlMode > 1)
@@ -38,40 +42,43 @@ void UncurlPlant_Update(void)
             self->uncurlPercent += 0x20;
     }
 
-    for (int32 n = 0; n < UNCURLPLANT_NODE_COUNT; ++n)
+    for (n = 0; n < UNCURLPLANT_NODE_COUNT; ++n)
         self->nodeAngles[n] =
             UncurlPlant->startingNodeAngles[n] + ((self->uncurlPercent * (self->targetNodeAngles[n] - UncurlPlant->startingNodeAngles[n])) >> 8);
 
-    int32 prevStoodNode = self->stoodNodeID;
+    prevStoodNode = self->stoodNodeID;
     self->stood         = false;
     self->stoodNodeID   = -1;
     self->uncurlMode    = 0;
     UncurlPlant_CalculateDrawPositions();
 
-    foreach_active(Player, player)
-    {
-        int32 angle  = 0;
-        int32 nodeID = 0;
-        for (int32 n = 0; n < UNCURLPLANT_NODE_COUNT; ++n) {
-            angle += self->nodeAngles[n];
-            if (angle >= 0x90)
-                break;
+{
+        foreach_active(Player, player)
+        {
+            int32 n;
+            int32 angle  = 0;
+            int32 nodeID = 0;
+            for (n = 0; n < UNCURLPLANT_NODE_COUNT; ++n) {
+                angle += self->nodeAngles[n];
+                if (angle >= 0x90)
+                    break;
 
-            self->position.x = self->nodePositions[n].x;
-            self->position.y = self->nodePositions[n].y;
-            if (Player_CheckCollisionPlatform(player, self, &UncurlPlant->hitboxNode)) {
-                player->position.y += 0x40000;
-                self->stood = true;
-                if (nodeID > self->stoodNodeID) {
-                    if (abs(player->velocity.x) >= 0xC0000)
-                        self->uncurlMode = 2; // Fast uncurl
-                    else if (abs(player->velocity.x) >= 0x40000)
-                        self->uncurlMode = 1; // Slow uncurl
+                self->position.x = self->nodePositions[n].x;
+                self->position.y = self->nodePositions[n].y;
+                if (Player_CheckCollisionPlatform(player, self, &UncurlPlant->hitboxNode)) {
+                    player->position.y += 0x40000;
+                    self->stood = true;
+                    if (nodeID > self->stoodNodeID) {
+                        if (abs(player->velocity.x) >= 0xC0000)
+                            self->uncurlMode = 2; // Fast uncurl
+                        else if (abs(player->velocity.x) >= 0x40000)
+                            self->uncurlMode = 1; // Slow uncurl
 
-                    self->stoodNodeID = nodeID;
+                        self->stoodNodeID = nodeID;
+                    }
                 }
+                ++nodeID;
             }
-            ++nodeID;
         }
     }
 
@@ -93,9 +100,10 @@ void UncurlPlant_StaticUpdate(void) {}
 
 void UncurlPlant_Draw(void)
 {
+    int32 i;
     RSDK_THIS(UncurlPlant);
 
-    for (int32 i = 0; i < UNCURLPLANT_NODE_COUNT; ++i) {
+    for (i = 0; i < UNCURLPLANT_NODE_COUNT; ++i) {
         RSDK.DrawSprite(&self->nodeAnimator, &self->drawPositions[i], false);
         RSDK.DrawSprite(&self->decorAnimators[i], &self->drawPositions[i], false);
     }
@@ -116,6 +124,7 @@ void UncurlPlant_Create(void *data)
         self->nodeAngles[7] = 0xC0;
     }
     else {
+        int32 i;
         self->visible       = true;
         self->drawGroup     = Zone->objectDrawGroup[1] - 2;
         self->active        = ACTIVE_BOUNDS;
@@ -124,7 +133,7 @@ void UncurlPlant_Create(void *data)
         UncurlPlant_CalculatePositions();
 
         RSDK.SetSpriteAnimation(UncurlPlant->aniFrames, 1, &self->nodeAnimator, true, 0);
-        for (int32 i = 0; i < UNCURLPLANT_NODE_COUNT; ++i) {
+        for (i = 0; i < UNCURLPLANT_NODE_COUNT; ++i) {
             RSDK.SetSpriteAnimation(UncurlPlant->aniFrames, 1, &self->decorAnimators[i], true, RSDK.Rand(1, 8));
             self->nodeAngles[i] = UncurlPlant->startingNodeAngles[i];
         }
@@ -150,14 +159,16 @@ void UncurlPlant_CalculateDrawPositions(void)
     self->drawPositions[0].y = self->position.y;
 
     if (self->direction == FLIP_NONE) {
-        for (int32 i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
+        int32 i;
+        for (i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
             angle += self->nodeAngles[i];
             self->drawPositions[i].x = self->drawPositions[i - 1].x + (RSDK.Cos1024(angle) << 10);
             self->drawPositions[i].y = self->drawPositions[i - 1].y - (RSDK.Sin1024(angle) << 10);
         }
     }
     else {
-        for (int32 i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
+        int32 i;
+        for (i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
             angle += self->nodeAngles[i];
             self->drawPositions[i].x = self->drawPositions[i - 1].x - (RSDK.Cos1024(angle) << 10);
             self->drawPositions[i].y = self->drawPositions[i - 1].y - (RSDK.Sin1024(angle) << 10);
@@ -174,14 +185,16 @@ void UncurlPlant_CalculatePositions(void)
     self->nodePositions[0].y = self->position.y;
 
     if (self->direction == FLIP_NONE) {
-        for (int32 i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
+        int32 i;
+        for (i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
             angle += UncurlPlant->targetNodeAnglesStood[i];
             self->nodePositions[i].x = self->nodePositions[i - 1].x + (RSDK.Cos1024(angle) << 10);
             self->nodePositions[i].y = self->nodePositions[i - 1].y - (RSDK.Sin1024(angle) << 10);
         }
     }
     else {
-        for (int32 i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
+        int32 i;
+        for (i = 1; i < UNCURLPLANT_NODE_COUNT; ++i) {
             angle += UncurlPlant->targetNodeAnglesStood[i];
             self->nodePositions[i].x = self->nodePositions[i - 1].x - (RSDK.Cos1024(angle) << 10);
             self->nodePositions[i].y = self->nodePositions[i - 1].y - (RSDK.Sin1024(angle) << 10);

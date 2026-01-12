@@ -108,6 +108,8 @@ void AIZTornado_HandleMovement(void)
 
 void AIZTornado_HandlePlayerCollisions(void)
 {
+    int32 x;
+    int32 y; 
     RSDK_THIS(AIZTornado);
     EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     Hitbox *hitbox       = RSDK.GetHitbox(&self->animatorTornado, 0);
@@ -115,8 +117,8 @@ void AIZTornado_HandlePlayerCollisions(void)
         player->drawGroup = self->drawGroup + 1;
     else
         player->drawGroup = self->drawGroup;
-    int32 x = self->position.x;
-    int32 y = self->position.y;
+    x = self->position.x;
+    y = self->position.y;
     self->prevPos.x &= 0xFFFF0000;
     self->prevPos.y &= 0xFFFF0000;
     self->isStood        = false;

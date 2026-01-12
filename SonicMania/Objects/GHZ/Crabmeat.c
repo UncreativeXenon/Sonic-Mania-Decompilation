@@ -150,6 +150,7 @@ void Crabmeat_State_Shoot(void)
     RSDK_THIS(Crabmeat);
 
     if (++self->timer >= 60) {
+        EntityCrabmeat *projectile;
         switch (self->shootState) {
             default:
             case 2:
@@ -168,7 +169,7 @@ void Crabmeat_State_Shoot(void)
             case 1:
                 self->shootState = 2;
 
-                EntityCrabmeat *projectile = CREATE_ENTITY(Crabmeat, INT_TO_VOID(true), self->position.x - 0x100000, self->position.y);
+                projectile = CREATE_ENTITY(Crabmeat, INT_TO_VOID(true), self->position.x - 0x100000, self->position.y);
                 projectile->velocity.x     = -0x10000;
                 projectile->velocity.y     = -0x40000;
 
@@ -198,10 +199,12 @@ void Crabmeat_State_Projectile(void)
     else {
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Crabmeat->hitboxProjectile))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Crabmeat->hitboxProjectile))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
 }

@@ -72,7 +72,8 @@ void Crate_StageLoad(void)
 
 void Crate_Break(EntityCrate *create)
 {
-    for (int32 s = 0; s < 64; ++s) {
+    int32 s;
+    for (s = 0; s < 64; ++s) {
         // ice is used to create a shattering effect
         int32 x        = create->position.x + (RSDK.Rand(-24, 25) << 16);
         int32 y        = create->position.y + (RSDK.Rand(-24, 25) << 16);
@@ -103,11 +104,13 @@ void Crate_Break(EntityCrate *create)
     RSDK.PlaySfx(Crate->sfxExplosion2, false, 255);
     create->position.y -= 0x10000;
 
-    foreach_active(Crate, crate)
-    {
-        if (crate != create && crate->state == Crate_State_None
-            && RSDK.CheckObjectCollisionTouchBox(create, &create->hitbox, crate, &crate->hitbox)) {
-            crate->state = Crate_State_ApplyGravity;
+{
+        foreach_active(Crate, crate)
+        {
+            if (crate != create && crate->state == Crate_State_None
+                && RSDK.CheckObjectCollisionTouchBox(create, &create->hitbox, crate, &crate->hitbox)) {
+                crate->state = Crate_State_ApplyGravity;
+            }
         }
     }
 
@@ -115,17 +118,20 @@ void Crate_Break(EntityCrate *create)
 }
 void Crate_MoveY(EntityCrate *self, int32 offset)
 {
+    int32 start;
     self->drawPos.y += offset;
     self->centerPos.x = self->drawPos.x;
     self->centerPos.y = self->drawPos.y;
     self->position.x  = self->drawPos.x;
     self->position.y  = self->drawPos.y;
 
-    int32 start = (self->drawPos.y - 0x300000) & 0xFFFF0000;
-    foreach_active(Crate, crate)
+    start = (self->drawPos.y - 0x300000) & 0xFFFF0000;
     {
-        if (crate != self && RSDK.CheckObjectCollisionBox(self, &self->hitbox, crate, &crate->hitbox, true) == C_TOP)
-            Crate_MoveY(crate, start - crate->drawPos.y);
+        foreach_active(Crate, crate)
+        {
+            if (crate != self && RSDK.CheckObjectCollisionBox(self, &self->hitbox, crate, &crate->hitbox, true) == C_TOP)
+                Crate_MoveY(crate, start - crate->drawPos.y);
+        }
     }
 }
 bool32 Crate_Collide(void)
@@ -265,10 +271,12 @@ void Crate_State_ApplyGravity(void)
 
     self->position.y -= 0x10000;
 
-    foreach_active(Crate, crate)
-    {
-        if (crate != self && crate->state == Crate_State_None && RSDK.CheckObjectCollisionTouchBox(self, &self->hitbox, crate, &crate->hitbox)) {
-            crate->state = Crate_State_ApplyGravity;
+{
+        foreach_active(Crate, crate)
+        {
+            if (crate != self && crate->state == Crate_State_None && RSDK.CheckObjectCollisionTouchBox(self, &self->hitbox, crate, &crate->hitbox)) {
+                crate->state = Crate_State_ApplyGravity;
+            }
         }
     }
 
@@ -285,12 +293,14 @@ void Crate_State_WaitToFall(void)
 }
 void Crate_State_Fall(void)
 {
+    int32 x;
+    int32 y;
     RSDK_THIS(Crate);
 
     self->drawPos.y += self->velocity.y;
 
-    int32 x = self->position.x;
-    int32 y = self->position.y;
+    x = self->position.x;
+    y = self->position.y;
 
     self->velocity.y += 0x3800;
     self->position.x = self->drawPos.x;

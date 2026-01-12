@@ -131,10 +131,12 @@ void Armadiloid_State_PlatformFlying(void)
         }
     }
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionPlatform(player, self, &self->hitbox))
-            player->position.x += self->velocity.x;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionPlatform(player, self, &self->hitbox))
+                player->position.x += self->velocity.x;
+        }
     }
 }
 
@@ -152,10 +154,12 @@ void Armadiloid_PlatformShootDelay(void)
             self->state = Armadiloid_State_PlatformShoot;
         }
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionPlatform(player, self, &self->hitbox))
-                player->position.x += self->velocity.x;
+    {
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionPlatform(player, self, &self->hitbox))
+                    player->position.x += self->velocity.x;
+            }
         }
     }
     else {
@@ -181,10 +185,11 @@ void Armadiloid_State_PlatformShoot(void)
         }
     }
     else {
+        EntityProjectile *projectile;
         self->timer = 1;
         RSDK.PlaySfx(Armadiloid->sfxShot, false, 255);
 
-        EntityProjectile *projectile = CREATE_ENTITY(Projectile, Projectile_State_Move, self->position.x - 0x120000, self->position.y + 0x90000);
+        projectile = CREATE_ENTITY(Projectile, Projectile_State_Move, self->position.x - 0x120000, self->position.y + 0x90000);
         projectile->velocity.x       = -0x18000;
         projectile->drawGroup        = Zone->objectDrawGroup[0];
         projectile->hitbox.left      = -4;
@@ -195,29 +200,34 @@ void Armadiloid_State_PlatformShoot(void)
         RSDK.SetSpriteAnimation(Armadiloid->aniFrames, 5, &projectile->animator, true, 0);
     }
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionPlatform(player, self, &self->hitbox))
-            player->position.x += self->velocity.x;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionPlatform(player, self, &self->hitbox))
+                player->position.x += self->velocity.x;
+        }
     }
 }
 
 void Armadiloid_State_Rider(void)
 {
+    EntityArmadiloid *child;
     RSDK_THIS(Armadiloid);
 
     RSDK.ProcessAnimation(&self->bodyAnimator);
 
-    EntityArmadiloid *child = self->child;
+    child = self->child;
     if (child) {
         self->position.x = child->position.x;
         self->position.y = child->position.y;
     }
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBadnikBreak(player, self, true)) {
-            child->parent = NULL;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBadnikBreak(player, self, true)) {
+                child->parent = NULL;
+            }
         }
     }
 }

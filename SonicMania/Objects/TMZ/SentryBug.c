@@ -28,6 +28,8 @@ void SentryBug_Draw(void)
     RSDK_THIS(SentryBug);
 
     if (self->orbsDetached) {
+        int32 angle;
+        int32 i;
         RSDK.DrawSprite(&self->bugAnimator, NULL, false);
 
         if (self->showNet) {
@@ -44,7 +46,7 @@ void SentryBug_Draw(void)
             self->inkEffect = INK_NONE;
         }
 
-        for (int32 angle = 0, i = 0; angle < 0xFC; ++i) {
+        for (angle = 0, i = 0; angle < 0xFC; ++i) {
             self->orbAnimator.frameID = ((angle + self->netRotation + 8) >> 5) & 7;
             if (self->netColor == 0xF0F000)
                 self->orbAnimator.frameID += 8;
@@ -150,6 +152,7 @@ void SentryBug_CheckPlayerCollisions(void)
 
 void SentryBug_SetupOrbDropVelocity(void)
 {
+    int32 i;
     RSDK_THIS(SentryBug);
 
     Vector2 *velocity = NULL;
@@ -158,7 +161,7 @@ void SentryBug_SetupOrbDropVelocity(void)
     else
         velocity = (Vector2 *)SentryBug->dropVelL;
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         self->orbVelocities[i].x = velocity[i].x;
         self->orbVelocities[i].y = velocity[i].y;
     }
@@ -166,6 +169,7 @@ void SentryBug_SetupOrbDropVelocity(void)
 
 void SentryBug_StateOrbs_Attached(void)
 {
+    int32 i;
     RSDK_THIS(SentryBug);
 
     Vector2 *offsets = NULL;
@@ -174,7 +178,7 @@ void SentryBug_StateOrbs_Attached(void)
     else
         offsets = (Vector2 *)&SentryBug->orbOffsets_Attached[-12 * self->bugAnimator.frameID + 72];
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         self->orbPositions[i].x = self->position.x + offsets[i].x;
         self->orbPositions[i].y = self->position.y + offsets[i].y;
     }
@@ -182,9 +186,10 @@ void SentryBug_StateOrbs_Attached(void)
 
 void SentryBug_StateOrbs_Dropped(void)
 {
+    int32 i;
     RSDK_THIS(SentryBug);
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         self->orbVelocities[i].y += 0x2800;
         self->orbPositions[i].x += self->orbVelocities[i].x;
         self->orbPositions[i].y += self->orbVelocities[i].y;
@@ -193,10 +198,11 @@ void SentryBug_StateOrbs_Dropped(void)
 
 void SentryBug_StateOrbs_BeginNetRotation(void)
 {
+    int32 i;
     RSDK_THIS(SentryBug);
 
     int32 angle = self->netRotation;
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         int32 x = self->netScale * RSDK.Cos256(angle) + self->netPos.x;
         int32 y = self->netScale * RSDK.Sin256(angle) + self->netPos.y;
 
@@ -212,10 +218,11 @@ void SentryBug_StateOrbs_BeginNetRotation(void)
 
 void SentryBug_StateOrbs_RotateAroundNet(void)
 {
+    int32 i;
     RSDK_THIS(SentryBug);
 
     int32 angle = self->netRotation;
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         self->orbPositions[i].x = self->netScale * RSDK.Cos256(angle) + self->netPos.x;
         self->orbPositions[i].y = self->netScale * RSDK.Sin256(angle) + self->netPos.y;
         angle += 42;
@@ -226,6 +233,7 @@ void SentryBug_StateOrbs_RotateAroundNet(void)
 
 void SentryBug_StateOrbs_ReturnToSlots(void)
 {
+    int32 i;
     RSDK_THIS(SentryBug);
 
     Vector2 *offsets = NULL;
@@ -234,7 +242,7 @@ void SentryBug_StateOrbs_ReturnToSlots(void)
     else
         offsets = (Vector2 *)&SentryBug->orbOffsets_Attached[-12 * self->bugAnimator.frameID + 72];
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         self->orbVelocities[i].x = CLAMP((self->position.x + offsets[i].x - self->orbPositions[i].x) >> 3, -0xC0000, 0xC0000);
         self->orbVelocities[i].y = CLAMP((self->position.y + offsets[i].y - self->orbPositions[i].y) >> 3, -0xC0000, 0xC0000);
 
@@ -245,6 +253,7 @@ void SentryBug_StateOrbs_ReturnToSlots(void)
 
 void SentryBug_State_AwaitPlayer(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(SentryBug);
 
     int32 x = self->position.x;
@@ -257,7 +266,7 @@ void SentryBug_State_AwaitPlayer(void)
     if (self->timer > 0)
         self->timer--;
 
-    EntityPlayer *player = Player_GetNearestPlayer();
+    player = Player_GetNearestPlayer();
     if (player) {
         if (!self->timer) {
             int32 rx = (self->position.x - player->position.x) >> 16;
@@ -335,6 +344,8 @@ void SentryBug_State_NetAppear(void)
 
 void SentryBug_State_NetShrink(void)
 {
+    int32 rx;
+    int32 ry;
     RSDK_THIS(SentryBug);
 
     EntityPlayer *player = self->playerPtr;
@@ -344,8 +355,8 @@ void SentryBug_State_NetShrink(void)
     self->netPos.x += (player->position.x - self->netPos.x) >> 3;
     self->netPos.y += ((player->position.y - self->netPos.y) >> 3);
 
-    int32 rx = (self->netPos.x - self->position.x) >> 16;
-    int32 ry = (self->netPos.y - self->position.y) >> 16;
+    rx = (self->netPos.x - self->position.x) >> 16;
+    ry = (self->netPos.y - self->position.y) >> 16;
 
     self->alpha = 0xA0 + (RSDK.Sin256(4 * Zone->timer) >> 2);
 

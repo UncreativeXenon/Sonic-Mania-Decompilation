@@ -58,12 +58,13 @@ void UIVideo_State_PlayVideo1(void)
         Music_Stop();
 
     if (++self->timer >= 16) {
+        int32 len;
         char videoFile1[64];
         char audioFile[64];
         RSDK.GetCString(audioFile, &self->audioFile);
         RSDK.GetCString(videoFile1, &self->videoFile1);
 
-        int32 len = self->videoFile1.length;
+        len = self->videoFile1.length;
 #if MANIA_USE_PLUS
         if (videoFile1[len - 3] == 'p' && videoFile1[len - 2] == 'n' && videoFile1[len - 1] == 'g')
 #else

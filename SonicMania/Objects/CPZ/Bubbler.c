@@ -158,15 +158,17 @@ void Bubbler_State_MotherPatrol(void)
         self->timer      = 0x200;
     }
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Bubbler->hitboxRange)) {
-            self->timer = 16;
-            self->state = Bubbler_State_FoundPlayer;
-            if (self->direction == FLIP_NONE)
-                self->velocity.x = -0x28000;
-            else
-                self->velocity.x = 0x28000;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Bubbler->hitboxRange)) {
+                self->timer = 16;
+                self->state = Bubbler_State_FoundPlayer;
+                if (self->direction == FLIP_NONE)
+                    self->velocity.x = -0x28000;
+                else
+                    self->velocity.x = 0x28000;
+            }
         }
     }
 
@@ -191,6 +193,7 @@ void Bubbler_State_FoundPlayer(void)
 
 void Bubbler_State_AttackPlayer(void)
 {
+    int32 spawnX;
     RSDK_THIS(Bubbler);
 
     RSDK.ProcessAnimation(&self->flameAnimator);
@@ -200,7 +203,7 @@ void Bubbler_State_AttackPlayer(void)
 
     if (++self->spawnTimer >= 30) {
         self->spawnTimer = 0;
-        int32 spawnX     = self->position.x + 0x60000;
+        spawnX     = self->position.x + 0x60000;
         if (self->direction)
             spawnX = self->position.x - 0x60000;
         CREATE_ENTITY(Bubbler, INT_TO_VOID(true), spawnX, self->position.y + 0xA0000)->active = ACTIVE_NORMAL;

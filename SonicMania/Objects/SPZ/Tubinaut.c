@@ -25,7 +25,8 @@ void Tubinaut_Draw(void)
     RSDK_THIS(Tubinaut);
 
     if (self->attackTimer < 256 || self->orbCount <= 1) {
-        for (int32 i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
+        int32 i;
+        for (i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
             if (self->ballsVisible[i]) {
                 RSDK.DrawSprite(&self->ballAnimators[i], &self->orbPositions[i], false);
             }
@@ -55,6 +56,8 @@ void Tubinaut_Create(void *data)
         self->state = Tubinaut_Orb_BodyDeath;
     }
     else {
+        int32 angle;
+        int32 o;
         self->startPos      = self->position;
         self->active        = ACTIVE_BOUNDS;
         self->updateRange.x = 0x800000;
@@ -64,15 +67,15 @@ void Tubinaut_Create(void *data)
         RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 2, &self->ballAnimators[1], true, 0);
         RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 3, &self->ballAnimators[2], true, 0);
 
-        int32 angle = 0x000;
-        for (int32 o = 0; o < TUBINAUT_ORB_COUNT; ++o) {
+        angle = 0x000;
+        for (o = 0; o < TUBINAUT_ORB_COUNT; ++o) {
             self->orbAngles[o]    = angle;
             self->ballsVisible[o] = true;
 
             angle += 0x500;
         }
 
-        self->activeOrbs  = 0b111;
+        self->activeOrbs  = 0x07;
         self->orbCount    = 3;
         self->attackTimer = 64;
         RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 0, &self->bodyAnimator, true, 0);
@@ -146,8 +149,9 @@ void Tubinaut_CheckPlayerCollisions(void)
             }
         }
         else {
+            int32 i;
             bool32 repelled = false;
-            for (int32 i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
+            for (i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
                 if (self->ballsVisible[i]) {
                     self->position.x = self->orbPositions[i].x;
                     self->position.y = self->orbPositions[i].y;
@@ -169,9 +173,9 @@ void Tubinaut_CheckPlayerCollisions(void)
                             }
                             else if (self->orbCount == 2) {
                                 switch (self->activeOrbs) {
-                                    case 0b011: RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 4, &self->fieldAnimator, true, 0); break;
-                                    case 0b101: RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 6, &self->fieldAnimator, true, 0); break;
-                                    case 0b110: RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 5, &self->fieldAnimator, true, 0); break;
+                                    case 0x03: RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 4, &self->fieldAnimator, true, 0); break;
+                                    case 0x05: RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 6, &self->fieldAnimator, true, 0); break;
+                                    case 0x06: RSDK.SetSpriteAnimation(Tubinaut->aniFrames, 5, &self->fieldAnimator, true, 0); break;
                                 }
 
                                 self->bodyAnimator.frameID = 0;
@@ -187,7 +191,8 @@ void Tubinaut_CheckPlayerCollisions(void)
             self->position.x = storeX;
             self->position.y = storeY;
             if (!repelled && Player_CheckBadnikTouch(player, self, &Tubinaut->hitboxFace) && Player_CheckBadnikBreak(player, self, false)) {
-                for (int32 i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
+                int32 i;
+                for (i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
                     if (self->ballsVisible[i]) {
                         EntityTubinaut *orb = CREATE_ENTITY(Tubinaut, INT_TO_VOID(i + 1), self->orbPositions[i].x, self->orbPositions[i].y);
                         orb->velocity.x     = 0x380 * RSDK.Cos256(self->orbAngles[i] >> 4);
@@ -330,12 +335,13 @@ void Tubinaut_HandleRepel(EntityPlayer *player, int32 playerID)
 
 void Tubinaut_HandleOrbs(void)
 {
+    int32 i;
     RSDK_THIS(Tubinaut);
 
     self->position.y = (RSDK.Sin256(self->angle) << 10) + self->startPos.y;
     self->angle      = (self->angle + 4) & 0xFF;
 
-    for (int32 i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
+    for (i = 0; i < TUBINAUT_ORB_COUNT; ++i) {
         self->orbPositions[i].x = 0x1400 * RSDK.Cos256(self->orbAngles[i] >> 4) + self->position.x;
         self->orbPositions[i].y = 0x1400 * RSDK.Sin256(self->orbAngles[i] >> 4) + self->position.y;
         self->orbAngles[i] -= self->attackTimer;

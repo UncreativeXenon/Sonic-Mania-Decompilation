@@ -27,15 +27,17 @@ void UIText_StaticUpdate(void) {}
 
 void UIText_Draw(void)
 {
+    uint16 frames;
+    int32 width;
     RSDK_THIS(UIText);
 
     Vector2 drawPos;
     drawPos.x = self->position.x;
     drawPos.y = self->position.y;
 
-    uint16 frames = (!UIWidgets || UIText->aniFrames) ? UIText->aniFrames : UIWidgets->uiFrames;
+    frames = (!UIWidgets || UIText->aniFrames) ? UIText->aniFrames : UIWidgets->uiFrames;
 
-    int32 width = RSDK.GetStringWidth(frames, self->listID, &self->text, 0, self->text.length, 0);
+    width = RSDK.GetStringWidth(frames, self->listID, &self->text, 0, self->text.length, 0);
     switch (self->align) {
         default:
         case UITEXT_ALIGN_LEFT: break;

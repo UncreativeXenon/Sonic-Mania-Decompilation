@@ -113,106 +113,110 @@ void SeeSaw_Update(void)
     self->tiltTimerR = 0;
     self->stood      = false;
 
-    foreach_active(Player, player)
     {
-        SeeSaw_SetupHitbox(player->position.x, self->prevTilt);
+        foreach_active(Player, player)
+        {
+            SeeSaw_SetupHitbox(player->position.x, self->prevTilt);
 
-        if (SeeSaw->hitboxPlank.right) {
-            if (player->velocity.y > self->launchVelocity)
-                SeeSaw->launchVelocity = player->velocity.y + 0x7000;
-            else
-                SeeSaw->launchVelocity = self->launchVelocity;
+            if (SeeSaw->hitboxPlank.right) {
+                if (player->velocity.y > self->launchVelocity)
+                    SeeSaw->launchVelocity = player->velocity.y + 0x7000;
+                else
+                    SeeSaw->launchVelocity = self->launchVelocity;
 
-            if (Player_CheckCollisionPlatform(player, self, &SeeSaw->hitboxPlank)) {
+                if (Player_CheckCollisionPlatform(player, self, &SeeSaw->hitboxPlank)) {
 #if MANIA_USE_PLUS
-                if (player->state == Player_State_MightyHammerDrop) {
-                    if (player->position.x >= self->position.x ? self->tilt != SEESAW_TILT_R : self->tilt != SEESAW_TILT_L)
-                        player->state = Player_State_Air;
-                }
+                    if (player->state == Player_State_MightyHammerDrop) {
+                        if (player->position.x >= self->position.x ? self->tilt != SEESAW_TILT_R : self->tilt != SEESAW_TILT_L)
+                            player->state = Player_State_Air;
+                    }
 #endif
 
-                self->stood = true;
+                    self->stood = true;
 
-                if (self->tilt != self->prevTilt) {
-                    int32 top = SeeSaw->hitboxPlank.top;
-                    SeeSaw_SetupHitbox(player->position.x, self->tilt);
-                    player->position.y += (SeeSaw->hitboxPlank.top - top) << 16;
-                }
-
-                player->position.y += 0x20000;
-
-                if (self->orbSide) {
-                    SeeSaw->launchVelocity = self->velocity.y;
-                    if (abs(player->position.x - self->position.x) >= 0x80000) {
-                        if (player->position.x >= self->position.x ? self->orbSide == 2 : self->orbSide == 1)
-                            SeeSaw->launchVelocity = 0;
+                    if (self->tilt != self->prevTilt) {
+                        int32 top = SeeSaw->hitboxPlank.top;
+                        SeeSaw_SetupHitbox(player->position.x, self->tilt);
+                        player->position.y += (SeeSaw->hitboxPlank.top - top) << 16;
                     }
 
-                    if (SeeSaw->launchVelocity) {
-                        player->state    = Player_State_Air;
-                        player->onGround = false;
+                    player->position.y += 0x20000;
 
-                        if (self->state == SeeSaw_State_NoOrb || self->orbTimer)
-                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, true, 0);
-                        else
-                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_TWIRL, &player->animator, true, 0);
-
-                        RSDK.PlaySfx(SeeSaw->sfxSpring, false, 255);
-                        player->velocity.y = -SeeSaw->launchVelocity;
-                    }
-                }
-                else {
-                    if (self->state == SeeSaw_State_OrbIdle)
-                        self->state = SeeSaw_State_None;
-                    else if (self->state == SeeSaw_State_OrbLaunched)
-                        SeeSaw->launchVelocity = self->launchVelocity;
-
-                    if (abs(player->position.x - self->position.x) >= 0x80000) {
-                        if (player->position.x >= self->position.x) {
-                            ++self->tiltTimerR;
-                            if (self->targetTilt != SEESAW_TILT_R)
-                                self->launchVelocity = SeeSaw->launchVelocity;
+                    if (self->orbSide) {
+                        SeeSaw->launchVelocity = self->velocity.y;
+                        if (abs(player->position.x - self->position.x) >= 0x80000) {
+                            if (player->position.x >= self->position.x ? self->orbSide == 2 : self->orbSide == 1)
+                                SeeSaw->launchVelocity = 0;
                         }
-                        else {
-                            ++self->tiltTimerL;
-                            if (self->targetTilt != SEESAW_TILT_L)
-                                self->launchVelocity = SeeSaw->launchVelocity;
+
+                        if (SeeSaw->launchVelocity) {
+                            player->state    = Player_State_Air;
+                            player->onGround = false;
+
+                            if (self->state == SeeSaw_State_NoOrb || self->orbTimer)
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, true, 0);
+                            else
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_TWIRL, &player->animator, true, 0);
+
+                            RSDK.PlaySfx(SeeSaw->sfxSpring, false, 255);
+                            player->velocity.y = -SeeSaw->launchVelocity;
                         }
                     }
                     else {
-                        ++self->tiltTimerM;
+                        if (self->state == SeeSaw_State_OrbIdle)
+                            self->state = SeeSaw_State_None;
+                        else if (self->state == SeeSaw_State_OrbLaunched)
+                            SeeSaw->launchVelocity = self->launchVelocity;
+
+                        if (abs(player->position.x - self->position.x) >= 0x80000) {
+                            if (player->position.x >= self->position.x) {
+                                ++self->tiltTimerR;
+                                if (self->targetTilt != SEESAW_TILT_R)
+                                    self->launchVelocity = SeeSaw->launchVelocity;
+                            }
+                            else {
+                                ++self->tiltTimerL;
+                                if (self->targetTilt != SEESAW_TILT_L)
+                                    self->launchVelocity = SeeSaw->launchVelocity;
+                            }
+                        }
+                        else {
+                            ++self->tiltTimerM;
+                        }
                     }
                 }
             }
         }
-    }
 
-    self->prevTilt = self->tilt;
-    self->orbSide  = 0;
+        self->prevTilt = self->tilt;
+        self->orbSide  = 0;
 
-    switch (self->prevTilt) {
-        case SEESAW_TILT_L: self->rotation = 480; break;
-        case SEESAW_TILT_M: self->rotation = 0; break;
-        case SEESAW_TILT_R: self->rotation = 32; break;
-    }
-
-    if (self->state != SeeSaw_State_NoOrb) {
-        int32 storeX   = self->position.x;
-        int32 storeY   = self->position.y;
-        self->position = self->orbPos;
-
-        foreach_active(Player, playerPtr)
-        {
-            if (Player_CheckCollisionTouch(playerPtr, self, &SeeSaw->hitboxCactinaut)) {
-#if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(playerPtr, 0x300, 2, &player->uncurlTimer))
-#endif
-                    Player_Hurt(playerPtr, self);
-            }
+        switch (self->prevTilt) {
+            case SEESAW_TILT_L: self->rotation = 480; break;
+            case SEESAW_TILT_M: self->rotation = 0; break;
+            case SEESAW_TILT_R: self->rotation = 32; break;
         }
 
-        self->position.x = storeX;
-        self->position.y = storeY;
+        if (self->state != SeeSaw_State_NoOrb) {
+            int32 storeX   = self->position.x;
+            int32 storeY   = self->position.y;
+            self->position = self->orbPos;
+
+            {
+                foreach_active(Player, playerPtr)
+                {
+                    if (Player_CheckCollisionTouch(playerPtr, self, &SeeSaw->hitboxCactinaut)) {
+#if MANIA_USE_PLUS
+                        if (!Player_CheckMightyUnspin(playerPtr, 0x300, 2, &player->uncurlTimer))
+#endif
+                            Player_Hurt(playerPtr, self);
+                    }
+                }
+            }
+
+            self->position.x = storeX;
+            self->position.y = storeY;
+        }
     }
 }
 

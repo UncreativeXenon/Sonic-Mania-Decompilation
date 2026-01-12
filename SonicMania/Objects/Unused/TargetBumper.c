@@ -87,105 +87,112 @@ void TargetBumper_CheckPlayerCollisions(void)
             break;
     }
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &hitboxBumper) && player->animator.animationID != ANI_HURT) {
-            self->curPos = self->startPos;
-            self->state  = TargetBumper_State_Hit;
-            self->active = ACTIVE_NORMAL;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &hitboxBumper) && player->animator.animationID != ANI_HURT) {
+                int32 anim;
+                self->curPos = self->startPos;
+                self->state  = TargetBumper_State_Hit;
+                self->active = ACTIVE_NORMAL;
 
-            switch (self->type) {
-                case TARGETBUMP_HORIZONTAL:
-                    if (player->position.y <= self->position.y) {
-                        player->velocity.y = -0x70000;
-                        self->curPos.y += 0x20000;
-                    }
-                    else {
-                        player->velocity.y = 0x70000;
-                        self->curPos.y -= 0x20000;
-                    }
-                    break;
-
-                case TARGETBUMP_VERTICAL:
-                    if (player->position.x <= self->position.x) {
-                        player->velocity.x = -0x70000;
-                        self->curPos.x += 0x20000;
-                    }
-                    else {
-                        player->velocity.x = 0x70000;
-                        self->curPos.x -= 0x20000;
-                    }
-                    break;
-
-                case TARGETBUMP_DIAGONAL: {
-                    int32 angle = 96;
-                    if (self->direction)
-                        angle = 32;
-
-                    int32 ang2 = 0;
-                    uint8 atan = RSDK.ATan2(player->velocity.x, player->velocity.y);
-                    int32 ang  = atan - angle;
-                    if (atan - angle >= 0)
-                        ang2 = ang;
-                    else
-                        ang2 = -ang;
-
-                    if (ang2 < 0x40) {
-                        if (ang2 < 0x38) {
-                            angle -= ang;
-                            angle &= 0xFF;
+                switch (self->type) {
+                    case TARGETBUMP_HORIZONTAL:
+                        if (player->position.y <= self->position.y) {
+                            player->velocity.y = -0x70000;
+                            self->curPos.y += 0x20000;
                         }
-
-                        if ((self->direction & FLIP_X))
-                            self->curPos.x += 0x20000;
-                        else
-                            self->curPos.x -= 0x20000;
-
-                        self->curPos.y += 0x20000;
-                    }
-                    else {
-                        angle += 0x80;
-                        if ((0x80 - ang2) < 0x38) {
-                            angle -= ang;
-                            angle &= 0xFF;
+                        else {
+                            player->velocity.y = 0x70000;
+                            self->curPos.y -= 0x20000;
                         }
+                        break;
 
-                        if ((self->direction & FLIP_X))
-                            self->curPos.x -= 0x20000;
-                        else
+                    case TARGETBUMP_VERTICAL:
+                        if (player->position.x <= self->position.x) {
+                            player->velocity.x = -0x70000;
                             self->curPos.x += 0x20000;
+                        }
+                        else {
+                            player->velocity.x = 0x70000;
+                            self->curPos.x -= 0x20000;
+                        }
+                        break;
 
-                        self->curPos.y -= 0x20000;
+                    case TARGETBUMP_DIAGONAL: {
+                        int32 ang2;
+                        uint8 atan;
+                        int32 ang;
+                        int32 angle = 96;
+                        if (self->direction)
+                            angle = 32;
+
+                        ang2 = 0;
+                        atan = RSDK.ATan2(player->velocity.x, player->velocity.y);
+                        ang  = atan - angle;
+                        if (atan - angle >= 0)
+                            ang2 = ang;
+                        else
+                            ang2 = -ang;
+
+                        if (ang2 < 0x40) {
+                            if (ang2 < 0x38) {
+                                angle -= ang;
+                                angle &= 0xFF;
+                            }
+
+                            if ((self->direction & FLIP_X))
+                                self->curPos.x += 0x20000;
+                            else
+                                self->curPos.x -= 0x20000;
+
+                            self->curPos.y += 0x20000;
+                        }
+                        else {
+                            angle += 0x80;
+                            if ((0x80 - ang2) < 0x38) {
+                                angle -= ang;
+                                angle &= 0xFF;
+                            }
+
+                            if ((self->direction & FLIP_X))
+                                self->curPos.x -= 0x20000;
+                            else
+                                self->curPos.x += 0x20000;
+
+                            self->curPos.y -= 0x20000;
+                        }
+                        player->velocity.x = -0x700 * RSDK.Cos256(angle);
+                        player->velocity.y = -0x700 * RSDK.Sin256(angle);
+                        break;
                     }
-                    player->velocity.x = -0x700 * RSDK.Cos256(angle);
-                    player->velocity.y = -0x700 * RSDK.Sin256(angle);
-                    break;
                 }
-            }
 
-            if (player->state == Player_State_FlyCarried)
-                RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
+                if (player->state == Player_State_FlyCarried)
+                    RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
 
-            int32 anim = player->animator.animationID;
-            if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED && player->state != Player_State_TailsFlight) {
-                player->state = Player_State_Air;
-                if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                    player->animator.animationID = ANI_WALK;
-            }
+                anim = player->animator.animationID;
+                if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED && player->state != Player_State_TailsFlight) {
+                    player->state = Player_State_Air;
+                    if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                        player->animator.animationID = ANI_WALK;
+                }
 
-            if (player->animator.animationID != ANI_FLY)
-                player->groundVel = player->velocity.x;
+                if (player->animator.animationID != ANI_FLY)
+                    player->groundVel = player->velocity.x;
 
-            player->onGround       = false;
-            player->tileCollisions = TILECOLLISION_DOWN;
-            if (self->hitCount < 3) {
-                self->hitTimer = 0;
+                player->onGround       = false;
+                player->tileCollisions = TILECOLLISION_DOWN;
+                if (self->hitCount < 3) {
+                    EntityScoreBonus *bonus;
+                    self->hitTimer = 0;
 
-                EntityScoreBonus *bonus = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y);
-                bonus->animator.frameID = 16;
-                Player_GiveScore(player, 10);
-                if (++self->hitCount < 3)
-                    self->animator.frameID = self->hitCount;
+                    bonus = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y);
+                    bonus->animator.frameID = 16;
+                    Player_GiveScore(player, 10);
+                    if (++self->hitCount < 3)
+                        self->animator.frameID = self->hitCount;
+                }
             }
         }
     }

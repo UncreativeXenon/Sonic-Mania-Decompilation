@@ -39,17 +39,21 @@ void SPZ2Outro_StageLoad(void)
     SPZ2Outro->unused = 0;
 
     SPZ2Outro->weatherTV = NULL;
-    foreach_all(TVFlyingBattery, tvFlyingBattery)
     {
-        SPZ2Outro->tvFlyingBattery = tvFlyingBattery;
-        foreach_break;
+        foreach_all(TVFlyingBattery, tvFlyingBattery)
+        {
+            SPZ2Outro->tvFlyingBattery = tvFlyingBattery;
+            foreach_break;
+        }
     }
 
     SPZ2Outro->weatherTV = NULL;
-    foreach_all(WeatherTV, weatherTV)
     {
-        SPZ2Outro->weatherTV = weatherTV;
-        foreach_break;
+        foreach_all(WeatherTV, weatherTV)
+        {
+            SPZ2Outro->weatherTV = weatherTV;
+            foreach_break;
+        }
     }
 }
 
@@ -69,19 +73,22 @@ void SPZ2Outro_StartCutscene(void)
 
 bool32 SPZ2Outro_Cutscene_SetupFBZTV(EntityCutsceneSeq *host)
 {
+    EntityTVFlyingBattery *tvFlyingBattery;
+    EntityWeatherTV *weatherTV;
     MANIA_GET_PLAYER(player1, player2, camera);
 
-    EntityTVFlyingBattery *tvFlyingBattery = SPZ2Outro->tvFlyingBattery;
-    EntityWeatherTV *weatherTV             = SPZ2Outro->weatherTV;
+    tvFlyingBattery = SPZ2Outro->tvFlyingBattery;
+    weatherTV             = SPZ2Outro->weatherTV;
 
     if (!host->timer) {
+        EntityEggPrison *prison;
         foreach_all(EggPrison, prisonPtr)
         {
             SPZ2Outro->prison = prisonPtr;
             foreach_break;
         }
 
-        EntityEggPrison *prison     = SPZ2Outro->prison;
+        prison     = SPZ2Outro->prison;
         prison->notSolid            = true;
         prison->drawGroup           = Zone->playerDrawGroup[1];
         tvFlyingBattery->position.y = 0x81E0000;
@@ -158,6 +165,7 @@ bool32 SPZ2Outro_Cutscene_SetupFBZTV(EntityCutsceneSeq *host)
 
 bool32 SPZ2Outro_Cutscene_ExitStageRight(EntityCutsceneSeq *host)
 {
+    int32 posX;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
@@ -177,7 +185,7 @@ bool32 SPZ2Outro_Cutscene_ExitStageRight(EntityCutsceneSeq *host)
         }
     }
 
-    int32 posX = ((ScreenInfo->size.x + ScreenInfo->position.x) << 16) + 0x100000;
+    posX = ((ScreenInfo->size.x + ScreenInfo->position.x) << 16) + 0x100000;
     if (player1->position.x > posX) {
         player1->right = false;
         if (player2->classID != Player->classID || SPZ2Outro->ignoreP2 || player2->position.x > posX) {
@@ -205,10 +213,15 @@ void SPZ2Outro_DrawHook_PrepareWeatherTV(void)
 // State where they are on da TV and jump onto FBZ
 bool32 SPZ2Outro_Cutscene_AsSeenOnTV(EntityCutsceneSeq *host)
 {
+    EntityTVFlyingBattery *tvFlyingBattery;
+    EntityWeatherTV *weatherTV;
+    EntityPlayer *players[2];
+    bool32 finished;
+    int32 p;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
-    EntityTVFlyingBattery *tvFlyingBattery = SPZ2Outro->tvFlyingBattery;
-    EntityWeatherTV *weatherTV             = SPZ2Outro->weatherTV;
+    tvFlyingBattery = SPZ2Outro->tvFlyingBattery;
+    weatherTV             = SPZ2Outro->weatherTV;
 
     if (!host->timer) {
         RSDK.SetDrawGroupProperties(Zone->playerDrawGroup[0], false, SPZ2Outro_DrawHook_PrepareWeatherTV);
@@ -247,10 +260,11 @@ bool32 SPZ2Outro_Cutscene_AsSeenOnTV(EntityCutsceneSeq *host)
         }
     }
 
-    EntityPlayer *players[2] = { player1, player2 };
+    players[0]   = player1;
+    players[1] = player2;
 
-    bool32 finished = true;
-    for (int32 p = 0; p < 2; ++p) {
+    finished = true;
+    for (p = 0; p < 2; ++p) {
         if (p != 1 || (players[p]->classID == Player->classID && !SPZ2Outro->ignoreP2)) {
             EntityPlayer *player = players[p];
 
@@ -279,15 +293,17 @@ bool32 SPZ2Outro_Cutscene_AsSeenOnTV(EntityCutsceneSeq *host)
 
 bool32 SPZ2Outro_Cutscene_FBZFlyAway(EntityCutsceneSeq *host)
 {
+    EntityTVFlyingBattery *tvFlyingBattery;
+    int32 volume;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityTVFlyingBattery *tvFlyingBattery = SPZ2Outro->tvFlyingBattery;
+    tvFlyingBattery = SPZ2Outro->tvFlyingBattery;
 
     if (host->timer == 30)
         Zone_StartFadeOut(10, 0x000000);
 
-    int32 volume = MAX(30 - host->timer, 0);
+    volume = MAX(30 - host->timer, 0);
     if (host->timer - 30 > 90)
         volume = -90;
 

@@ -115,6 +115,7 @@ void HCZSpikeBall_LinkToConveyor(void)
         }
         else if (MathHelpers_PointInHitbox(conveyor->position.x, conveyor->position.y, self->position.x, self->position.y, conveyor->direction,
                                            &hitboxLeft)) {
+            int32 atan;
             int32 dist  = len / 0x15555;
             int32 angle = 0x180;
             if (conveyor->direction) {
@@ -122,7 +123,7 @@ void HCZSpikeBall_LinkToConveyor(void)
                 angle = 0x80;
             }
 
-            int32 atan           = RSDK.ATan2(self->position.x - conveyor->position.x - (len >> 1), self->position.y - conveyor->position.y);
+            atan           = RSDK.ATan2(self->position.x - conveyor->position.x - (len >> 1), self->position.y - conveyor->position.y);
             self->intervalOffset = (abs(angle - 2 * atan) / 5) + dist;
         }
         else if (MathHelpers_PointInHitbox(conveyor->position.x, conveyor->position.y, self->position.x, self->position.y, conveyor->direction,
@@ -134,6 +135,7 @@ void HCZSpikeBall_LinkToConveyor(void)
         }
         else if (MathHelpers_PointInHitbox(conveyor->position.x, conveyor->position.y, self->position.x, self->position.y, conveyor->direction,
                                            &hitboxRight)) {
+            int32 atan;
             int32 dist  = len / 0x15555;
             int32 angle = 0x180;
             if (!conveyor->direction) {
@@ -141,7 +143,7 @@ void HCZSpikeBall_LinkToConveyor(void)
                 angle = 0x80;
             }
 
-            int32 atan           = RSDK.ATan2(self->position.x - (len >> 1) + conveyor->position.x, self->position.y - conveyor->position.y);
+            atan           = RSDK.ATan2(self->position.x - (len >> 1) + conveyor->position.x, self->position.y - conveyor->position.y);
             self->intervalOffset = (abs(angle - 2 * atan) / 5) + dist;
         }
         else {
@@ -168,14 +170,18 @@ void HCZSpikeBall_HandleConveyorMovement(void)
     RSDK_THIS(HCZSpikeBall);
 
     if (self->conveyor) {
+        int32 interval;
+        int32 timer;
+        int32 conveyX;
+        int32 conveyY;
         int32 len = 0;
         if (self->conveyor->length != -3)
             len = (self->conveyor->length + 3) << 20;
 
-        int32 interval = (2 * len + 0x8A3AE6) / 0x15555;
-        int32 timer    = (self->intervalOffset + Zone->timer) % interval;
-        int32 conveyX  = self->conveyor->position.x;
-        int32 conveyY  = self->conveyor->position.y;
+        interval = (2 * len + 0x8A3AE6) / 0x15555;
+        timer    = (self->intervalOffset + Zone->timer) % interval;
+        conveyX  = self->conveyor->position.x;
+        conveyY  = self->conveyor->position.y;
 
         if (timer < len / 0x15555) {
             if (self->conveyor->direction == FLIP_NONE)
@@ -187,26 +193,28 @@ void HCZSpikeBall_HandleConveyorMovement(void)
             self->position.y = conveyY - 0x160000;
         }
         else if (timer < (len / 0x15555) + 51) {
+            int32 mult;
             int32 angle = timer - (len / 0x15555);
             if (self->conveyor->direction == FLIP_NONE)
                 self->position.x = conveyX - (len >> 1);
             else
                 self->position.x = conveyX + (len >> 1);
 
-            int32 mult = self->conveyor->direction == FLIP_NONE ? -5 : 5;
+            mult = self->conveyor->direction == FLIP_NONE ? -5 : 5;
 
             self->position.y = conveyY;
             self->position.x += 0xB00 * RSDK.Cos512(angle * mult + 0x180);
             self->position.y += 0xB00 * RSDK.Sin512(angle * mult + 0x180);
         }
         else if (timer >= 2 * (len / 0x15555) + 51) {
+            int32 mult;
             int32 angle = -51 - 2 * (len / 0x15555) + timer;
             if (self->conveyor->direction == FLIP_NONE)
                 self->position.x = conveyX + (len >> 1);
             else
                 self->position.x = conveyX - (len >> 1);
 
-            int32 mult = self->conveyor->direction == FLIP_NONE ? -5 : 5;
+            mult = self->conveyor->direction == FLIP_NONE ? -5 : 5;
 
             self->position.y = conveyY;
             self->position.x += 0xB00 * RSDK.Cos512(angle * mult + 0x80);

@@ -24,19 +24,23 @@ void PopOut_Update(void)
     self->direction = FLIP_NONE;
     if (!self->manualTrigger) {
         self->shouldAppear = false;
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &self->hitboxRange)) {
-                self->shouldAppear = true;
-                foreach_break;
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &self->hitboxRange)) {
+                    self->shouldAppear = true;
+                    foreach_break;
+                }
             }
         }
     }
     else if (PopOut->hasButton) {
-        foreach_active(Button, button)
         {
-            if (button->tag == self->tag && button->activated)
-                self->shouldAppear = true;
+            foreach_active(Button, button)
+            {
+                if (button->tag == self->tag && button->activated)
+                    self->shouldAppear = true;
+            }
         }
     }
 
@@ -82,7 +86,9 @@ void PopOut_Update(void)
 
     self->position.x += -32 * self->appearVelocity.x + 4 * self->appearTimer * self->appearVelocity.x;
     self->position.y += -32 * self->appearVelocity.y + 4 * self->appearTimer * self->appearVelocity.y;
-    foreach_active(Player, playerLoop) { Player_CheckCollisionBox(playerLoop, self, &self->hitboxSolid); }
+    {
+        foreach_active(Player, playerLoop) { Player_CheckCollisionBox(playerLoop, self, &self->hitboxSolid); }
+    }
     self->direction  = storeDir;
     self->position.x = storeX;
     self->position.y = storeY;
@@ -133,6 +139,7 @@ void PopOut_Create(void *data)
     self->drawFX = FX_ROTATE | FX_FLIP;
 
     if (!SceneInfo->inEditor) {
+        EntitySpring *child;
         self->active        = ACTIVE_BOUNDS;
         self->drawGroup     = Zone->objectDrawGroup[0];
         self->startPos.x    = self->position.x;
@@ -142,7 +149,7 @@ void PopOut_Create(void *data)
         self->updateRange.y = 0x800000;
         RSDK.SetSpriteAnimation(PopOut->aniFrames, 0, &self->mountAnimator, true, 0);
 
-        EntitySpring *child = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, Spring);
+        child = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, Spring);
         if (child->classID != Spring->classID && child->classID != Spikes->classID)
             child = NULL;
 

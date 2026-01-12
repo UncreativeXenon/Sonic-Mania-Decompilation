@@ -28,112 +28,117 @@ void BouncePlant_Update(void)
 
     self->stood         = false;
     self->instantRecoil = false;
-    foreach_active(Player, player)
     {
-        if (abs(player->position.x - self->position.x) <= 0x320000 && (player->velocity.y >= 0 || player->onGround)) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
+        foreach_active(Player, player)
+        {
+            if (abs(player->position.x - self->position.x) <= 0x320000 && (player->velocity.y >= 0 || player->onGround)) {
+                Hitbox *playerHitbox = Player_GetHitbox(player);
 
-            if (self->stood) {
-                int32 posY = BoucePlant_GetNodeY(player->position.x) + self->stoodPos.y - (playerHitbox->bottom << 16) - 0x40000;
-                if (player->position.y > posY - 0x80000) {
-                    player->velocity.x += RSDK.Sin256(self->angle) << 13 >> 8;
-                    player->position.y    = posY;
-                    player->velocity.y    = 0;
-                    player->onGround      = true;
-                    player->groundedStore = true;
-                    player->angle         = 0;
-                    player->collisionMode = CMODE_FLOOR;
-                    player->groundVel     = player->velocity.x;
-                    if (player->state == Player_State_KnuxGlideSlide || player->state == Player_State_KnuxGlideDrop)
-                        player->state = Player_State_Ground;
+                if (self->stood) {
+                    int32 posY = BoucePlant_GetNodeY(player->position.x) + self->stoodPos.y - (playerHitbox->bottom << 16) - 0x40000;
+                    if (player->position.y > posY - 0x80000) {
+                        player->velocity.x += RSDK.Sin256(self->angle) << 13 >> 8;
+                        player->position.y    = posY;
+                        player->velocity.y    = 0;
+                        player->onGround      = true;
+                        player->groundedStore = true;
+                        player->angle         = 0;
+                        player->collisionMode = CMODE_FLOOR;
+                        player->groundVel     = player->velocity.x;
+                        if (player->state == Player_State_KnuxGlideSlide || player->state == Player_State_KnuxGlideDrop)
+                            player->state = Player_State_Ground;
+                    }
                 }
-            }
-            else {
-                int32 posY = BoucePlant_GetNodeStandY(player->position.x) + self->position.y - (playerHitbox->bottom << 16) - 0x40000;
-                if (player->position.y > posY - 0x80000 && player->position.y < self->position.y + 0x400000) {
-                    player->position.y = posY;
-                    if (abs(player->velocity.x) > 0xC0000)
-                        self->instantRecoil = true;
+                else {
+                    int32 posY = BoucePlant_GetNodeStandY(player->position.x) + self->position.y - (playerHitbox->bottom << 16) - 0x40000;
+                    if (player->position.y > posY - 0x80000 && player->position.y < self->position.y + 0x400000) {
+                        player->position.y = posY;
+                        if (abs(player->velocity.x) > 0xC0000)
+                            self->instantRecoil = true;
 
-                    if (abs(player->position.x - self->centerX) >= abs(player->velocity.x)) {
-                        player->velocity.x += RSDK.Sin256(self->angle) << 13 >> 8;
-                        player->velocity.y    = 0;
-                        player->onGround      = true;
-                        player->groundedStore = true;
-                        player->angle         = 0;
-                        player->collisionMode = CMODE_FLOOR;
-                        player->groundVel     = player->velocity.x;
+                        if (abs(player->position.x - self->centerX) >= abs(player->velocity.x)) {
+                            player->velocity.x += RSDK.Sin256(self->angle) << 13 >> 8;
+                            player->velocity.y    = 0;
+                            player->onGround      = true;
+                            player->groundedStore = true;
+                            player->angle         = 0;
+                            player->collisionMode = CMODE_FLOOR;
+                            player->groundVel     = player->velocity.x;
 
-                        if (player->state == Player_State_KnuxGlideSlide || player->state == Player_State_KnuxGlideDrop
+                            if (player->state == Player_State_KnuxGlideSlide || player->state == Player_State_KnuxGlideDrop
 
 #if MANIA_USE_PLUS
-                            || player->state == Player_State_MightyHammerDrop
+                                || player->state == Player_State_MightyHammerDrop
 #endif
-                        ) {
-                            player->state = Player_State_Ground;
+                            ) {
+                                player->state = Player_State_Ground;
+                            }
                         }
-                    }
-                    else if (self->depression > 0xA0) {
-                        if (self->direction == FLIP_NONE)
-                            player->velocity.x = -0xB4000;
-                        else
-                            player->velocity.x = 0xB4000;
-                        player->velocity.y = -0xB4000;
-                        player->onGround   = false;
-                        player->state      = Player_State_Air;
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, false, 0);
-                        RSDK.PlaySfx(BouncePlant->sfxBouncePlant, false, 255);
-                    }
-                    else if (abs(player->groundVel) <= 0xC00000) {
-                        player->velocity.x += RSDK.Sin256(self->angle) << 13 >> 8;
-                        player->velocity.y    = 0;
-                        player->onGround      = true;
-                        player->groundedStore = true;
-                        player->angle         = 0;
-                        player->collisionMode = CMODE_FLOOR;
-                        player->groundVel     = player->velocity.x;
+                        else if (self->depression > 0xA0) {
+                            if (self->direction == FLIP_NONE)
+                                player->velocity.x = -0xB4000;
+                            else
+                                player->velocity.x = 0xB4000;
+                            player->velocity.y = -0xB4000;
+                            player->onGround   = false;
+                            player->state      = Player_State_Air;
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, false, 0);
+                            RSDK.PlaySfx(BouncePlant->sfxBouncePlant, false, 255);
+                        }
+                        else if (abs(player->groundVel) <= 0xC00000) {
+                            player->velocity.x += RSDK.Sin256(self->angle) << 13 >> 8;
+                            player->velocity.y    = 0;
+                            player->onGround      = true;
+                            player->groundedStore = true;
+                            player->angle         = 0;
+                            player->collisionMode = CMODE_FLOOR;
+                            player->groundVel     = player->velocity.x;
 
-                        if (player->state == Player_State_KnuxGlideSlide || player->state == Player_State_KnuxGlideDrop
+                            if (player->state == Player_State_KnuxGlideSlide || player->state == Player_State_KnuxGlideDrop
 #if MANIA_USE_PLUS
-                            || player->state == Player_State_MightyHammerDrop
+                                || player->state == Player_State_MightyHammerDrop
 #endif
-                        ) {
-                            player->state = Player_State_Ground;
+                            ) {
+                                player->state = Player_State_Ground;
+                            }
                         }
+                        else {
+                            if (self->direction == FLIP_NONE)
+                                player->velocity.x = -0xB4000;
+                            else
+                                player->velocity.x = 0xB4000;
+                            player->velocity.y = -0xB4000;
+                            player->onGround   = false;
+                            player->state      = Player_State_Air;
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, false, 0);
+                            RSDK.PlaySfx(BouncePlant->sfxBouncePlant, false, 255);
+                        }
+                        self->stood          = true;
+                        self->recoilDuration = 60;
+                        self->stoodPos.x     = player->position.x;
+                        self->stoodPos.y     = self->position.y + BoucePlant_GetNodeStandY(player->position.x);
                     }
-                    else {
-                        if (self->direction == FLIP_NONE)
-                            player->velocity.x = -0xB4000;
-                        else
-                            player->velocity.x = 0xB4000;
-                        player->velocity.y = -0xB4000;
-                        player->onGround   = false;
-                        player->state      = Player_State_Air;
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, false, 0);
-                        RSDK.PlaySfx(BouncePlant->sfxBouncePlant, false, 255);
-                    }
-                    self->stood          = true;
-                    self->recoilDuration = 60;
-                    self->stoodPos.x     = player->position.x;
-                    self->stoodPos.y     = self->position.y + BoucePlant_GetNodeStandY(player->position.x);
                 }
             }
         }
-    }
 
-    if (self->stood) {
-        for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) self->drawPos[i].y = self->stoodPos.y + BoucePlant_GetNodeY(self->drawPos[i].x);
-    }
-    else {
-        if (self->recoilDuration <= 0) {
-            for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) self->drawPos[i] = self->nodeStartPos[i];
+        if (self->stood) {
+            int32 i;
+            for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) self->drawPos[i].y = self->stoodPos.y + BoucePlant_GetNodeY(self->drawPos[i].x);
         }
         else {
-            self->recoilDuration--;
+            if (self->recoilDuration <= 0) {
+                int32 i;
+                for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) self->drawPos[i] = self->nodeStartPos[i];
+            }
+            else {
+                int32 i;
+                self->recoilDuration--;
 
-            for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
-                self->recoilVelocity[i] += ((self->nodeStartPos[i].y - self->drawPos[i].y) >> 3) - (self->recoilVelocity[i] >> 3);
-                self->drawPos[i].y += self->recoilVelocity[i];
+                for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
+                    self->recoilVelocity[i] += ((self->nodeStartPos[i].y - self->drawPos[i].y) >> 3) - (self->recoilVelocity[i] >> 3);
+                    self->drawPos[i].y += self->recoilVelocity[i];
+                }
             }
         }
     }
@@ -145,9 +150,10 @@ void BouncePlant_StaticUpdate(void) {}
 
 void BouncePlant_Draw(void)
 {
+    int32 i;
     RSDK_THIS(BouncePlant);
 
-    for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
+    for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
         RSDK.DrawSprite(&self->nodeAnimator, &self->drawPos[i], false);
         RSDK.DrawSprite(&self->decorAnimators[i], &self->drawPos[i], false);
     }
@@ -157,6 +163,7 @@ void BouncePlant_Create(void *data)
 {
     RSDK_THIS(BouncePlant);
     if (!SceneInfo->inEditor) {
+        int32 i;
         self->visible       = true;
         self->drawGroup     = Zone->objectDrawGroup[0];
         self->active        = ACTIVE_BOUNDS;
@@ -174,7 +181,7 @@ void BouncePlant_Create(void *data)
         }
 
         RSDK.SetSpriteAnimation(BouncePlant->aniFrames, 1, &self->nodeAnimator, true, 0);
-        for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
+        for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
             RSDK.SetSpriteAnimation(BouncePlant->aniFrames, 1, &self->decorAnimators[i], true, RSDK.Rand(1, 8));
             self->drawPos[i].x = self->nodeStartPos[i].x;
             self->drawPos[i].y = self->nodeStartPos[i].y;
@@ -196,25 +203,29 @@ void BouncePlant_StageLoad(void)
 
 void BoucePlant_SetupNodePositions(void)
 {
+    int32 y;
+    int32 i;
     RSDK_THIS(BouncePlant);
 
     if (self->direction == FLIP_NONE) {
+        int32 i;
         int32 x = self->position.x - 0x2A0000;
-        for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
+        for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
             self->nodeStartPos[i].x = x;
             x += 0xC0000;
         }
     }
     else {
+        int32 i;
         int32 x = self->position.x + 0x2A0000;
-        for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
+        for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
             self->nodeStartPos[i].x = x;
             x -= 0xC0000;
         }
     }
 
-    int32 y = self->position.y + 0x2A0000;
-    for (int32 i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
+    y = self->position.y + 0x2A0000;
+    for (i = 0; i < BOUNCEPLANT_NODE_COUNT; ++i) {
         self->nodeStartPos[i].y = y;
         y -= 0xC0000;
     }

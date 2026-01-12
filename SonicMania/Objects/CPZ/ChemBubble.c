@@ -64,17 +64,20 @@ void ChemBubble_State_Appear(void)
 
 void ChemBubble_State_Rising(void)
 {
+    int32 x;
+    int32 deform;
+    int32 y;
     RSDK_THIS(ChemBubble);
     EntityChemicalPool *parent = self->parent;
 
     self->velocity.y -= 0x2000;
     self->position.y += self->velocity.y;
 
-    int32 x          = (RSDK.Sin256(self->position.y >> self->angleShift) << self->amplitude) + self->startPos.x;
+    x          = (RSDK.Sin256(self->position.y >> self->angleShift) << self->amplitude) + self->startPos.x;
     self->position.x = x;
 
-    int32 deform = ChemicalPool->surfaceDeformation[x >> 20];
-    int32 y      = parent->offsetY + (((x >> 12) & 0xFF) * (ChemicalPool->surfaceDeformation[(x + 0x100000) >> 20] - deform) >> 8) + deform + 0x20000;
+    deform = ChemicalPool->surfaceDeformation[x >> 20];
+    y      = parent->offsetY + (((x >> 12) & 0xFF) * (ChemicalPool->surfaceDeformation[(x + 0x100000) >> 20] - deform) >> 8) + deform + 0x20000;
 
     if (self->position.y <= y) {
         self->position.y = y;
@@ -92,14 +95,16 @@ void ChemBubble_State_Rising(void)
 
 void ChemBubble_State_Surfaced(void)
 {
+    int32 x;
+    int32 deform;
     RSDK_THIS(ChemBubble);
     EntityChemicalPool *parent = self->parent;
 
     RSDK.ProcessAnimation(&self->animator);
 
-    int32 x = self->position.x;
+    x = self->position.x;
 
-    int32 deform = ChemicalPool->surfaceDeformation[x >> 20];
+    deform = ChemicalPool->surfaceDeformation[x >> 20];
     self->position.y =
         parent->offsetY + (((x >> 12) & 0xFF) * (ChemicalPool->surfaceDeformation[(x + 0x100000) >> 20] - deform) >> 8) + deform + 0x20000;
 

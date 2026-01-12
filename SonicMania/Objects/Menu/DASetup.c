@@ -15,19 +15,21 @@ void DASetup_LateUpdate(void) {}
 
 void DASetup_StaticUpdate(void)
 {
+    EntityFXFade *fade;
+    EntityUIControl *control;
     if (!DASetup->initialized) {
         DASetup_SetupUI();
         DASetup->initialized = true;
     }
 
-    EntityFXFade *fade = DASetup->fxFade;
+    fade = DASetup->fxFade;
     if (DASetup->returnToMenu && fade->timer == 512) {
         Music_FadeOut(0.02);
         RSDK.SetScene("Presentation", "Menu");
         RSDK.LoadScene();
     }
 
-    EntityUIControl *control = DASetup->control;
+    control = DASetup->control;
     if (!control->childHasFocus)
         control->childHasFocus = true;
 }
@@ -38,30 +40,39 @@ void DASetup_Create(void *data) {}
 
 void DASetup_StageLoad(void)
 {
+    int32 trackCount;
 
-    foreach_all(UIControl, control)
     {
-        DASetup->control              = control;
-        control->processButtonInputCB = DASetup_State_ManageControl;
+        foreach_all(UIControl, control)
+        {
+            DASetup->control              = control;
+            control->processButtonInputCB = DASetup_State_ManageControl;
+        }
     }
 
-    foreach_all(FXFade, fade) { DASetup->fxFade = fade; }
-
-    foreach_all(UIInfoLabel, label)
     {
-        if (DASetup->trackTitleLabel) {
-            if (!DASetup->trackSelLabel) {
-                DASetup->trackSelLabel = label;
-                foreach_break;
+        foreach_all(FXFade, fade) { DASetup->fxFade = fade; }
+    }
+
+    {
+        foreach_all(UIInfoLabel, label)
+        {
+            if (DASetup->trackTitleLabel) {
+                if (!DASetup->trackSelLabel) {
+                    DASetup->trackSelLabel = label;
+                    foreach_break;
+                }
+            }
+            else {
+                DASetup->trackTitleLabel = label;
             }
         }
-        else {
-            DASetup->trackTitleLabel = label;
-        }
     }
 
-    int32 trackCount = 0;
-    foreach_all(Music, track) { DASetup->trackList[trackCount++] = track; }
+    trackCount = 0;
+    {
+        foreach_all(Music, track) { DASetup->trackList[trackCount++] = track; }
+    }
 
     DASetup->trackCount  = trackCount;
     DASetup->activeTrack = TRACK_NONE;
@@ -74,12 +85,14 @@ void DASetup_StageLoad(void)
 
 void DASetup_DisplayTrack(int32 trackID)
 {
+    EntityUIInfoLabel *trackTitleLabel;
+    EntityMusic *trackCountTrack;
     char buffer[0x10];
     String text;
     INIT_STRING(text);
 
-    EntityUIInfoLabel *trackTitleLabel = DASetup->trackTitleLabel;
-    EntityMusic *trackCountTrack       = DASetup->trackList[trackID];
+    trackTitleLabel = DASetup->trackTitleLabel;
+    trackCountTrack       = DASetup->trackList[trackID];
 
     memset(buffer, 0, 0x10 * sizeof(char));
     strcpy(&buffer[2], " - ");
@@ -145,12 +158,13 @@ bool32 DASetup_HandleMedallionDebug(void)
 
 void DASetup_SetupUI(void)
 {
+    EntityUIInfoLabel *trackSelLabel;
     String buffer;
     INIT_STRING(buffer);
 
     TitleBG_SetupFX();
     DASetup_DisplayTrack(0);
-    EntityUIInfoLabel *trackSelLabel = DASetup->trackSelLabel;
+    trackSelLabel = DASetup->trackSelLabel;
     Localization_GetString(&buffer, STR_SELECTATRACK);
 #if MANIA_USE_PLUS
     LogHelpers_PrintString(&buffer);
@@ -201,9 +215,10 @@ void DASetup_State_ManageControl(void)
     }
 
     if (!DASetup->returnToMenu && UIControl->anyBackPress) {
+        EntityFXFade *fade;
         DASetup->returnToMenu = true;
 
-        EntityFXFade *fade = DASetup->fxFade;
+        fade = DASetup->fxFade;
         fade->state        = FXFade_State_FadeOut;
         fade->timer        = 0;
     }

@@ -103,6 +103,7 @@ void Batbrain_State_Init(void)
 
 void Batbrain_State_CheckPlayerInRange(void)
 {
+    EntityPlayer *playerPtr;
     RSDK_THIS(Batbrain);
 
     int32 targetDistance       = 0x7FFFFFFF;
@@ -126,10 +127,11 @@ void Batbrain_State_CheckPlayerInRange(void)
         }
     }
 
-    EntityPlayer *playerPtr = backupPlayer;
+    playerPtr = backupPlayer;
     if (targetPlayer) {
+        int32 distance;
         playerPtr      = targetPlayer;
-        int32 distance = targetPlayer->position.y - self->position.y;
+        distance = targetPlayer->position.y - self->position.y;
         if (distance >= 0 && distance <= 0x800000 && !RSDK.Rand(0, 8)) {
             self->state   = Batbrain_State_DropToPlayer;
             self->targetY = playerPtr->position.y;

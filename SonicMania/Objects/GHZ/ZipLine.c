@@ -11,52 +11,65 @@ ObjectZipLine *ZipLine;
 
 void ZipLine_Update(void)
 {
+    int32 storeX;
+    int32 storeY; 
     RSDK_THIS(ZipLine);
 
     StateMachine_Run(self->state);
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
     self->position = self->handlePos;
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        if (self->grabDelay[playerID])
-            self->grabDelay[playerID]--;
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
+            if (self->grabDelay[playerID])
+                self->grabDelay[playerID]--;
 
-        if ((1 << playerID) & self->activePlayers) {
-            if (Player_CheckValidState(player)) {
-                Hitbox *playerHitbox = Player_GetHitbox(player);
+            if ((1 << playerID) & self->activePlayers) {
+                if (Player_CheckValidState(player)) {
+                    Hitbox *playerHitbox = Player_GetHitbox(player);
 
-                if (player->state != Player_State_Hurt) {
-                    if (player->velocity.x) {
-                        self->groundVel = player->groundVel;
-                        if (self->angle >= 0x40 && self->angle <= 0xC0)
-                            self->groundVel = -player->groundVel;
+                    if (player->state != Player_State_Hurt) {
+                        int32 lastX;
+                        if (player->velocity.x) {
+                            self->groundVel = player->groundVel;
+                            if (self->angle >= 0x40 && self->angle <= 0xC0)
+                                self->groundVel = -player->groundVel;
 
-                        self->groundVel = CLAMP(self->groundVel, -0xA0000, 0xA0000);
+                            self->groundVel = CLAMP(self->groundVel, -0xA0000, 0xA0000);
 
-                        self->velocity.x   = self->groundVel * RSDK.Cos256(self->angle) >> 8;
-                        self->velocity.y   = self->groundVel * RSDK.Sin256(self->angle) >> 8;
-                        player->velocity.x = 0;
-                        player->velocity.y = 0;
-                        player->groundVel  = 0;
-                        player->angle      = 0;
-                        player->rotation   = 0;
-                    }
+                            self->velocity.x   = self->groundVel * RSDK.Cos256(self->angle) >> 8;
+                            self->velocity.y   = self->groundVel * RSDK.Sin256(self->angle) >> 8;
+                            player->velocity.x = 0;
+                            player->velocity.y = 0;
+                            player->groundVel  = 0;
+                            player->angle      = 0;
+                            player->rotation   = 0;
+                        }
 
-                    int32 lastX        = player->position.x;
-                    player->position.x = self->position.x;
-                    player->position.y = self->position.y + (((ZipLine->hitboxHandle.bottom - ZipLine->hitboxHandle.top) << 15) & 0xFFFF0000)
-                                         + ((ZipLine->hitboxHandle.top - playerHitbox->top) << 16);
+                        lastX        = player->position.x;
+                        player->position.x = self->position.x;
+                        player->position.y = self->position.y + (((ZipLine->hitboxHandle.bottom - ZipLine->hitboxHandle.top) << 15) & 0xFFFF0000)
+                                             + ((ZipLine->hitboxHandle.top - playerHitbox->top) << 16);
 
-                    if (abs(lastX - self->position.x) <= 0x100000) {
-                        if (!self->grabDelay[playerID] && player->jumpPress) {
-                            player->velocity.y       = -0x40000;
-                            player->jumpAbilityState = 1;
-                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                            player->animator.speed    = 48;
+                        if (abs(lastX - self->position.x) <= 0x100000) {
+                            if (!self->grabDelay[playerID] && player->jumpPress) {
+                                player->velocity.y       = -0x40000;
+                                player->jumpAbilityState = 1;
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                                player->animator.speed    = 48;
+                                player->state             = Player_State_Air;
+                                self->grabDelay[playerID] = 60;
+                                self->activePlayers &= ~(1 << playerID);
+                                player->onGround       = false;
+                                player->groundedStore  = false;
+                                player->tileCollisions = TILECOLLISION_DOWN;
+                            }
+                        }
+                        else {
                             player->state             = Player_State_Air;
                             self->grabDelay[playerID] = 60;
                             self->activePlayers &= ~(1 << playerID);
@@ -66,7 +79,6 @@ void ZipLine_Update(void)
                         }
                     }
                     else {
-                        player->state             = Player_State_Air;
                         self->grabDelay[playerID] = 60;
                         self->activePlayers &= ~(1 << playerID);
                         player->onGround       = false;
@@ -75,75 +87,68 @@ void ZipLine_Update(void)
                     }
                 }
                 else {
-                    self->grabDelay[playerID] = 60;
                     self->activePlayers &= ~(1 << playerID);
-                    player->onGround       = false;
-                    player->groundedStore  = false;
-                    player->tileCollisions = TILECOLLISION_DOWN;
-                }
-            }
-            else {
-                self->activePlayers &= ~(1 << playerID);
-                if (player->state != Player_State_Death) {
-                    player->tileCollisions = TILECOLLISION_DOWN;
-                }
-            }
-        }
-        else if (!self->grabDelay[playerID] && player->state != Player_State_Static && !player->down) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
-            Hitbox otherHitbox;
-            otherHitbox.top    = playerHitbox->top - 4;
-            otherHitbox.left   = playerHitbox->left;
-            otherHitbox.right  = playerHitbox->right;
-            otherHitbox.bottom = otherHitbox.top + 8;
-
-            if (RSDK.CheckObjectCollisionTouchBox(self, &ZipLine->hitboxHandle, player, &otherHitbox)) {
-                if (player->sidekick || self->state == ZipLine_State_Moving) {
-                    ZipLine_GrabHandle(player, playerID, playerHitbox);
-                }
-                else if (!self->state) {
-                    self->groundVel = player->groundVel;
-                    if (self->angle >= 0x40 && self->angle <= 0xC0)
-                        self->groundVel = -player->groundVel;
-
-                    self->groundVel = CLAMP(self->groundVel, -0xA0000, 0xA0000);
-
-                    self->velocity.x = self->groundVel * RSDK.Cos256(self->angle) >> 8;
-                    self->velocity.y = self->groundVel * RSDK.Sin256(self->angle) >> 8;
-
-                    if (self->angle & 0x7F) {
-                        if ((uint8)self->angle < 0x80) {
-                            if (self->handlePos.x == self->startPos.x) {
-                                if (self->velocity.y < 0) {
-                                    self->velocity.x = 0;
-                                    self->velocity.y = 0;
-                                    self->groundVel  = 0;
-                                }
-                                self->state = ZipLine_State_Moving;
-                            }
-
-                            if (self->handlePos.x == self->endPos.x && self->velocity.y < 0)
-                                ZipLine_GrabHandle(player, playerID, playerHitbox);
-                        }
-                        else {
-                            if (self->handlePos.x == self->endPos.x) {
-                                if (self->velocity.y < 0) {
-                                    self->velocity.x = 0;
-                                    self->velocity.y = 0;
-                                    self->groundVel  = 0;
-                                }
-
-                                self->state = ZipLine_State_Moving;
-                            }
-
-                            if (self->handlePos.x == self->startPos.x && self->velocity.y < 0)
-                                ZipLine_GrabHandle(player, playerID, playerHitbox);
-                        }
+                    if (player->state != Player_State_Death) {
+                        player->tileCollisions = TILECOLLISION_DOWN;
                     }
-                    else if (self->groundVel) {
-                        if ((self->groundVel < 0 && self->handlePos.x != self->startPos.x)
-                            || (self->groundVel > 0 && self->handlePos.x != self->endPos.x)) {
-                            ZipLine_GrabHandle(player, playerID, playerHitbox);
+                }
+            }
+            else if (!self->grabDelay[playerID] && player->state != Player_State_Static && !player->down) {
+                Hitbox *playerHitbox = Player_GetHitbox(player);
+                Hitbox otherHitbox;
+                otherHitbox.top    = playerHitbox->top - 4;
+                otherHitbox.left   = playerHitbox->left;
+                otherHitbox.right  = playerHitbox->right;
+                otherHitbox.bottom = otherHitbox.top + 8;
+
+                if (RSDK.CheckObjectCollisionTouchBox(self, &ZipLine->hitboxHandle, player, &otherHitbox)) {
+                    if (player->sidekick || self->state == ZipLine_State_Moving) {
+                        ZipLine_GrabHandle(player, playerID, playerHitbox);
+                    }
+                    else if (!self->state) {
+                        self->groundVel = player->groundVel;
+                        if (self->angle >= 0x40 && self->angle <= 0xC0)
+                            self->groundVel = -player->groundVel;
+
+                        self->groundVel = CLAMP(self->groundVel, -0xA0000, 0xA0000);
+
+                        self->velocity.x = self->groundVel * RSDK.Cos256(self->angle) >> 8;
+                        self->velocity.y = self->groundVel * RSDK.Sin256(self->angle) >> 8;
+
+                        if (self->angle & 0x7F) {
+                            if ((uint8)self->angle < 0x80) {
+                                if (self->handlePos.x == self->startPos.x) {
+                                    if (self->velocity.y < 0) {
+                                        self->velocity.x = 0;
+                                        self->velocity.y = 0;
+                                        self->groundVel  = 0;
+                                    }
+                                    self->state = ZipLine_State_Moving;
+                                }
+
+                                if (self->handlePos.x == self->endPos.x && self->velocity.y < 0)
+                                    ZipLine_GrabHandle(player, playerID, playerHitbox);
+                            }
+                            else {
+                                if (self->handlePos.x == self->endPos.x) {
+                                    if (self->velocity.y < 0) {
+                                        self->velocity.x = 0;
+                                        self->velocity.y = 0;
+                                        self->groundVel  = 0;
+                                    }
+
+                                    self->state = ZipLine_State_Moving;
+                                }
+
+                                if (self->handlePos.x == self->startPos.x && self->velocity.y < 0)
+                                    ZipLine_GrabHandle(player, playerID, playerHitbox);
+                            }
+                        }
+                        else if (self->groundVel) {
+                            if ((self->groundVel < 0 && self->handlePos.x != self->startPos.x)
+                                || (self->groundVel > 0 && self->handlePos.x != self->endPos.x)) {
+                                ZipLine_GrabHandle(player, playerID, playerHitbox);
+                            }
                         }
                     }
                 }
@@ -359,12 +364,12 @@ void ZipLine_State_Moving(void)
     self->velocity.y = self->groundVel * RSDK.Sin256(self->angle) >> 8;
 
     if (self->joinPos.x) {
+        Hitbox otherHitbox;
         int32 storeX     = self->position.x;
         int32 storeY     = self->position.y;
         self->position.x = self->handlePos.x;
         self->position.y = self->handlePos.y;
 
-        Hitbox otherHitbox;
         otherHitbox.top    = ((self->joinPos.y - self->position.y - (self->velocity.y >> 1)) >> 16) + 8;
         otherHitbox.bottom = (((self->velocity.y >> 1) + (self->joinPos.y - self->position.y)) >> 16) + 16;
 
@@ -391,18 +396,21 @@ void ZipLine_State_Moving(void)
             self->groundVel          = 0;
             self->handlePos.x        = -0x100000;
             self->state              = StateMachine_None;
-            foreach_active(Player, player)
             {
-                if ((1 << RSDK.GetEntitySlot(player)) & endMarker->activePlayers) {
-                    Hitbox *playerHitbox = Player_GetHitbox(player);
-                    player->velocity.x   = 0;
-                    player->velocity.y   = 0;
-                    player->groundVel    = 0;
-                    player->angle        = 0;
-                    player->rotation     = 0;
-                    player->position.x   = endMarker->handlePos.x;
-                    player->position.y   = endMarker->handlePos.y + (((ZipLine->hitboxHandle.bottom - ZipLine->hitboxHandle.top) << 15) & 0xFFFF0000)
-                                         + ((ZipLine->hitboxHandle.top - playerHitbox->top) << 16);
+                foreach_active(Player, player)
+                {
+                    if ((1 << RSDK.GetEntitySlot(player)) & endMarker->activePlayers) {
+                        Hitbox *playerHitbox = Player_GetHitbox(player);
+                        player->velocity.x   = 0;
+                        player->velocity.y   = 0;
+                        player->groundVel    = 0;
+                        player->angle        = 0;
+                        player->rotation     = 0;
+                        player->position.x   = endMarker->handlePos.x;
+                        player->position.y   = endMarker->handlePos.y
+                                             + (((ZipLine->hitboxHandle.bottom - ZipLine->hitboxHandle.top) << 15) & 0xFFFF0000)
+                                             + ((ZipLine->hitboxHandle.top - playerHitbox->top) << 16);
+                    }
                 }
             }
             return;

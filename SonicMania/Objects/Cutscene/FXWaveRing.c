@@ -12,6 +12,7 @@ ObjectFXWaveRing *FXWaveRing;
 
 void FXWaveRing_Update(void)
 {
+    Entity *parent;
     RSDK_THIS(FXWaveRing);
 
     if (!(Zone->timer & 3)) {
@@ -29,7 +30,7 @@ void FXWaveRing_Update(void)
 
     StateMachine_Run(self->state);
 
-    Entity *parent = self->parent;
+    parent = self->parent;
     if (parent) {
         self->position.x = parent->position.x + self->offsetPos.x;
         self->position.y = parent->position.y + self->offsetPos.y;
@@ -42,6 +43,7 @@ void FXWaveRing_StaticUpdate(void) {}
 
 void FXWaveRing_Draw(void)
 {
+    int32 i;
     RSDK_THIS(FXWaveRing);
 
     int32 angInc = 256 / self->pointCount;
@@ -55,7 +57,7 @@ void FXWaveRing_Draw(void)
     int32 angle2 = self->angle2;
     int32 prevX  = x;
     int32 prevY  = y;
-    for (int32 i = 0; i < self->pointCount - 1; ++i) {
+    for (i = 0; i < self->pointCount - 1; ++i) {
         angle += angInc;
         angle2 += self->angleInc;
         sin   = self->radius * RSDK.Sin256(angle2) + (self->radiusOffset << 8);

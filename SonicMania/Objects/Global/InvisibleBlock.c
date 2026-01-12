@@ -83,14 +83,16 @@ void InvisibleBlock_StageLoad(void)
 
 void InvisibleBlock_DrawSprites(void)
 {
+    int32 y;
     RSDK_THIS(InvisibleBlock);
 
     Vector2 drawPos;
     drawPos.x = self->position.x - (self->width << 19);
     drawPos.y = self->position.y - (self->height << 19);
 
-    for (int32 y = 0; y <= self->height; ++y) {
-        for (int32 x = 0; x <= self->width; ++x) {
+    for (y = 0; y <= self->height; ++y) {
+        int32 x;
+        for (x = 0; x <= self->width; ++x) {
             RSDK.DrawSprite(&InvisibleBlock->animator, &drawPos, false);
             drawPos.x += TO_FIXED(16);
         }

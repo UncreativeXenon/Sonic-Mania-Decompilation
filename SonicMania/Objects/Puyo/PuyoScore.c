@@ -42,6 +42,8 @@ void PuyoScore_StageLoad(void) { PuyoScore->aniFrames = RSDK.LoadSpriteAnimation
 
 void PuyoScore_DrawScore(int32 score)
 {
+    Vector2 drawPos;
+    int32 i; 
     RSDK_THIS(PuyoScore);
 
     char buffer[8];
@@ -50,8 +52,8 @@ void PuyoScore_DrawScore(int32 score)
     else
         sprintf_s(buffer, (int32)sizeof(buffer), "%06d", score);
 
-    Vector2 drawPos = self->position;
-    for (int32 i = 0; i < 6; ++i) {
+    drawPos = self->position;
+    for (i = 0; i < 6; ++i) {
         if (!buffer[i])
             break;
 

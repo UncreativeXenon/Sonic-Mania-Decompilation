@@ -207,10 +207,11 @@ void BallHog_State_DropBomb(void)
             RSDK.SetSpriteAnimation(BallHog->aniFrames, 3, &self->animator, true, 0);
     }
     else {
+        EntityBallHog *bomb;
         self->timer = 18;
         RSDK.PlaySfx(BallHog->sfxDrop, false, 0xFF);
 
-        EntityBallHog *bomb = CREATE_ENTITY(BallHog, INT_TO_VOID(true), self->position.x, self->position.y);
+        bomb = CREATE_ENTITY(BallHog, INT_TO_VOID(true), self->position.x, self->position.y);
         if (self->direction) {
             bomb->position.x += 0x40000;
             bomb->velocity.x = 0x10000;
@@ -241,17 +242,21 @@ void BallHog_State_Bomb(void)
     self->velocity.y += 0x3800;
 
     if (RSDK.CheckOnScreen(self, &self->updateRange)) {
+        bool32 shouldExplode;
         if (self->velocity.y > 0 && RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0x80000, 4)) {
+            int32 storeY;
+            int32 y1;
+            int32 y2;
             RSDK.PlaySfx(BallHog->sfxArrowHit, false, 255);
-            int32 storeY = self->position.y;
+            storeY = self->position.y;
 
             self->velocity.y = -0x30000;
             RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, -0x20000, 0x80000, 8);
-            int32 y1 = self->position.y;
+            y1 = self->position.y;
 
             self->position.y = storeY;
             RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0x20000, 0x80000, 8);
-            int32 y2 = self->position.y;
+            y2 = self->position.y;
 
             self->position.y = storeY;
             if (self->velocity.x <= 0 ? y1 < y2 : y2 < y1)
@@ -260,19 +265,21 @@ void BallHog_State_Bomb(void)
 
         RSDK.ProcessAnimation(&self->animator);
 
-        bool32 shouldExplode = false;
-        foreach_active(Player, player)
+        shouldExplode = false;
         {
-            if (Player_CheckCollisionTouch(player, self, &BallHog->hitboxBomb)) {
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &BallHog->hitboxBomb)) {
 #if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(player, 0x100, 2, &player->uncurlTimer)) {
+                    if (!Player_CheckMightyUnspin(player, 0x100, 2, &player->uncurlTimer)) {
 #endif
-                    Player_Hurt(player, self);
-                    shouldExplode = true;
-                    foreach_break;
+                        Player_Hurt(player, self);
+                        shouldExplode = true;
+                        foreach_break;
 #if MANIA_USE_PLUS
+                    }
+#endif
                 }
-#endif
             }
         }
 

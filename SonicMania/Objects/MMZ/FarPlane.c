@@ -86,6 +86,8 @@ void FarPlane_StageLoad(void)
     FarPlane->layerID = RSDK.GetTileLayerID("Far Plane");
 
     if (FarPlane->layerID != (uint16)-1) {
+        int32 s;
+        EntityCamera *camera;
         TileLayer *farPlane        = RSDK.GetTileLayer(FarPlane->layerID);
         farPlane->drawGroup[0]     = DRAWGROUP_COUNT;
         farPlane->scanlineCallback = FarPlane_Scanline_FarPlaneView;
@@ -107,7 +109,7 @@ void FarPlane_StageLoad(void)
 
         RSDK.CopyTileLayer(FarPlane->layerID, 0, 192, Zone->fgLayer[0], 0, 192, 1024, 208);
 
-        for (int32 s = 0; s < PLAYER_COUNT; ++s) {
+        for (s = 0; s < PLAYER_COUNT; ++s) {
             Zone->cameraBoundsB[s] -= 2048;
             Zone->deathBoundary[s] -= 2048 << 16;
         }
@@ -120,17 +122,18 @@ void FarPlane_StageLoad(void)
 
         RSDK.ClearCameras();
 
-        EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         RSDK.AddCamera(&camera->center, ScreenInfo[camera->screenID].center.x << 16, ScreenInfo[camera->screenID].center.y << 16, 0);
     }
 }
 
 void FarPlane_SetupEntities(void)
 {
+    int32 i;
     RSDK_THIS(FarPlane);
 
     self->entityCount = 0;
-    for (int32 i = 0; i < SCENEENTITY_COUNT && self->entityCount < FARPLANE_ENTITY_COUNT; ++i) {
+    for (i = 0; i < SCENEENTITY_COUNT && self->entityCount < FARPLANE_ENTITY_COUNT; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(i);
         if (abs(self->origin.x - child->position.x) < self->size.x && abs(self->origin.y - child->position.y) < self->size.y) {
             self->entitySlots[self->entityCount++] = i;
@@ -144,17 +147,19 @@ void FarPlane_SetupEntities(void)
 
 void FarPlane_SetEntityActivities(uint8 active)
 {
+    int32 i;
     RSDK_THIS(FarPlane);
 
-    for (int32 i = 0; i < self->entityCount; ++i) {
+    for (i = 0; i < self->entityCount; ++i) {
         RSDK_GET_ENTITY_GEN(self->entitySlots[i])->active = active;
     }
 }
 
 void FarPlane_DrawHook_ApplyFarPlane(void)
 {
+    int32 i;
     int32 id = 0;
-    for (int32 i = 0; i < 0x200 && id < 0x200; ++i) {
+    for (i = 0; i < 0x200 && id < 0x200; ++i) {
         Entity *entity = RSDK.GetDrawListRef(1, i);
         if (!entity)
             break;
@@ -170,7 +175,7 @@ void FarPlane_DrawHook_ApplyFarPlane(void)
         id++;
     }
 
-    for (int32 i = 0; i < 0x200 && id < 0x200; ++i) {
+    for (i = 0; i < 0x200 && id < 0x200; ++i) {
         Entity *entity = RSDK.GetDrawListRef(2, i);
         if (!entity)
             break;
@@ -185,48 +190,54 @@ void FarPlane_DrawHook_ApplyFarPlane(void)
         id++;
     }
 
-    foreach_active(InvincibleStars, invincibleStars)
     {
-        if (invincibleStars->drawGroup < 3 && id < 0x200) {
-            invincibleStars->starOffset = 10;
-            invincibleStars->drawFX     = FX_SCALE;
-            invincibleStars->scale.x    = 0x100;
-            invincibleStars->scale.y    = 0x100;
+        foreach_active(InvincibleStars, invincibleStars)
+        {
+            if (invincibleStars->drawGroup < 3 && id < 0x200) {
+                int32 s; 
+                invincibleStars->starOffset = 10;
+                invincibleStars->drawFX     = FX_SCALE;
+                invincibleStars->scale.x    = 0x100;
+                invincibleStars->scale.y    = 0x100;
 
-            for (int32 s = 0; s < 8; ++s) {
-                FarPlane->positionList[id].x = invincibleStars->starPos[s].x;
-                FarPlane->positionList[id].y = invincibleStars->starPos[s].y;
+                for (s = 0; s < 8; ++s) {
+                    FarPlane->positionList[id].x = invincibleStars->starPos[s].x;
+                    FarPlane->positionList[id].y = invincibleStars->starPos[s].y;
 
-                invincibleStars->starPos[s].x = FarPlane->worldPos.x + ((invincibleStars->starPos[s].x - FarPlane->originPos.x) >> 1);
-                invincibleStars->starPos[s].y = FarPlane->worldPos.y + ((invincibleStars->starPos[s].y - FarPlane->originPos.y) >> 1);
+                    invincibleStars->starPos[s].x = FarPlane->worldPos.x + ((invincibleStars->starPos[s].x - FarPlane->originPos.x) >> 1);
+                    invincibleStars->starPos[s].y = FarPlane->worldPos.y + ((invincibleStars->starPos[s].y - FarPlane->originPos.y) >> 1);
 
-                id++;
+                    id++;
+                }
             }
         }
     }
 
-    foreach_active(ImageTrail, imageTrail)
     {
-        if (imageTrail->drawGroup < 3 && id < 0x200) {
-            imageTrail->scale.x = 0x100;
-            imageTrail->scale.y = 0x100;
+        foreach_active(ImageTrail, imageTrail)
+        {
+            if (imageTrail->drawGroup < 3 && id < 0x200) {
+                int32 s; 
+                imageTrail->scale.x = 0x100;
+                imageTrail->scale.y = 0x100;
 
-            FarPlane->positionList[id].x = imageTrail->currentPos.x;
-            FarPlane->positionList[id].y = imageTrail->currentPos.y;
+                FarPlane->positionList[id].x = imageTrail->currentPos.x;
+                FarPlane->positionList[id].y = imageTrail->currentPos.y;
 
-            imageTrail->currentPos.x = FarPlane->worldPos.x + ((imageTrail->currentPos.x - FarPlane->originPos.x) >> 1);
-            imageTrail->currentPos.y = FarPlane->worldPos.y + ((imageTrail->currentPos.y - FarPlane->originPos.y) >> 1);
-
-            id++;
-
-            for (int32 s = 0; s < 7; ++s) {
-                FarPlane->positionList[id].x = imageTrail->statePos[s].x;
-                FarPlane->positionList[id].y = imageTrail->statePos[s].y;
-
-                imageTrail->statePos[s].x = FarPlane->worldPos.x + ((imageTrail->statePos[s].x - FarPlane->originPos.x) >> 1);
-                imageTrail->statePos[s].y = FarPlane->worldPos.y + ((imageTrail->statePos[s].y - FarPlane->originPos.y) >> 1);
+                imageTrail->currentPos.x = FarPlane->worldPos.x + ((imageTrail->currentPos.x - FarPlane->originPos.x) >> 1);
+                imageTrail->currentPos.y = FarPlane->worldPos.y + ((imageTrail->currentPos.y - FarPlane->originPos.y) >> 1);
 
                 id++;
+
+                for (s = 0; s < 7; ++s) {
+                    FarPlane->positionList[id].x = imageTrail->statePos[s].x;
+                    FarPlane->positionList[id].y = imageTrail->statePos[s].y;
+
+                    imageTrail->statePos[s].x = FarPlane->worldPos.x + ((imageTrail->statePos[s].x - FarPlane->originPos.x) >> 1);
+                    imageTrail->statePos[s].y = FarPlane->worldPos.y + ((imageTrail->statePos[s].y - FarPlane->originPos.y) >> 1);
+
+                    id++;
+                }
             }
         }
     }
@@ -234,8 +245,9 @@ void FarPlane_DrawHook_ApplyFarPlane(void)
 
 void FarPlane_DrawHook_RemoveFarPlane(void)
 {
+    int32 i;
     int32 id = 0;
-    for (int32 i = 0; i < 0x200 && id < 0x200; ++i) {
+    for (i = 0; i < 0x200 && id < 0x200; ++i) {
         Entity *entity = RSDK.GetDrawListRef(1, i);
         if (!entity)
             break;
@@ -245,7 +257,7 @@ void FarPlane_DrawHook_RemoveFarPlane(void)
         id++;
     }
 
-    for (int32 i = 0; i < 0x200 && id < 0x200; ++i) {
+    for (i = 0; i < 0x200 && id < 0x200; ++i) {
         Entity *entity = RSDK.GetDrawListRef(2, i);
         if (!entity)
             break;
@@ -255,28 +267,34 @@ void FarPlane_DrawHook_RemoveFarPlane(void)
         id++;
     }
 
-    foreach_active(InvincibleStars, invincibleStars)
     {
-        if (invincibleStars->drawGroup == 1 && id < 0x200) {
-            for (int32 s = 0; s < 8; ++s) {
-                invincibleStars->starPos[s].x = FarPlane->positionList[id].x;
-                invincibleStars->starPos[s].y = FarPlane->positionList[id].y;
-                id++;
+        foreach_active(InvincibleStars, invincibleStars)
+        {
+            if (invincibleStars->drawGroup == 1 && id < 0x200) {
+                int32 s;
+                for (s = 0; s < 8; ++s) {
+                    invincibleStars->starPos[s].x = FarPlane->positionList[id].x;
+                    invincibleStars->starPos[s].y = FarPlane->positionList[id].y;
+                    id++;
+                }
             }
         }
     }
 
-    foreach_active(ImageTrail, imageTrail)
     {
-        if (imageTrail->drawGroup == 1 && id < 0x200) {
-            imageTrail->currentPos.x = FarPlane->positionList[id].x;
-            imageTrail->currentPos.y = FarPlane->positionList[id].y;
-            id++;
-
-            for (int32 s = 0; s < 7; ++s) {
-                imageTrail->statePos[s].x = FarPlane->positionList[id].x;
-                imageTrail->statePos[s].y = FarPlane->positionList[id].y;
+        foreach_active(ImageTrail, imageTrail)
+        {
+            if (imageTrail->drawGroup == 1 && id < 0x200) {
+                int32 s;
+                imageTrail->currentPos.x = FarPlane->positionList[id].x;
+                imageTrail->currentPos.y = FarPlane->positionList[id].y;
                 id++;
+
+                for (s = 0; s < 7; ++s) {
+                    imageTrail->statePos[s].x = FarPlane->positionList[id].x;
+                    imageTrail->statePos[s].y = FarPlane->positionList[id].y;
+                    id++;
+                }
             }
         }
     }
@@ -284,10 +302,11 @@ void FarPlane_DrawHook_RemoveFarPlane(void)
 
 void FarPlane_Scanline_FarPlaneView(ScanlineInfo *scanline)
 {
+    int32 h;
     int32 x = FarPlane->screenPos.x - (ScreenInfo->center.x << 17);
     int32 y = FarPlane->screenPos.y - (ScreenInfo->center.y << 17);
 
-    for (int32 h = 0; h < ScreenInfo->size.y; ++h) {
+    for (h = 0; h < ScreenInfo->size.y; ++h) {
         scanline->position.x = x;
         scanline->position.y = y;
 

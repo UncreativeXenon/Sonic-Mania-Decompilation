@@ -171,9 +171,11 @@ void Flamethrower_CheckOffScreen(void)
 
 void Flamethrower_HandleAnimations(void)
 {
+    int32 dist;
+    int32 anim;
     RSDK_THIS(Flamethrower);
 
-    int32 dist = 0;
+    dist = 0;
     if (self->mode == FLAMETHROWER_MODE_SPRINKLER) {
         dist = self->currentDist;
     }
@@ -184,7 +186,7 @@ void Flamethrower_HandleAnimations(void)
             dist = abs(self->position.x - self->origin.x) >> 16;
     }
 
-    int32 anim = dist > 0x20 ? (dist > 0x40 ? 2 : 1) : 0;
+    anim = dist > 0x20 ? (dist > 0x40 ? 2 : 1) : 0;
 
     if (self->orientation == FLAMETHROWER_ORIENTATION_DOWN || self->orientation == FLAMETHROWER_ORIENTATION_UP)
         RSDK.SetSpriteAnimation(Flamethrower->aniFrames, anim + 5, &self->animator, false, 0);
@@ -237,9 +239,10 @@ void Flamethrower_HandleTileCollisions(void)
 
 void Flamethrower_CheckOutOfBounds(uint8 orientation)
 {
+    int32 dist = 0;
     RSDK_THIS(Flamethrower);
 
-    int32 dist = 0;
+    dist = 0;
     if (self->mode == FLAMETHROWER_MODE_SPRINKLER) {
         dist = self->currentDist;
     }
@@ -256,14 +259,17 @@ void Flamethrower_CheckOutOfBounds(uint8 orientation)
 
 void Flamethrower_CheckFlameCollisions(void)
 {
+    Hitbox hitbox;
     RSDK_THIS(Flamethrower);
 
-    Hitbox hitbox = Flamethrower_GetHitbox();
+    hitbox = Flamethrower_GetHitbox();
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-            Player_ElementHurt(player, self, SHIELD_FIRE);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                Player_ElementHurt(player, self, SHIELD_FIRE);
+            }
         }
     }
 }
@@ -279,7 +285,9 @@ void Flamethrower_CheckMouthCollisions(void)
         else
             hitbox = &Flamethrower->hitboxMouthH;
 
-        foreach_active(Player, player) { Player_CheckCollisionBox(player, self, hitbox); }
+        {
+            foreach_active(Player, player) { Player_CheckCollisionBox(player, self, hitbox); }
+        }
     }
 }
 

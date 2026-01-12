@@ -38,6 +38,8 @@ Vector2 PuyoAI_GetBeanPos(int32 playerID)
 
 void PuyoAI_PrepareAction(int32 playerID)
 {
+    int32 lastBeanY;
+    int32 beanPos;
     EntityPuyoBean *bean    = NULL;
     EntityPuyoBean *partner = NULL;
 
@@ -49,33 +51,42 @@ void PuyoAI_PrepareAction(int32 playerID)
         }
     }
 
-    int32 lastBeanY             = PuyoAI->lastBeanY[playerID];
-    int32 beanPos                 = MIN(bean->stillPos.y, partner->stillPos.y);
+    lastBeanY             = PuyoAI->lastBeanY[playerID];
+    beanPos                 = MIN(bean->stillPos.y, partner->stillPos.y);
     PuyoAI->lastBeanY[playerID] = beanPos;
 
     if (lastBeanY > beanPos) {
+        int32 x;
+        int32 startX;
+        int32 endX;
+        int32 lastY;
+        int32 beanX;
+        int32 beanY;
+        int32 partnerX;
+        int32 partnerY;
         uint8 columnHeights[PUYO_PLAYFIELD_W];
         memset(columnHeights, 0, sizeof(columnHeights));
 
-        for (int32 x = 0; x < PUYO_PLAYFIELD_W; ++x) columnHeights[x] = (PUYO_PLAYFIELD_H - 1) - PuyoBean_GetColumnHeight(playerID, x, bean, partner);
+        for (x = 0; x < PUYO_PLAYFIELD_W; ++x) columnHeights[x] = (PUYO_PLAYFIELD_H - 1) - PuyoBean_GetColumnHeight(playerID, x, bean, partner);
 
         beanPos = MAX(bean->stillPos.y, partner->stillPos.y);
 
-        int32 startX = MIN(bean->stillPos.x, partner->stillPos.x);
-        int32 endX   = MAX(bean->stillPos.x, partner->stillPos.x);
+        startX = MIN(bean->stillPos.x, partner->stillPos.x);
+        endX   = MAX(bean->stillPos.x, partner->stillPos.x);
 
         while ((bean->stillPos.x == startX || partner->stillPos.x == startX || columnHeights[startX] > beanPos) && startX > 0) startX--;
 
         while ((bean->stillPos.x == endX || partner->stillPos.x == endX || columnHeights[endX] > beanPos) && endX < PUYO_PLAYFIELD_W) endX++;
 
-        int32 lastY    = 0;
-        int32 beanX    = 0;
-        int32 beanY    = 0;
-        int32 partnerX = 0;
-        int32 partnerY = 0;
+        lastY    = 0;
+        beanX    = 0;
+        beanY    = 0;
+        partnerX = 0;
+        partnerY = 0;
 
-        for (int32 x = startX + 1; x < endX; ++x) {
-            for (int32 orientation = 0; orientation < 4; ++orientation) {
+        for (x = startX + 1; x < endX; ++x) {
+            int32 orientation;
+            for (orientation = 0; orientation < 4; ++orientation) {
                 switch (orientation) {
                     case 0: // Oriented Left
                         if (x >= (PUYO_PLAYFIELD_W - 1))
@@ -115,6 +126,10 @@ void PuyoAI_PrepareAction(int32 playerID)
                 }
 
                 if (beanX < PUYO_PLAYFIELD_W && beanY < PUYO_PLAYFIELD_H && partnerX < PUYO_PLAYFIELD_W && partnerY < PUYO_PLAYFIELD_H) {
+                    int32 beanAvailableLinks;
+                    int32 partnerAvailableLinks;
+                    int32 linkCount;
+                    int32 newBeanY;
                     int32 chainComboSize = PuyoAI_GetChainComboSize(playerID, bean, partner, beanX, beanY, partnerX, partnerY);
                     if (chainComboSize < 16) {
                         if (!beanY && (beanX == 2 || beanX == 3))
@@ -124,17 +139,17 @@ void PuyoAI_PrepareAction(int32 playerID)
                             chainComboSize = -1;
                     }
 
-                    int32 beanAvailableLinks    = PuyoBean_GetAvailableLinks(playerID, bean, beanX, beanY);
-                    int32 partnerAvailableLinks = PuyoBean_GetAvailableLinks(playerID, partner, partnerX, partnerY);
+                    beanAvailableLinks    = PuyoBean_GetAvailableLinks(playerID, bean, beanX, beanY);
+                    partnerAvailableLinks = PuyoBean_GetAvailableLinks(playerID, partner, partnerX, partnerY);
 
-                    int32 linkCount = (beanAvailableLinks > 0) + (partnerAvailableLinks > 0);
+                    linkCount = (beanAvailableLinks > 0) + (partnerAvailableLinks > 0);
 
                     if (orientation == 1 || orientation == 3)
                         chainComboSize = (0x70000 * chainComboSize) >> 19;
 
                     for (; linkCount; --linkCount) chainComboSize = (0x30000 * chainComboSize) >> 18;
 
-                    int32 newBeanY = (chainComboSize * ((MIN(beanY, partnerY) << 16) / 4 + 1)) >> 16;
+                    newBeanY = (chainComboSize * ((MIN(beanY, partnerY) << 16) / 4 + 1)) >> 16;
                     if (newBeanY > lastY || (newBeanY == lastY && RSDK.Rand(0, 10) > 5)) {
                         lastY                             = newBeanY;
                         PuyoAI->desiredColumn[playerID]   = beanX;
@@ -149,10 +164,13 @@ void PuyoAI_PrepareAction(int32 playerID)
 int32 PuyoAI_GetChainComboSize(int32 playerID, EntityPuyoBean *bean, EntityPuyoBean *partner, int32 beanX, int32 beanY, int32 partnerX,
                                int32 partnerY)
 {
-    for (int32 i = 0; i < (PUYO_PLAYFIELD_W * PUYO_PLAYFIELD_H); ++i) PuyoBean->beanLinkTable[i] = false;
+    int32 i;
+    int32 removeCount;
+    int32 partnerRemoveCount;
+    for (i = 0; i < (PUYO_PLAYFIELD_W * PUYO_PLAYFIELD_H); ++i) PuyoBean->beanLinkTable[i] = false;
 
-    int32 removeCount        = PuyoBean_GetBeanChainRemovalCount(playerID, bean, beanX, beanY);
-    int32 partnerRemoveCount = PuyoBean_GetBeanChainRemovalCount(playerID, partner, partnerX, partnerY);
+    removeCount        = PuyoBean_GetBeanChainRemovalCount(playerID, bean, beanX, beanY);
+    partnerRemoveCount = PuyoBean_GetBeanChainRemovalCount(playerID, partner, partnerX, partnerY);
 
     if (bean->type == partner->type && (beanX == partnerX || beanY == partnerY))
         return 1 << (removeCount + partnerRemoveCount);
@@ -221,9 +239,11 @@ void PuyoAI_Input_AI(void)
                     PuyoAI_SetupInputs(self, rotationDisabled);
                 }
                 else {
+                    uint8 currentRotation;
+                    int32 targetRotation;
                     PuyoAI_PrepareAction(self->playerID);
 
-                    uint8 currentRotation = 0;
+                    currentRotation = 0;
                     if (self->stillPos.y == partner->stillPos.y && self->stillPos.x >= partner->stillPos.x) {
                         if (self->stillPos.y == partner->stillPos.y && self->stillPos.x > partner->stillPos.x) {
                             currentRotation = 2;
@@ -240,7 +260,7 @@ void PuyoAI_Input_AI(void)
                         }
                     }
 
-                    int32 targetRotation = PuyoAI->desiredRotation[self->playerID] - currentRotation;
+                    targetRotation = PuyoAI->desiredRotation[self->playerID] - currentRotation;
                     if (targetRotation == 3)
                         targetRotation = -1;
 

@@ -19,89 +19,96 @@ void Turntable_Update(void)
         self->angle += 0x400;
     self->angle %= 0x3FF;
 
-    foreach_active(Player, player)
-    {
-        int32 playerID = RSDK.GetEntitySlot(player);
+{
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (!((1 << playerID) & self->activePlayers)) {
-            if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_TOP) {
+            if (!((1 << playerID) & self->activePlayers)) {
+                if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_TOP) {
+                    int32 dist;
+                    Hitbox *hitbox;
 
 #if MANIA_USE_PLUS
-                if (player->state == Player_State_MightyHammerDrop || player->state == Player_State_BubbleBounce)
-                    continue;
+                    if (player->state == Player_State_MightyHammerDrop || player->state == Player_State_BubbleBounce)
+                        continue;
 #else
-                if (player->state == Player_State_BubbleBounce)
-                    continue;
+                    if (player->state == Player_State_BubbleBounce)
+                        continue;
 #endif
 
-                self->active = ACTIVE_NORMAL;
-                self->activePlayers |= (1 << playerID);
-                player->nextGroundState = StateMachine_None;
-                player->nextAirState    = StateMachine_None;
-                player->velocity.x      = 0;
-                player->velocity.y      = 0;
-                player->groundVel       = 0;
-                player->onGround        = true;
-                player->state           = Player_State_Static;
+                    self->active = ACTIVE_NORMAL;
+                    self->activePlayers |= (1 << playerID);
+                    player->nextGroundState = StateMachine_None;
+                    player->nextAirState    = StateMachine_None;
+                    player->velocity.x      = 0;
+                    player->velocity.y      = 0;
+                    player->groundVel       = 0;
+                    player->onGround        = true;
+                    player->state           = Player_State_Static;
 
-                int32 dist = FROM_FIXED(abs(player->position.x - self->position.x));
+                    dist = FROM_FIXED(abs(player->position.x - self->position.x));
 
-                if (dist >= 0x10) {
-                    if (player->position.x <= self->position.x) {
-                        self->playerAngles[playerID] = 0x200;
-                        self->playerFrames[playerID] = 12;
+                    if (dist >= 0x10) {
+                        if (player->position.x <= self->position.x) {
+                            self->playerAngles[playerID] = 0x200;
+                            self->playerFrames[playerID] = 12;
+                        }
+                        else {
+                            self->playerAngles[playerID] = 0x000;
+                            self->playerFrames[playerID] = 0;
+                        }
                     }
                     else {
-                        self->playerAngles[playerID] = 0x000;
+                        int32 distX;
+                        int32 angX;
+                        int32 distY = 16 * (0x10000 - dist / 16);
+                        int32 angY  = -16 * (0x10000 - dist / 16);
+
+                        if (player->drawGroup != Zone->playerDrawGroup[0])
+                            angY = distY;
+
+                        distX = player->position.x - self->position.x;
+                        angX  = player->position.x >= self->position.x ? distX : -distX;
+
+                        dist                         = 0x10;
+                        self->playerAngles[playerID] = 4 * RSDK.ATan2(angX, angY);
                         self->playerFrames[playerID] = 0;
                     }
+
+                    self->playerDistance[playerID] = dist;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_TWISTER, &player->animator, true, self->playerFrames[playerID]);
+                    hitbox     = Player_GetHitbox(player);
+                    player->position.y = self->position.y - (hitbox->bottom << 16) - (self->size.y >> 1);
                 }
-                else {
-                    int32 distY = 16 * (0x10000 - dist / 16);
-                    int32 angY  = -16 * (0x10000 - dist / 16);
-
-                    if (player->drawGroup != Zone->playerDrawGroup[0])
-                        angY = distY;
-
-                    int32 distX = player->position.x - self->position.x;
-                    int32 angX  = player->position.x >= self->position.x ? distX : -distX;
-
-                    dist                         = 0x10;
-                    self->playerAngles[playerID] = 4 * RSDK.ATan2(angX, angY);
-                    self->playerFrames[playerID] = 0;
-                }
-
-                self->playerDistance[playerID] = dist;
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_TWISTER, &player->animator, true, self->playerFrames[playerID]);
-                Hitbox *hitbox     = Player_GetHitbox(player);
-                player->position.y = self->position.y - (hitbox->bottom << 16) - (self->size.y >> 1);
             }
-        }
 
-        if ((1 << playerID) & self->activePlayers) {
-            player->velocity.x           = 0;
-            player->velocity.y           = 0;
-            player->groundVel            = 0;
-            self->playerAngles[playerID] = (self->angleVel + self->playerAngles[playerID]) & 0x3FF;
-            player->position.x           = self->position.x;
-            player->position.x += (RSDK.Cos1024(self->playerAngles[playerID]) << 6) * self->playerDistance[playerID];
+            if ((1 << playerID) & self->activePlayers) {
+                int32 frame;
+                player->velocity.x           = 0;
+                player->velocity.y           = 0;
+                player->groundVel            = 0;
+                self->playerAngles[playerID] = (self->angleVel + self->playerAngles[playerID]) & 0x3FF;
+                player->position.x           = self->position.x;
+                player->position.x += (RSDK.Cos1024(self->playerAngles[playerID]) << 6) * self->playerDistance[playerID];
 
-            int32 frame = 0;
-            if (player->direction)
-                frame = 24 - self->playerAngles[playerID] / 42;
-            else
-                frame = self->playerAngles[playerID] / 42 % 24;
+                frame = 0;
+                if (player->direction)
+                    frame = 24 - self->playerAngles[playerID] / 42;
+                else
+                    frame = self->playerAngles[playerID] / 42 % 24;
 
-            player->drawGroup = self->playerAngles[playerID] < 0x200 ? Zone->playerDrawGroup[1] : Zone->playerDrawGroup[0];
+                player->drawGroup = self->playerAngles[playerID] < 0x200 ? Zone->playerDrawGroup[1] : Zone->playerDrawGroup[0];
 
-            player->animator.frameID = (self->playerFrames[playerID] + frame) % -24;
+                player->animator.frameID = (self->playerFrames[playerID] + frame) % -24;
 
-            if (player->jumpPress)
-                Player_Action_Jump(player);
-            else if (player->animator.animationID == ANI_TWISTER && player->state == Player_State_Static)
-                continue;
+                if (player->jumpPress)
+                    Player_Action_Jump(player);
+                else if (player->animator.animationID == ANI_TWISTER && player->state == Player_State_Static)
+                    continue;
 
-            self->activePlayers &= ~(1 << playerID);
+                self->activePlayers &= ~(1 << playerID);
+            }
         }
     }
 }

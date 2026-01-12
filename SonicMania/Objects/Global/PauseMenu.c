@@ -56,15 +56,17 @@ void PauseMenu_LateUpdate(void)
 void PauseMenu_StaticUpdate(void)
 {
     if (SceneInfo->state == ENGINESTATE_REGULAR) {
+        EntityPauseMenu *pauseMenu;
+        bool32 allowEvents;
         int32 cnt = 0;
         if (TitleCard)
             cnt = RSDK.GetEntityCount(TitleCard->classID, true);
         if (ActClear)
             cnt += RSDK.GetEntityCount(ActClear->classID, true);
 
-        EntityPauseMenu *pauseMenu = RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
+        pauseMenu = RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
 
-        bool32 allowEvents = true;
+        allowEvents = true;
         if (Zone)
             allowEvents = Zone->timer > 1;
 
@@ -83,7 +85,8 @@ void PauseMenu_StaticUpdate(void)
             }
 #endif
             else {
-                for (int32 i = 0; i < PauseMenu_GetPlayerCount(); ++i) {
+                int32 i;
+                for (i = 0; i < PauseMenu_GetPlayerCount(); ++i) {
 #if MANIA_USE_PLUS
                     int32 id = API_GetInputDeviceID(CONT_P1 + i);
                     if (!RSDK.IsInputDeviceAssigned(id) && id != INPUT_AUTOASSIGN) {
@@ -137,6 +140,7 @@ void PauseMenu_Create(void *data)
 
 void PauseMenu_StageLoad(void)
 {
+    int32 i;
     PauseMenu->active = ACTIVE_ALWAYS;
 
     PauseMenu->sfxBleep  = RSDK.GetSfx("Global/MenuBleep.wav");
@@ -155,7 +159,7 @@ void PauseMenu_StageLoad(void)
     }
 #endif
 
-    for (int32 i = 0; i < CHANNEL_COUNT; ++i) {
+    for (i = 0; i < CHANNEL_COUNT; ++i) {
         PauseMenu->activeChannels[i] = false;
     }
 
@@ -169,11 +173,13 @@ void PauseMenu_SetupMenu(void)
     RSDK_THIS(PauseMenu);
 
     Vector2 size;
+    EntityUIControl *control;
+    int32 i;
     size.x = ScreenInfo->size.x << 16;
     size.y = ScreenInfo->size.y << 16;
     RSDK.ResetEntitySlot(SLOT_PAUSEMENU_UICONTROL, UIControl->classID, &size);
 
-    EntityUIControl *control = RSDK_GET_ENTITY(SLOT_PAUSEMENU_UICONTROL, UIControl);
+    control = RSDK_GET_ENTITY(SLOT_PAUSEMENU_UICONTROL, UIControl);
 
     control->position.x = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
     control->position.y = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
@@ -188,11 +194,12 @@ void PauseMenu_SetupMenu(void)
     control->buttonID    = 0;
     self->manager        = control;
 
-    int32 i = 0;
+    i = 0;
     for (; i < PAUSEMENU_BUTTON_COUNT; ++i) {
+        EntityUIButton *button;
         if (!self->buttonPtrs[i])
             break;
-        EntityUIButton *button = self->buttonPtrs[i];
+        button = self->buttonPtrs[i];
         button->parent         = (Entity *)control;
         control->buttons[i]    = button;
     }
@@ -201,8 +208,9 @@ void PauseMenu_SetupMenu(void)
 
 void PauseMenu_SetupTintTable(void)
 {
+    int32 i;
 #if MANIA_USE_PLUS
-    for (int32 i = 0; i < 0x10000; ++i) {
+    for (i = 0; i < 0x10000; ++i) {
         uint32 r = (0x20F * (i >> 11) + 23) >> 6;
         uint32 g = (0x103 * ((i >> 5) & 0x3F) + 33) >> 6;
         uint32 b = (0x20F * (i & 0x1F) + 23) >> 6;
@@ -229,16 +237,18 @@ void PauseMenu_SetupTintTable(void)
 
 void PauseMenu_AddButton(uint8 id, void *action)
 {
+    int32 buttonSlot;
     RSDK_THIS(PauseMenu);
 
     int32 buttonID = self->buttonCount;
     if (buttonID < PAUSEMENU_BUTTON_COUNT) {
+        EntityUIButton *button;
         self->buttonIDs[buttonID]     = id;
         self->buttonActions[buttonID] = action;
 
-        int32 buttonSlot = self->buttonCount + 18;
+        buttonSlot = self->buttonCount + 18;
         RSDK.ResetEntitySlot(buttonSlot, UIButton->classID, NULL);
-        EntityUIButton *button = RSDK_GET_ENTITY(buttonSlot, UIButton);
+        button = RSDK_GET_ENTITY(buttonSlot, UIButton);
 
         button->position.x = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
         button->position.y = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
@@ -257,10 +267,11 @@ void PauseMenu_AddButton(uint8 id, void *action)
 
 void PauseMenu_ClearButtons(EntityPauseMenu *entity)
 {
+    int32 i;
     if (entity->manager)
         destroyEntity(entity->manager);
 
-    for (int32 i = 0; i < PAUSEMENU_BUTTON_COUNT; ++i) {
+    for (i = 0; i < PAUSEMENU_BUTTON_COUNT; ++i) {
         if (entity->buttonPtrs[i])
             destroyEntity(entity->buttonPtrs[i]);
     }
@@ -273,6 +284,7 @@ void PauseMenu_HandleButtonPositions(void)
     RSDK_THIS(PauseMenu);
 
     Vector2 pos;
+    int32 i;
     pos.x = TO_FIXED(ScreenInfo->center.x - 69) + self->position.x + self->yellowTrianglePos.x;
     pos.y = (self->position.y + TO_FIXED(56)) + self->yellowTrianglePos.y - TO_FIXED(36);
     if (self->buttonCount == (PAUSEMENU_BUTTON_COUNT - 1)) {
@@ -280,11 +292,12 @@ void PauseMenu_HandleButtonPositions(void)
         pos.y += TO_FIXED(36);
     }
 
-    for (int32 i = 0; i < self->buttonCount; ++i) {
+    for (i = 0; i < self->buttonCount; ++i) {
+        EntityUIButton *button;
         if (!self->buttonPtrs[i])
             break;
 
-        EntityUIButton *button = self->buttonPtrs[i];
+        button = self->buttonPtrs[i];
         button->startPos.x     = pos.x;
         button->startPos.y     = pos.y;
         button->position.x     = pos.x;
@@ -296,7 +309,8 @@ void PauseMenu_HandleButtonPositions(void)
 
 void PauseMenu_PauseSound(void)
 {
-    for (int32 i = 0; i < CHANNEL_COUNT; ++i) {
+    int32 i;
+    for (i = 0; i < CHANNEL_COUNT; ++i) {
         if (RSDK.ChannelActive(i)) {
             RSDK.PauseChannel(i);
             PauseMenu->activeChannels[i] = true;
@@ -306,7 +320,8 @@ void PauseMenu_PauseSound(void)
 
 void PauseMenu_ResumeSound(void)
 {
-    for (int32 i = 0; i < CHANNEL_COUNT; ++i) {
+    int32 i;
+    for (i = 0; i < CHANNEL_COUNT; ++i) {
         if (PauseMenu->activeChannels[i]) {
             RSDK.ResumeChannel(i);
             PauseMenu->activeChannels[i] = false;
@@ -316,7 +331,8 @@ void PauseMenu_ResumeSound(void)
 
 void PauseMenu_StopSound(void)
 {
-    for (int32 i = 0; i < CHANNEL_COUNT; ++i) {
+    int32 i;
+    for (i = 0; i < CHANNEL_COUNT; ++i) {
         if (PauseMenu->activeChannels[i]) {
             RSDK.StopChannel(i);
             PauseMenu->activeChannels[i] = false;
@@ -332,18 +348,20 @@ void PauseMenu_FocusCamera(void)
         return;
 
     LogHelpers_Print("FocusCamera(): triggerPlayer = %d", self->triggerPlayer);
-    foreach_all(Camera, cameraPtr)
     {
-        int32 id         = RSDK.GetEntitySlot(cameraPtr);
-        int32 prevScreen = cameraPtr->screenID;
-        if (id - SLOT_CAMERA1 == self->triggerPlayer) {
-            cameraPtr->screenID = 0;
-            Camera_SetCameraBounds(cameraPtr);
+        foreach_all(Camera, cameraPtr)
+        {
+            int32 id         = RSDK.GetEntitySlot(cameraPtr);
+            int32 prevScreen = cameraPtr->screenID;
+            if (id - SLOT_CAMERA1 == self->triggerPlayer) {
+                cameraPtr->screenID = 0;
+                Camera_SetCameraBounds(cameraPtr);
+            }
+            else {
+                cameraPtr->screenID = 1;
+            }
+            LogHelpers_Print("cameraPtr->screenID %d => %d", prevScreen, cameraPtr->screenID);
         }
-        else {
-            cameraPtr->screenID = 1;
-        }
-        LogHelpers_Print("cameraPtr->screenID %d => %d", prevScreen, cameraPtr->screenID);
     }
 }
 
@@ -352,15 +370,18 @@ void PauseMenu_UpdateCameras(void)
     if (!Camera)
         return;
 
-    foreach_all(Camera, camera)
     {
-        camera->screenID = RSDK.GetEntitySlot(camera) - SLOT_CAMERA1;
-        Camera_SetCameraBounds(camera);
+        foreach_all(Camera, camera)
+        {
+            camera->screenID = RSDK.GetEntitySlot(camera) - SLOT_CAMERA1;
+            Camera_SetCameraBounds(camera);
+        }
     }
 }
 
 void PauseMenu_CheckAndReassignControllers(void)
 {
+    int32 id;
     EntityPauseMenu *entity = RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
 
     // prolly a leftover from pre-plus
@@ -369,7 +390,7 @@ void PauseMenu_CheckAndReassignControllers(void)
 #if MANIA_USE_PLUS
     UNUSED(deviceID); // be quiet compiler I know it aint used!!
 
-    int32 id = API_GetFilteredInputDeviceID(true, true, 5);
+    id = API_GetFilteredInputDeviceID(true, true, 5);
 #else
     int32 id = API_GetFilteredInputDeviceID(deviceID);
 #endif
@@ -425,11 +446,12 @@ void PauseMenu_ResumeButtonCB(void)
 
 void PauseMenu_RestartButtonCB(void)
 {
+    String msg;
+    int32 strID;
     RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
 
-    String msg;
 #if MANIA_USE_PLUS
-    int32 strID = STR_AREYOUSURE;
+    strID = STR_AREYOUSURE;
     if (!ReplayRecorder || !ReplayRecorder->isReplaying)
         strID = STR_RESTARTWARNING;
     Localization_GetString(&msg, strID);
@@ -442,11 +464,12 @@ void PauseMenu_RestartButtonCB(void)
 
 void PauseMenu_ExitButtonCB(void)
 {
+    String msg;
+    int32 strID;
     RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
 
-    String msg;
 #if MANIA_USE_PLUS
-    int32 strID = STR_AREYOUSURE;
+    strID = STR_AREYOUSURE;
     if (!ReplayRecorder || !ReplayRecorder->isReplaying)
         strID = STR_QUITWARNINGLOSEPROGRESS;
     Localization_GetString(&msg, strID);
@@ -459,6 +482,9 @@ void PauseMenu_ExitButtonCB(void)
 
 void PauseMenu_RestartDialog_YesCB(void)
 {
+    int32 x;
+    int32 y;
+    EntityPauseMenu *fadeout;
     RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
 
     UIDialog->activeDialog->parent->state = NULL;
@@ -470,15 +496,18 @@ void PauseMenu_RestartDialog_YesCB(void)
     }
     Music_Stop();
 
-    int32 x                  = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
-    int32 y                  = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-    EntityPauseMenu *fadeout = CREATE_ENTITY(PauseMenu, INT_TO_VOID(true), x, y);
+    x                  = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
+    y                  = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+    fadeout = CREATE_ENTITY(PauseMenu, INT_TO_VOID(true), x, y);
     fadeout->fadeoutCB       = PauseMenu_RestartFadeCB;
     fadeout->state           = PauseMenu_State_HandleFadeout;
 }
 
 void PauseMenu_ExitDialog_YesCB(void)
 {
+    int32 x;
+    int32 y;
+    EntityPauseMenu *fadeout;
     RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
 
     UIDialog->activeDialog->parent->state = NULL;
@@ -493,9 +522,9 @@ void PauseMenu_ExitDialog_YesCB(void)
     }
     Music_Stop();
 
-    int32 x                  = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
-    int32 y                  = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-    EntityPauseMenu *fadeout = CREATE_ENTITY(PauseMenu, INT_TO_VOID(true), x, y);
+    x                  = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
+    y                  = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+    fadeout = CREATE_ENTITY(PauseMenu, INT_TO_VOID(true), x, y);
     fadeout->fadeoutCB       = PauseMenu_ExitFadeCB;
     fadeout->state           = PauseMenu_State_HandleFadeout;
 }
@@ -667,6 +696,7 @@ void PauseMenu_State_StartPauseCompetition(void)
 
 void PauseMenu_State_Paused(void)
 {
+    EntityUIControl *manager;
     RSDK_THIS(PauseMenu);
 
     self->tintAlpha           = 0xFF;
@@ -675,7 +705,7 @@ void PauseMenu_State_Paused(void)
     self->yellowTrianglePos.x = 0;
     self->yellowTrianglePos.y = 0;
 
-    EntityUIControl *manager = self->manager;
+    manager = self->manager;
     if (Unknown_pausePress && !manager->dialogHasFocus) {
         EntityPauseMenu *pauseMenu = RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu);
         if (globals->gameMode != MODE_COMPETITION || RSDK.CheckSceneFolder("Puyo"))
@@ -693,12 +723,13 @@ void PauseMenu_State_ForcedPause(void)
     if (self->timer == 1) {
         UIControl->inputLocked = false;
         if (PauseMenu->controllerDisconnect) {
+            EntityUIDialog *dialog;
             int32 strID = STR_RECONNECTWIRELESSCONTROLLER;
             if (sku_platform == PLATFORM_SWITCH)
                 strID = STR_RECONNECTCONTROLLER;
             Localization_GetString(&textBuffer, strID);
 
-            EntityUIDialog *dialog = UIDialog_CreateActiveDialog(&textBuffer);
+            dialog = UIDialog_CreateActiveDialog(&textBuffer);
             UIDialog_AddButton(DIALOG_CONTINUE, dialog, PauseMenu_CheckAndReassignControllers, 0);
             UIDialog_Setup(dialog);
 
@@ -707,6 +738,7 @@ void PauseMenu_State_ForcedPause(void)
         }
 #if MANIA_USE_PLUS
         else if (PauseMenu->signOutDetected || PauseMenu->plusChanged) {
+            EntityUIDialog *dialog;
             int32 strID = STR_TESTSTR;
             if (PauseMenu->signOutDetected)
                 strID = STR_SIGNOUTDETECTED;
@@ -715,7 +747,7 @@ void PauseMenu_State_ForcedPause(void)
 
             Localization_GetString(&textBuffer, strID);
 
-            EntityUIDialog *dialog = UIDialog_CreateActiveDialog(&textBuffer);
+            dialog = UIDialog_CreateActiveDialog(&textBuffer);
             UIDialog_AddButton(DIALOG_OK, dialog, PauseMenu_State_SetupTitleFade, 1);
             UIDialog_Setup(dialog);
         }
@@ -747,10 +779,11 @@ void PauseMenu_State_ForcedPause(void)
 
     if (!self->forcePaused && self->disconnectCheck) {
         if (self->disconnectCheck()) {
+            EntityUIDialog *dialog;
             if (PauseMenu->controllerDisconnect)
                 PauseMenu->controllerDisconnect = false;
 
-            EntityUIDialog *dialog = UIDialog->activeDialog;
+            dialog = UIDialog->activeDialog;
             if (dialog)
                 UIDialog_CloseOnSel_HandleSelection(dialog, StateMachine_None);
 

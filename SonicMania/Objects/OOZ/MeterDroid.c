@@ -234,13 +234,17 @@ void MeterDroid_Explode(void)
 
 void MeterDroid_FindTargetValve(void)
 {
+    int32 i;
+    int32 id;
     RSDK_THIS(MeterDroid);
 
     EntityValve *valves[5];
-    for (int32 i = 0; i < 5; ++i) valves[i] = NULL;
+    for (i = 0; i < 5; ++i) valves[i] = NULL;
 
-    int32 id = 1;
-    foreach_active(Valve, valve) { valves[id++] = valve; }
+    id = 1;
+    {
+        foreach_active(Valve, valve) { valves[id++] = valve; }
+    }
 
     valves[0]         = valves[RSDK.Rand(1, id)];
     self->targetValve = valves[0];
@@ -482,13 +486,14 @@ void MeterDroid_State_ThrowWrench(void)
     }
 
     if (self->timer == 36) {
+        EntityPlayer *player1;
         self->wrenchPos.x = self->position.x + (self->direction == FLIP_NONE ? -0x300000 : 0x300000);
         self->wrenchPos.y = self->position.y - 0x100000;
 
         self->targetPos.x = self->wrenchPos.x;
         self->targetPos.y = self->wrenchPos.y;
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         self->wrenchMoveVel.x = (player1->position.x + 16 * player1->velocity.x - self->wrenchPos.x) >> 5;
         self->wrenchMoveVel.y = (player1->position.y + 16 * player1->velocity.y - self->wrenchPos.y) >> 5;
         self->wrenchMoveInc.x = -(self->wrenchMoveVel.x >> 6);
@@ -519,6 +524,8 @@ void MeterDroid_State_ThrowWrench(void)
 
 void MeterDroid_State_ThrownWrench(void)
 {
+    int32 rx;
+    int32 ry;
     RSDK_THIS(MeterDroid);
 
     self->position.y = BadnikHelpers_Oscillate(self->origin.y, 4, 10);
@@ -532,8 +539,8 @@ void MeterDroid_State_ThrownWrench(void)
     self->wrenchPos.x += self->wrenchMoveVel.x;
     self->wrenchPos.y += self->wrenchMoveVel.y;
 
-    int32 rx = abs(self->targetPos.x - self->wrenchPos.x) >> 16;
-    int32 ry = abs(self->targetPos.y - self->wrenchPos.y) >> 16;
+    rx = abs(self->targetPos.x - self->wrenchPos.x) >> 16;
+    ry = abs(self->targetPos.y - self->wrenchPos.y) >> 16;
 
     if (rx * rx + ry * ry < 0x200) {
         RSDK.PlaySfx(MeterDroid->sfxGrab, false, 0xFF);
@@ -569,6 +576,8 @@ void MeterDroid_State_CaughtWrench(void)
 
 void MeterDroid_State_MoveToValve(void)
 {
+    int32 rx;
+    int32 ry;
     RSDK_THIS(MeterDroid);
 
     RSDK.ProcessAnimation(&self->mainAnimator);
@@ -583,8 +592,8 @@ void MeterDroid_State_MoveToValve(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    int32 rx = abs(self->targetPos.x - self->position.x) >> 16;
-    int32 ry = abs(self->targetPos.y - self->position.y) >> 16;
+    rx = abs(self->targetPos.x - self->position.x) >> 16;
+    ry = abs(self->targetPos.y - self->position.y) >> 16;
 
     if (rx * rx + ry * ry < 96) {
         self->direction = self->targetValve->direction;
@@ -610,11 +619,12 @@ void MeterDroid_State_MoveIntoBG(void)
     self->position.y += ((self->targetPos.y - self->position.y) >> 3) + self->velocity.y;
 
     if (++self->timer == 24) {
+        EntityValve *valve;
         self->position.x = self->targetPos.x;
         self->position.y = self->targetPos.y;
         self->timer      = 0;
 
-        EntityValve *valve = self->targetValve;
+        valve = self->targetValve;
         RSDK.SetSpriteAnimation(MeterDroid->aniFrames, 4, &self->mainAnimator, true, 0);
         RSDK.SetSpriteAnimation(MeterDroid->aniFrames, 6, &self->armAnimator, true, 0);
         RSDK.SetSpriteAnimation(Valve->aniFrames, 0, &valve->valveAnimator, true, 0);
@@ -639,9 +649,10 @@ void MeterDroid_State_TurningValve(void)
         MeterDroid_PopPlatforms();
 
     if (self->timer == 90) {
+        EntityValve *valve;
         self->timer = 0;
 
-        EntityValve *valve = self->targetValve;
+        valve = self->targetValve;
         RSDK.SetSpriteAnimation(MeterDroid->aniFrames, 5, &self->mainAnimator, true, 0);
         RSDK.SetSpriteAnimation(MeterDroid->aniFrames, 7, &self->armAnimator, true, 0);
         RSDK.SetSpriteAnimation(Valve->aniFrames, 1, &valve->valveAnimator, true, 0);
@@ -725,7 +736,8 @@ void MeterDroid_State_FinishAct(void)
     MeterDroid_Explode();
 
     if (++self->timer == 180) {
-        for (int32 p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
+        int32 p;
+        for (p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
 
         SaveGame_SavePlayerState();
         globals->enableIntro = true;

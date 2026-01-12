@@ -180,6 +180,7 @@ void PhantomRuby_State_MoveRotateGravity_CheckGround(void)
 #if MANIA_USE_PLUS
 void PhantomRuby_State_MoveToPos(void)
 {
+    int32 r;
     RSDK_THIS(PhantomRuby);
 
     int32 rx    = (self->startPos.x - self->position.x) >> 16;
@@ -189,7 +190,7 @@ void PhantomRuby_State_MoveToPos(void)
     self->velocity.x += RSDK.Cos256(angle) << 3;
     self->velocity.y += RSDK.Sin256(angle) << 3;
 
-    int32 r = rx * rx + ry * ry;
+    r = rx * rx + ry * ry;
     if (r >= 0x10) {
         if (r < 0x900) {
             self->velocity.x = (self->startPos.x - self->position.x) >> 4;

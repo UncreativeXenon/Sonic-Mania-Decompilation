@@ -164,19 +164,22 @@ void Stegway_State_Init(void)
 
 void Stegway_State_Moving(void)
 {
+    bool32 collided;
     RSDK_THIS(Stegway);
 
     self->position.x += self->velocity.x;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Stegway->hitboxRange)) {
-            self->state = Stegway_State_RevUp;
-            Stegway_SetupAnims(3, false);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Stegway->hitboxRange)) {
+                self->state = Stegway_State_RevUp;
+                Stegway_SetupAnims(3, false);
+            }
         }
     }
 
-    bool32 collided = false;
+    collided = false;
     if (self->direction)
         collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0xC0000, 0x100000, 8);
     else
@@ -226,9 +229,10 @@ void Stegway_State_RevRelease(void)
 {
     RSDK_THIS(Stegway);
     if (++self->timer == 32) {
+        EntityDust *dust;
         self->timer = 0;
         self->state = Stegway_State_Dash;
-        EntityDust *dust =
+        dust =
             CREATE_ENTITY(Dust, self, self->position.x - 0xA0000 * (2 * (self->direction != FLIP_NONE) - 1), self->position.y + 0x100000);
         RSDK.SetSpriteAnimation(Dust->aniFrames, 2, &dust->animator, true, 0);
         dust->state     = Dust_State_DustPuff;
@@ -243,10 +247,12 @@ void Stegway_State_RevRelease(void)
 
 void Stegway_State_Dash(void)
 {
+    int32 dir;
+    bool32 collided;
     RSDK_THIS(Stegway);
 
     self->position.x += self->velocity.x;
-    int32 dir = 2 * (self->direction != FLIP_NONE) - 1;
+    dir = 2 * (self->direction != FLIP_NONE) - 1;
 
     if (!self->noFloor) {
         int32 storeX = self->position.x;
@@ -257,7 +263,7 @@ void Stegway_State_Dash(void)
         self->position.y = storeY;
     }
 
-    bool32 collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0xC0000 * dir, 0x100000, 8);
+    collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0xC0000 * dir, 0x100000, 8);
 
     if (self->noFloor) {
         if (self->velocity.x * dir >= 0x4000) {

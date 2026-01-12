@@ -60,39 +60,49 @@ void GHZCutsceneST_StageLoad(void) {}
 
 void GHZCutsceneST_SetupObjects(void)
 {
-    foreach_all(Platform, platform)
     {
-        if (!platform->frameID) {
-            platform->drawGroup     = Zone->objectDrawGroup[1] - 1;
-            GHZCutsceneST->platform = platform;
+        foreach_all(Platform, platform)
+        {
+            if (!platform->frameID) {
+                platform->drawGroup     = Zone->objectDrawGroup[1] - 1;
+                GHZCutsceneST->platform = platform;
+                foreach_break;
+            }
+        }
+    }
+
+    {
+        foreach_all(AIZKingClaw, claw)
+        {
+            GHZCutsceneST->claw = claw;
             foreach_break;
         }
     }
 
-    foreach_all(AIZKingClaw, claw)
     {
-        GHZCutsceneST->claw = claw;
-        foreach_break;
+        foreach_all(PhantomRuby, phantomRuby)
+        {
+            GHZCutsceneST->phantomRuby = phantomRuby;
+            foreach_break;
+        }
     }
 
-    foreach_all(PhantomRuby, phantomRuby)
     {
-        GHZCutsceneST->phantomRuby = phantomRuby;
-        foreach_break;
+        foreach_all(FXRuby, fxRuby)
+        {
+            GHZCutsceneST->fxRuby = fxRuby;
+            fxRuby->state         = StateMachine_None;
+            fxRuby->fadeBlack     = 0x200;
+            fxRuby->fadeWhite     = 0x200;
+            fxRuby->outerRadius   = ScreenInfo->size.x;
+            fxRuby->timer         = 64;
+            foreach_break;
+        }
     }
 
-    foreach_all(FXRuby, fxRuby)
     {
-        GHZCutsceneST->fxRuby = fxRuby;
-        fxRuby->state         = StateMachine_None;
-        fxRuby->fadeBlack     = 0x200;
-        fxRuby->fadeWhite     = 0x200;
-        fxRuby->outerRadius   = ScreenInfo->size.x;
-        fxRuby->timer         = 64;
-        foreach_break;
+        foreach_all(CutsceneHBH, cutsceneHBH) { GHZCutsceneST->cutsceneHBH[cutsceneHBH->characterID] = cutsceneHBH; }
     }
-
-    foreach_all(CutsceneHBH, cutsceneHBH) { GHZCutsceneST->cutsceneHBH[cutsceneHBH->characterID] = cutsceneHBH; }
 }
 
 void GHZCutsceneST_SetupKnuxCutscene(void)
@@ -133,11 +143,15 @@ void GHZCutsceneST_Cutscene_SkipCB(void)
 
 bool32 GHZCutsceneST_Cutscene_FadeIn(EntityCutsceneSeq *host)
 {
+    EntityFXRuby *fxRuby;
+    EntityPhantomRuby *ruby;
+    int32 angle;
+    int32 id;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityFXRuby *fxRuby    = GHZCutsceneST->fxRuby;
-    EntityPhantomRuby *ruby = GHZCutsceneST->phantomRuby;
+    fxRuby    = GHZCutsceneST->fxRuby;
+    ruby = GHZCutsceneST->phantomRuby;
 
     if (host->timer) {
         if (host->timer >= 60) {
@@ -165,8 +179,8 @@ bool32 GHZCutsceneST_Cutscene_FadeIn(EntityCutsceneSeq *host)
         }
     }
 
-    int32 id = 0;
-    for (int32 angle = 0; angle < 0x80; angle += 0x40) {
+    id = 0;
+    for (angle = 0; angle < 0x80; angle += 0x40) {
         EntityPlayer *player = RSDK_GET_ENTITY(id++, Player);
         if (!player || player->classID == TYPE_BLANK)
             break;
@@ -180,24 +194,30 @@ bool32 GHZCutsceneST_Cutscene_FadeIn(EntityCutsceneSeq *host)
 }
 bool32 GHZCutsceneST_Cutscene_FinishRubyWarp(EntityCutsceneSeq *host)
 {
+    EntityPhantomRuby *ruby;
+    EntityFXRuby *fxRuby;
+    EntityPlayer **curPlayer;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player2);
 
-    EntityPhantomRuby *ruby = GHZCutsceneST->phantomRuby;
-    EntityFXRuby *fxRuby    = GHZCutsceneST->fxRuby;
+    ruby = GHZCutsceneST->phantomRuby;
+    fxRuby    = GHZCutsceneST->fxRuby;
     if (!host->timer)
         fxRuby->state = FXRuby_State_Shrinking;
 
-    EntityPlayer **curPlayer = &player1;
+    curPlayer = &player1;
     if (fxRuby->outerRadius <= 0) {
+        int32 angle;
         int32 id = 0;
-        for (int32 angle = 0; angle < 0x80; angle += 0x10) {
+        for (angle = 0; angle < 0x80; angle += 0x10) {
+            int32 x;
+            int32 y;
             EntityPlayer *player = RSDK_GET_ENTITY(id++, Player);
             if (!player || player->classID == TYPE_BLANK)
                 break;
             RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
-            int32 x            = (player->position.x - player->position.x) >> 3;
-            int32 y            = (0xA00 * RSDK.Sin256(2 * (angle + host->timer - host->storedTimer)) + ruby->position.y - player->position.y) >> 3;
+            x            = (player->position.x - player->position.x) >> 3;
+            y            = (0xA00 * RSDK.Sin256(2 * (angle + host->timer - host->storedTimer)) + ruby->position.y - player->position.y) >> 3;
             player->velocity.x = (x >> 8) * (x >> 8);
             player->velocity.y = (y >> 8) * (y >> 8);
             player->state      = Player_State_Air;
@@ -211,8 +231,9 @@ bool32 GHZCutsceneST_Cutscene_FinishRubyWarp(EntityCutsceneSeq *host)
         return true;
     }
     else {
+        int32 angle;
         int32 id = 0;
-        for (int32 angle = 0; angle < 0x80; angle += 0x10) {
+        for (angle = 0; angle < 0x80; angle += 0x10) {
             EntityPlayer *player = RSDK_GET_ENTITY(id++, Player);
             if (!player || player->classID == TYPE_BLANK)
                 break;
@@ -228,17 +249,22 @@ bool32 GHZCutsceneST_Cutscene_FinishRubyWarp(EntityCutsceneSeq *host)
 }
 bool32 GHZCutsceneST_Cutscene_ExitHBH(EntityCutsceneSeq *host)
 {
+
+    EntityPhantomRuby *ruby;
+    EntityAIZKingClaw *claw;
+    EntityPlatform *platform;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player2);
 
-    EntityPhantomRuby *ruby  = GHZCutsceneST->phantomRuby;
-    EntityAIZKingClaw *claw  = GHZCutsceneST->claw;
-    EntityPlatform *platform = GHZCutsceneST->platform;
+    ruby  = GHZCutsceneST->phantomRuby;
+    claw  = GHZCutsceneST->claw;
+    platform = GHZCutsceneST->platform;
 
     if (host->timer >= 60) {
         if (host->timer == 60) {
+            int32 i;
             int32 id = 0;
-            for (int32 i = 0; i < 2; ++i) {
+            for (i = 0; i < 2; ++i) {
                 EntityPlayer *player = RSDK_GET_ENTITY(id++, Player);
                 if (!player || player->classID == TYPE_BLANK)
                     break;
@@ -254,8 +280,9 @@ bool32 GHZCutsceneST_Cutscene_ExitHBH(EntityCutsceneSeq *host)
             return true;
         }
         else {
+            int32 hbhChar;
             claw->velocity.y -= 0x1800;
-            for (int32 hbhChar = 0; hbhChar < 5; ++hbhChar) {
+            for (hbhChar = 0; hbhChar < 5; ++hbhChar) {
                 EntityCutsceneHBH *hbh = GHZCutsceneST->cutsceneHBH[hbhChar];
                 switch (hbhChar) {
                     case HBH_GUNNER:
@@ -309,6 +336,7 @@ bool32 GHZCutsceneST_Cutscene_ExitHBH(EntityCutsceneSeq *host)
 
 bool32 GHZCutsceneST_Cutscene_SetupGHZ1(EntityCutsceneSeq *host)
 {
+    EntityPlayer *player;
     RSDK_THIS(GHZCutsceneST);
 
 #if MANIA_USE_PLUS
@@ -319,7 +347,7 @@ bool32 GHZCutsceneST_Cutscene_SetupGHZ1(EntityCutsceneSeq *host)
         RSDK.SetScene("Mania Mode", "");
 
     globals->parallaxOffset[0] = self->timer;
-    EntityPlayer *player       = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player       = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     player->onGround           = true;
     player->state              = Player_State_Ground;
     Zone_StoreEntities((ScreenInfo->position.x + ScreenInfo->center.x) << 16, (ScreenInfo->size.y + ScreenInfo->position.y) << 16);

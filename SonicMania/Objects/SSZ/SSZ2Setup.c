@@ -80,7 +80,7 @@ void SSZ2Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if ((SceneInfo->filter & FILTER_ENCORE))
-        RSDK.LoadPalette(0, "EncoreSSZ2.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreSSZ2.act", 0xFF);
 #endif
 
     GenericTrigger->callbacks[GENERICTRIGGER_SSZ2_DESTROYHOTARUMKII] = SSZ2Setup_Trigger_DestroyHotaruMKII;
@@ -101,30 +101,38 @@ void SSZ2Setup_DrawHook_PrepareDrawingFX(void)
 
 void SSZ2Setup_Scanline_BGTower(ScanlineInfo *scanlines)
 {
+    ScanlineInfo *scanlinePtr;
+    int32 x1;
+    int32 offset;
+    int32 i;
     RSDK.SetClipBounds(0, ScreenInfo->center.x - 144, 0, ScreenInfo->center.x + 144, ScreenInfo->size.y);
     RSDK.ProcessParallax(SSZ2Setup->towerLayer);
     RSDK.SetActivePalette(3, 0, ScreenInfo->size.y);
 
-    ScanlineInfo *scanlinePtr = &scanlines[ScreenInfo->center.x - 64];
-    int32 x1                  = scanlinePtr->position.x;
-    int32 offset              = 0x10000;
-    for (int32 i = 2; i - 2 < 80;) {
+    scanlinePtr = &scanlines[ScreenInfo->center.x - 64];
+    x1                  = scanlinePtr->position.x;
+    offset              = 0x10000;
+    for (i = 2; i - 2 < 80;) {
+        int32 x2;
+        int32 x3;
+        int32 x4;
+        int32 x5;
         scanlinePtr -= 5;
         scanlinePtr[5].position.x = x1 & 0x1FFFFFF;
 
-        int32 x2                  = x1 - offset;
+        x2                  = x1 - offset;
         offset                    = (i - 2) * (i - 2) + offset;
         scanlinePtr[4].position.x = x2 & 0x1FFFFFF;
 
-        int32 x3                  = x2 - offset;
+        x3                  = x2 - offset;
         offset                    = (i - 1) * (i - 1) + offset;
         scanlinePtr[3].position.x = x3 & 0x1FFFFFF;
 
-        int32 x4                  = x3 - offset;
+        x4                  = x3 - offset;
         offset                    = i * i + offset;
         scanlinePtr[2].position.x = x4 & 0x1FFFFFF;
 
-        int32 x5                  = x4 - offset;
+        x5                  = x4 - offset;
         offset                    = (i + 1) * (i + 1) + offset;
         scanlinePtr[1].position.x = x5 & 0x1FFFFFF;
 
@@ -138,23 +146,27 @@ void SSZ2Setup_Scanline_BGTower(ScanlineInfo *scanlines)
     x1          = scanlinePtr->position.x;
     offset      = 0x10000;
 
-    for (int32 i = 2; i - 2 < 80;) {
+    for (i = 2; i - 2 < 80;) {
+        int32 x2;
+        int32 x3;
+        int32 x4;
+        int32 x5;
         scanlinePtr += 5;
         scanlinePtr[-5].position.x = x1 & 0x1FFFFFF;
 
-        int32 x2                   = x1 + offset;
+        x2                   = x1 + offset;
         offset                     = (i - 2) * (i - 2) + offset;
         scanlinePtr[-4].position.x = x2 & 0x1FFFFFF;
 
-        int32 x3                   = x2 + offset;
+        x3                   = x2 + offset;
         offset                     = (i - 1) * (i - 1) + offset;
         scanlinePtr[-3].position.x = x3 & 0x1FFFFFF;
 
-        int32 x4                   = x3 + offset;
+        x4                   = x3 + offset;
         offset                     = i * i + offset;
         scanlinePtr[-2].position.x = x4 & 0x1FFFFFF;
 
-        int32 x5                   = x4 + offset;
+        x5                   = x4 + offset;
         offset                     = (i + 1) * (i + 1) + offset;
         scanlinePtr[-1].position.x = x5 & 0x1FFFFFF;
 
@@ -192,6 +204,7 @@ void SSZ2Setup_Trigger_SSZ2BTransition(void)
     if (isMainGameMode()) {
         EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         if (player1->stateInput) {
+            int32 p;
             player1->stateInput = StateMachine_None;
             player1->left       = false;
             player1->right      = true;
@@ -203,7 +216,7 @@ void SSZ2Setup_Trigger_SSZ2BTransition(void)
             Zone->cameraBoundsR[3] = ScreenInfo->center.x + (self->position.x >> 16);
 #endif
 
-            for (int32 p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
+            for (p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
 
             SaveGame_SavePlayerState();
             globals->suppressAutoMusic = true;

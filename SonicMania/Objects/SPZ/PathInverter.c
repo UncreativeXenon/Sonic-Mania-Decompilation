@@ -34,8 +34,9 @@ void PathInverter_Create(void *data)
     RSDK.SetSpriteAnimation(PathInverter->aniFrames, self->type, &self->animator, true, 0);
 
     if (!SceneInfo->inEditor) {
+        Hitbox *hitbox;
         self->active        = ACTIVE_BOUNDS;
-        Hitbox *hitbox      = RSDK.GetHitbox(&self->animator, 0);
+        hitbox      = RSDK.GetHitbox(&self->animator, 0);
         self->size.x        = hitbox->right;
         self->size.y        = hitbox->bottom;
         self->size2x.x      = 2 * self->size.x;
@@ -61,9 +62,13 @@ void PathInverter_StageLoad(void)
 
 void PathInverter_HandlePathSwitch(EntityPlayer *player)
 {
+    int32 pos;
+    int32 frameAngle;
+    int32 angle;
     RSDK_THIS(PathInverter);
 
     if (!self->playerPtrs[player->playerID]) {
+        int32 topSpeed; 
         Hitbox *playerHitbox = Player_GetHitbox(player);
 
         if (player->position.y > self->position.y == player->position.x > self->position.x)
@@ -80,7 +85,7 @@ void PathInverter_HandlePathSwitch(EntityPlayer *player)
         player->velocity.y                     = player->groundVel * RSDK.Sin256(player->angle) >> 8;
         self->groundVelStore[player->playerID] = player->groundVel;
 
-        int32 topSpeed     = player->state == Player_State_Roll ? 0xC0000 : 0x80000;
+        topSpeed     = player->state == Player_State_Roll ? 0xC0000 : 0x80000;
         player->velocity.x = CLAMP(player->velocity.x, -topSpeed, topSpeed);
 
         player->state           = Player_State_Static;
@@ -88,9 +93,9 @@ void PathInverter_HandlePathSwitch(EntityPlayer *player)
         player->nextGroundState = StateMachine_None;
     }
 
-    int32 pos        = self->size.x + ((self->position.x - player->position.x) >> 16);
-    int32 frameAngle = 4 * (3 * pos) / self->size2x.x;
-    int32 angle      = (pos << 8) / self->size2x.x;
+    pos        = self->size.x + ((self->position.x - player->position.x) >> 16);
+    frameAngle = 4 * (3 * pos) / self->size2x.x;
+    angle      = (pos << 8) / self->size2x.x;
     if (player->animator.animationID != ANI_JUMP || !player->groundedStore) {
         int32 frame = 12 - frameAngle;
         if (player->collisionMode != CMODE_ROOF * (self->playerFlipFlags[player->playerID] >= 0))

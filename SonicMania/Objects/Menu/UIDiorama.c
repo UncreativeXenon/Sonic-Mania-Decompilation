@@ -49,7 +49,9 @@ void UIDiorama_StaticUpdate(void)
     if (!(UIWidgets->timer & 3))
         RSDK.RotatePalette(0, 60, 63, true);
 
-    foreach_all(UIDiorama, diorama) { RSDK.AddDrawListRef(diorama->drawGroup + 1, RSDK.GetEntitySlot(diorama)); }
+{
+        foreach_all(UIDiorama, diorama) { RSDK.AddDrawListRef(diorama->drawGroup + 1, RSDK.GetEntitySlot(diorama)); }
+    }
 }
 
 void UIDiorama_Draw(void)
@@ -119,6 +121,7 @@ void UIDiorama_StageLoad(void)
 
 void UIDiorama_ChangeDiorama(uint8 dioramaID)
 {
+    int32 size;
     RSDK_THIS(UIDiorama);
     int32 ids[] = { 0x00, 0x0C, 0x0C, 0x01, 0x03, 0x0F, 0x0D, 0x0E };
 
@@ -126,7 +129,7 @@ void UIDiorama_ChangeDiorama(uint8 dioramaID)
     RSDK.CopyPalette(((ids[self->dioramaID] >> 3) + 1), (32 * ids[self->dioramaID]), 0, 224, 32);
     self->needsSetup = true;
 
-    int32 size = sizeof(int32) + sizeof(Vector2) + sizeof(Animator);
+    size = sizeof(int32) + sizeof(Vector2) + sizeof(Animator);
     memset(self->values, 0, size * 16);
 
     switch (dioramaID) {
@@ -188,11 +191,12 @@ void UIDiorama_SetText(String *text)
     UIDiorama_StateInfo_PlusUpsell *info = (UIDiorama_StateInfo_PlusUpsell *)self->values;
 
     if (text) {
+        int32 i;
         int32 lineCount = 0;
         int32 linePos   = 0;
 
         int32 *linePosPtr = info->linePos;
-        for (int32 i = 0; i < text->length; ++i) {
+        for (i = 0; i < text->length; ++i) {
             if (text->chars[linePos] == '\n' && lineCount < 3) {
                 linePosPtr[lineCount] = linePos;
                 ++lineCount;
@@ -309,6 +313,7 @@ void UIDiorama_State_PlusUpsell(void)
     UIDiorama_StateInfo_PlusUpsell *info = (UIDiorama_StateInfo_PlusUpsell *)self->values;
 
     if (self->needsSetup) {
+        String text;
         self->maskColor = 0x00FF00;
         RSDK.SetSpriteAnimation(UIDiorama->aniFrames, 3, &info->dioramaAnimator, true, 0);
         RSDK.SetSpriteAnimation(UIDiorama->aniFrames, 3, &info->flashAnimator, true, 1);
@@ -317,7 +322,6 @@ void UIDiorama_State_PlusUpsell(void)
         RSDK.SetSpriteAnimation(UIDiorama->aniFrames, 3, &info->arrowAnimator, true, 4);
         RSDK.SetSpriteAnimation(UIDiorama->aniFrames, 11, &info->lightningAnimator, true, 0);
 
-        String text;
         INIT_STRING(text);
         RSDK.InitString(&text, "", 0);
         RSDK.InitString(&self->texts[0], "", 0);
@@ -600,6 +604,12 @@ void UIDiorama_Draw_ManiaMode(void)
     int32 frameSpeeds[] = { 0x100, 0x30, 0x30, 0x30, 0x60, 0x80 };
 
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
+        int32 i;
+        // Draw Stage "Parallax"
+        int32 offsets[]            = { 0, info->clouds1ScrollPos, info->clouds2ScrollPos, info->clouds3ScrollPos, 0, 0 };
+        Animator *levelAnimators[] = { &info->terrainAnimator, &info->clouds1Animator,   &info->clouds2Animator,
+                                       &info->clouds3Animator, &info->mountainsAnimator, &info->backgroundAnimator };
+
         drawPos.x = self->position.x + 0x380000;
         drawPos.y = self->position.y + 0x1D0000;
         drawPos.x = info->playerPos.x + self->position.x + 0x380000;
@@ -610,16 +620,16 @@ void UIDiorama_Draw_ManiaMode(void)
         drawPos.x += 0x280000;
         RSDK.DrawSprite(&info->sonicAnimator, &drawPos, false);
 
-        // Draw Stage "Parallax"
-        int32 offsets[]            = { 0, info->clouds1ScrollPos, info->clouds2ScrollPos, info->clouds3ScrollPos, 0, 0 };
-        Animator *levelAnimators[] = { &info->terrainAnimator, &info->clouds1Animator,   &info->clouds2Animator,
-                                       &info->clouds3Animator, &info->mountainsAnimator, &info->backgroundAnimator };
+        for (i = 0; i < 6; ++i) {
+            int32 width;
 
-        for (int32 i = 0; i < 6; ++i) {
+            int32 offset2;
+
             drawPos     = self->position;
-            int32 width = frameWidths[i] << 16;
 
-            int32 offset2 = -(int32)((offsets[i] << 8) + ((frameSpeeds[i] * (uint32)(info->scrollPos >> 4)) >> 4));
+            width = frameWidths[i] << 16;
+
+            offset2 = -(int32)((offsets[i] << 8) + ((frameSpeeds[i] * (uint32)(info->scrollPos >> 4)) >> 4));
             while (offset2 < -0x10000 * frameWidths[i]) {
                 offset2 += width;
             }
@@ -648,6 +658,7 @@ void UIDiorama_Draw_PlusUpsell(void)
     drawPos.x = self->position.x;
     drawPos.y = self->position.y;
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
+        color rectColor;
         RSDK.DrawSprite(&info->dioramaAnimator, &drawPos, false);
 
         drawPos.x = self->position.x + 0x500000;
@@ -658,10 +669,13 @@ void UIDiorama_Draw_PlusUpsell(void)
         drawPos.y += info->plusPos.y;
         RSDK.DrawSprite(&info->plusAnimator, &drawPos, false);
 
-        color rectColor = info->showFlash ? 0x01D870 : 0xF0C801;
+        rectColor = info->showFlash ? 0x01D870 : 0xF0C801;
         RSDK.DrawRect(self->dioramaPos.x, self->dioramaPos.y, self->dioramaSize.x, self->dioramaSize.y, rectColor, 0xFF, INK_MASKED, false);
     }
     else {
+        int32 length[5];
+        int32 lineCount;
+        int32 i;
         self->inkEffect = INK_ADD;
         self->alpha     = 0xFF;
         if (info->showFlash) {
@@ -674,15 +688,15 @@ void UIDiorama_Draw_PlusUpsell(void)
         drawPos.x       = self->position.x + 0x840000;
         drawPos.y       = self->position.y - 0x480000;
 
-        int32 length[5];
         length[0] = info->lineCount;
         length[1] = info->linePos[0];
         length[2] = info->linePos[1];
         length[3] = info->linePos[2];
         length[4] = info->linePos[3];
 
-        int32 lineCount = length[0];
-        for (int32 i = 0; i < lineCount + 1; ++i) {
+        lineCount = length[0];
+        for (i = 0; i < lineCount + 1; ++i) {
+            int32 width;
             int32 start = 0;
             int32 end   = 0;
             if (i > 0)
@@ -693,7 +707,7 @@ void UIDiorama_Draw_PlusUpsell(void)
             else
                 end = length[i + 1];
 
-            int32 width = -0x8000 * RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &self->texts[0], start, end, 0);
+            width = -0x8000 * RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &self->texts[0], start, end, 0);
             drawPos.x += width;
             RSDK.DrawText(&info->textAnimator, &drawPos, &self->texts[0], start, end, ALIGN_LEFT, 0, NULL, NULL, false);
 
@@ -726,10 +740,11 @@ void UIDiorama_Draw_EncoreMode(void)
         RSDK.DrawSprite(&info->dioramaAnimator, &drawPos, false);
     }
     else {
+        int32 x;
         self->inkEffect = INK_NONE;
         drawPos.y += 0x200000;
         drawPos.x += 0x500000;
-        int32 x = drawPos.x;
+        x = drawPos.x;
         RSDK.DrawSprite(&info->buttonAnimator, &drawPos, false);
 
         drawPos.x += 0xE0000;
@@ -767,6 +782,8 @@ void UIDiorama_Draw_TimeAttack(void)
         RSDK.DrawSprite(&info->dioramaAnimator, &drawPos, false);
     }
     else {
+        int32 i;
+        Vector2 gatePos;
         self->inkEffect = INK_NONE;
         drawPos.x += 0x340000;
         drawPos.y -= 0x30000;
@@ -774,12 +791,11 @@ void UIDiorama_Draw_TimeAttack(void)
 
         drawPos.x = self->position.x + 0x9B0000;
         drawPos.y = self->position.y - 0x400000;
-        for (int32 i = 0; i < 3; ++i) {
+        for (i = 0; i < 3; ++i) {
             RSDK.DrawSprite(&info->ringAnimator, &drawPos, false);
             drawPos.x += 0x1C0000;
         }
 
-        Vector2 gatePos;
         gatePos.x = self->position.x + 0x6C0000;
         gatePos.y = self->position.y - 0x130000;
         RSDK.DrawSprite(&info->gateTopAnimator, &gatePos, false);
@@ -834,9 +850,10 @@ void UIDiorama_Draw_Competition(void)
     drawPos.x = self->position.x;
     drawPos.y = self->position.y;
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
+        int32 i;
         drawPos.x = self->position.x + 0xAB0000;
         drawPos.y = self->position.y - 0x190000;
-        for (int32 i = 0; i < 3; ++i) {
+        for (i = 0; i < 3; ++i) {
             drawPos.x += 0x200000;
             RSDK.DrawSprite(&info->ringAnimator, &drawPos, false);
         }
@@ -849,11 +866,12 @@ void UIDiorama_Draw_Competition(void)
         RSDK.DrawSprite(&info->dioramaAnimator, &drawPos, false);
 
         drawPos.y += info->terrainPos.y;
-        for (int32 i = 0; i < 11; ++i) {
+        for (i = 0; i < 11; ++i) {
+            int32 scrollPos;
             drawPos.x                     = self->position.x;
             info->dioramaAnimator.frameID = i + 1;
 
-            int32 scrollPos = -(info->scrollPos[i] << 8);
+            scrollPos = -(info->scrollPos[i] << 8);
             if (scrollPos < -0x2000000)
                 scrollPos += ((-0x2000000 - scrollPos) & 0xFE000000) + 0x2000000;
             drawPos.x += scrollPos;
@@ -866,13 +884,15 @@ void UIDiorama_Draw_Competition(void)
         RSDK.DrawRect(self->dioramaPos.x, self->dioramaPos.y, self->dioramaSize.x, self->dioramaSize.y, 0x860F0, 255, INK_MASKED, false);
     }
     else {
-        self->inkEffect   = INK_NONE;
-        int32 playerCount = API.CheckDLC(DLC_PLUS) ? 4 : 2;
-
+        int32 playerCount;
+        int32 i;
         Vector2 *playerPos[]        = { &info->tailsPos, &info->knuxPos, &info->rayPos, &info->mightyPos };
         Animator *playerAnimators[] = { &info->tailsAnimator, &info->knuxAnimator, &info->rayAnimator, &info->mightyAnimator };
+        self->inkEffect   = INK_NONE;
+        playerCount = API.CheckDLC(DLC_PLUS) ? 4 : 2;
 
-        for (int32 i = 0; i < playerCount; ++i) {
+
+        for (i = 0; i < playerCount; ++i) {
             RSDK.DrawSprite(playerAnimators[i], playerPos[i], false);
         }
     }
@@ -890,13 +910,14 @@ void UIDiorama_Draw_Options(void)
     drawPos.x = self->position.x;
     drawPos.y = self->position.y;
     if (SceneInfo->currentDrawGroup != self->drawGroup) {
+        int32 i; 
         Vector2 *positions[]  = { &info->itemPos, &info->contPos, &info->audioPos };
         Vector2 *offsets[]    = { &info->itemOffset, &info->contOffset, &info->audioOffset };
         int32 alpha[]         = { info->itemAlpha, info->contAlpha, info->audioAlpha };
         Animator *animators[] = { &info->itemConstellationAnimator, &info->contConstellationAnimator, &info->audioConstellationAnimator };
 
         // Draw Constellations
-        for (int32 i = 0; i < 3; ++i) {
+        for (i = 0; i < 3; ++i) {
             drawPos = self->position;
             drawPos.x += positions[i]->x;
             drawPos.y += positions[i]->y;

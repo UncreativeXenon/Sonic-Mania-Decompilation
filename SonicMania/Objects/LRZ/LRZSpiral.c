@@ -114,10 +114,12 @@ void LRZSpiral_State_Cylinder(void)
                     self->activePlayers &= ~(1 << playerID);
                 }
                 else if (self->playerSpiralPos[playerID] < self->height) {
+                    uint8 spiralPos;
+                    int32 pos;
                     if (player->groundVel < 0x100000)
                         player->groundVel += 0x1000;
 
-                    uint8 spiralPos = self->playerSpiralPos[playerID] >> 17;
+                    spiralPos = self->playerSpiralPos[playerID] >> 17;
                     if (spiralPos < 0x40 || spiralPos >= 0xC0)
                         player->drawGroup = Zone->playerDrawGroup[1];
                     else
@@ -125,7 +127,7 @@ void LRZSpiral_State_Cylinder(void)
 
                     player->position.x = 0x4800 * RSDK.Sin256(self->playerSpiralPos[playerID] >> 17) + self->position.x;
                     player->position.y = self->playerSpiralPos[playerID] >> 2;
-                    int32 pos          = (player->position.y >> 16) & 0x7F;
+                    pos          = (player->position.y >> 16) & 0x7F;
                     player->position.y = player->position.y & 0xFF800000;
                     player->position.y += 0x580000 + self->position.y - ((self->height + 0x1000000) >> 3);
 

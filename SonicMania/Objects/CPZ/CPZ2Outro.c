@@ -37,10 +37,12 @@ void CPZ2Outro_Create(void *data)
 void CPZ2Outro_StageLoad(void)
 {
     CPZ2Outro->eggPrison = NULL;
-    foreach_all(EggPrison, prison)
     {
-        CPZ2Outro->eggPrison = prison;
-        foreach_break;
+        foreach_all(EggPrison, prison)
+        {
+            CPZ2Outro->eggPrison = prison;
+            foreach_break;
+        }
     }
 }
 
@@ -59,10 +61,10 @@ void CPZ2Outro_SetupCutscene(void)
 
 bool32 CPZ2Outro_Cutscene_Outro(EntityCutsceneSeq *host)
 {
+    Vector2 size;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    Vector2 size;
     RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
 
     if (!host->timer) {

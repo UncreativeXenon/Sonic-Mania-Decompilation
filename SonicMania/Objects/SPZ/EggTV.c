@@ -57,11 +57,12 @@ void EggTV_StageLoad(void)
 
 void EggTV_DrawScanlines(void)
 {
+    int32 i;
     RSDK_THIS(EggTV);
 
     int32 y = (((Zone->timer >> 1) & 1) << 16) - (self->size.y >> 1) + self->position.y;
     if (self->size.y >= 0 && (self->size.y & 0xFFFF0000)) {
-        for (int32 i = 0; i < (self->size.y >> 16); i += 2) {
+        for (i = 0; i < (self->size.y >> 16); i += 2) {
             RSDK.DrawLine(self->position.x - (self->size.x >> 1), y, self->position.x + (self->size.x >> 1), y, 0x404060, self->scanlineAlpha,
                           INK_BLEND, false);
             y += 0x20000;

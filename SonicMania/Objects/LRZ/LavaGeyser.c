@@ -28,11 +28,12 @@ void LavaGeyser_Draw(void)
     RSDK.DrawSprite(&self->plumeAnimator, NULL, false);
 
     if (self->height > 0) {
+        int32 i;
         SpriteFrame *frame = RSDK.GetFrame(LavaGeyser->aniFrames, 0, self->flowAnimator.frameID);
         frame->height      = 48;
         drawPos.y -= self->height;
 
-        for (int32 i = (self->height >> 16) / 48; i > 0; --i) {
+        for (i = (self->height >> 16) / 48; i > 0; --i) {
             RSDK.DrawSprite(&self->flowAnimator, &drawPos, false);
             drawPos.y += 0x300000;
         }
@@ -85,10 +86,12 @@ void LavaGeyser_CheckPlayerCollisions(void)
     hitbox.right  = 24;
     hitbox.bottom = 0;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-            Player_ElementHurt(player, self, SHIELD_FIRE);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                Player_ElementHurt(player, self, SHIELD_FIRE);
+            }
         }
     }
 }

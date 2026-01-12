@@ -11,13 +11,14 @@ ObjectCollapsingPlatform *CollapsingPlatform;
 
 void CollapsingPlatform_Update(void)
 {
+    bool32 runState; 
     RSDK_THIS(CollapsingPlatform);
 
     self->visible = false;
     if (DebugMode)
         self->visible = DebugMode->debugActive;
 
-    bool32 runState = false;
+    runState = false;
 
     if (self->collapseDelay) {
 #if MANIA_USE_PLUS
@@ -39,20 +40,22 @@ void CollapsingPlatform_Update(void)
     else {
         if (Player) {
             self->direction = FLIP_NONE;
-            foreach_active(Player, player)
             {
-                if (Player_CheckCollisionTouch(player, self, &self->hitboxTrigger)
+                foreach_active(Player, player)
+                {
+                    if (Player_CheckCollisionTouch(player, self, &self->hitboxTrigger)
 #if MANIA_USE_PLUS
-                    && (!self->mightyOnly || (player->characterID == ID_MIGHTY && player->state == Player_State_MightyHammerDrop))
+                        && (!self->mightyOnly || (player->characterID == ID_MIGHTY && player->state == Player_State_MightyHammerDrop))
 #endif
-                    && !player->sidekick && player->onGround && !player->collisionMode && !self->eventOnly && self->delay < 0xFFFF) {
-                    self->stoodPos.x = player->position.x;
+                        && !player->sidekick && player->onGround && !player->collisionMode && !self->eventOnly && self->delay < 0xFFFF) {
+                        self->stoodPos.x = player->position.x;
 #if MANIA_USE_PLUS
-                    if (player->characterID == ID_MIGHTY && player->jumpAbilityState > 1) {
-                        runState = true;
-                        foreach_break;
+                        if (player->characterID == ID_MIGHTY && player->jumpAbilityState > 1) {
+                            runState = true;
+                            foreach_break;
+                        }
+#endif
                     }
-#endif
                 }
             }
         }
@@ -134,17 +137,21 @@ void CollapsingPlatform_Create(void *data)
     }
 
     if (!SceneInfo->inEditor) {
+        int32 xOff;
+        int32 yOff;
         self->active        = ACTIVE_BOUNDS;
         self->updateRange.x = TO_FIXED(128);
         self->updateRange.y = TO_FIXED(128);
-        int32 xOff          = (self->position.x >> 20) - (self->size.x >> 21);
-        int32 yOff          = (self->position.y >> 20) - (self->size.y >> 21);
+        xOff          = (self->position.x >> 20) - (self->size.x >> 21);
+        yOff          = (self->position.y >> 20) - (self->size.y >> 21);
 
         if ((self->size.y & 0xFFF00000) && !(self->size.y & 0xFFF00000 & 0x80000000)) {
+            int32 y;
             int32 sx = self->size.x >> 20;
             int32 sy = self->size.y >> 20;
-            for (int32 y = 0; y < sy; ++y) {
-                for (int32 x = 0; x < sx; ++x) {
+            for (y = 0; y < sy; ++y) {
+                int32 x;
+                for (x = 0; x < sx; ++x) {
                     self->storedTiles[x + y * (self->size.x >> 20)] = RSDK.GetTile(self->targetLayer, x + xOff, y + yOff);
                 }
             }
@@ -185,6 +192,7 @@ void CollapsingPlatform_StageLoad(void)
 
 void CollapsingPlatform_State_Left(void)
 {
+    int32 y;
     RSDK_THIS(CollapsingPlatform);
 
     uint16 *tiles = self->storedTiles;
@@ -196,16 +204,19 @@ void CollapsingPlatform_State_Left(void)
     int32 sx = self->size.x >> 20;
     int32 sy = self->size.y >> 20;
 
-    for (int32 y = 0; y < sy; ++y) {
-        for (int32 x = 0; x < sx; ++x) {
+    for (y = 0; y < sy; ++y) {
+        int32 x;
+        for (x = 0; x < sx; ++x) {
+            int32 timerX;
+            int32 timerY;
             EntityBreakableWall *tile = CREATE_ENTITY(BreakableWall, INT_TO_VOID(BREAKWALL_TILE_DYNAMIC), tx, ty);
             tile->targetLayer         = self->targetLayer;
             tile->tileInfo            = *tiles;
             tile->drawGroup           = self->drawGroup;
             tile->tilePos.x           = x + startTX;
             tile->tilePos.y           = y + startTY;
-            int32 timerX              = x >> CollapsingPlatform->shift;
-            int32 timerY              = y >> CollapsingPlatform->shift;
+            timerX              = x >> CollapsingPlatform->shift;
+            timerY              = y >> CollapsingPlatform->shift;
             tile->timer               = 3 * (sy + 2 * timerX - timerY);
 
             ++tiles;
@@ -218,6 +229,7 @@ void CollapsingPlatform_State_Left(void)
 }
 void CollapsingPlatform_State_Right(void)
 {
+    int32 y;
     RSDK_THIS(CollapsingPlatform);
 
     uint16 *tiles = self->storedTiles;
@@ -231,16 +243,19 @@ void CollapsingPlatform_State_Right(void)
     int32 sx = self->size.x >> 20;
     int32 sy = self->size.y >> 20;
 
-    for (int32 y = 0; y < sy; ++y) {
-        for (int32 x = 0; x < sx; ++x) {
+    for (y = 0; y < sy; ++y) {
+        int32 x;
+        for (x = 0; x < sx; ++x) {
+            int32 timerX;
+            int32 timerY;
             EntityBreakableWall *tile = CREATE_ENTITY(BreakableWall, INT_TO_VOID(BREAKWALL_TILE_DYNAMIC), tx, ty);
             tile->targetLayer         = self->targetLayer;
             tile->tileInfo            = *tiles;
             tile->drawGroup           = self->drawGroup;
             tile->tilePos.x           = x + startTX;
             tile->tilePos.y           = y + startTY;
-            int32 timerX              = x >> CollapsingPlatform->shift;
-            int32 timerY              = y >> CollapsingPlatform->shift;
+            timerX              = x >> CollapsingPlatform->shift;
+            timerY              = y >> CollapsingPlatform->shift;
             tile->timer               = 3 * (sy + 2 * (timerSX - timerX) - timerY);
 
             ++tiles;
@@ -253,6 +268,7 @@ void CollapsingPlatform_State_Right(void)
 }
 void CollapsingPlatform_State_Center(void)
 {
+    int32 y; 
     RSDK_THIS(CollapsingPlatform);
 
     uint16 *tiles = self->storedTiles;
@@ -267,16 +283,19 @@ void CollapsingPlatform_State_Center(void)
     int32 sx = self->size.x >> 20;
     int32 sy = self->size.y >> 20;
 
-    for (int32 y = 0; y < sy; ++y) {
-        for (int32 x = 0; x < sx; ++x) {
+    for (y = 0; y < sy; ++y) {
+        int32 x;
+        for (x = 0; x < sx; ++x) {
+            int32 timerX;
+            int32 timerY;
             EntityBreakableWall *tile = CREATE_ENTITY(BreakableWall, INT_TO_VOID(BREAKWALL_TILE_DYNAMIC), tx, ty);
             tile->targetLayer         = self->targetLayer;
             tile->tileInfo            = *tiles;
             tile->drawGroup           = self->drawGroup;
             tile->tilePos.x           = x + startTX;
             tile->tilePos.y           = y + startTY;
-            int32 timerX              = abs((timerSX >> 1) - (x >> CollapsingPlatform->shift));
-            int32 timerY              = y >> CollapsingPlatform->shift;
+            timerX              = abs((timerSX >> 1) - (x >> CollapsingPlatform->shift));
+            timerY              = y >> CollapsingPlatform->shift;
             tile->timer               = 3 * (timerSY + 2 * timerX - timerY);
 
             if (!(timerSX & 1) && x >> CollapsingPlatform->shift < (timerSX >> 1))

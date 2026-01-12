@@ -1943,6 +1943,9 @@
     <ClInclude Include="Objects\HCZ\Fan.h">
       <Filter>Sources\Objects\HCZ</Filter>
     </ClInclude>
+    <ClInclude Include="All.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Objects\Global\ActClear.c">

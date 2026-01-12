@@ -84,7 +84,9 @@ void PBL_Player_Create(void *data)
 
         RSDK.SetModelAnimation(PBL_Player->jumpFrames, &self->animator, 128, 0, true, 0);
 
-        foreach_all(PBL_Camera, camera) { camera->target = (Entity *)self; }
+        {
+            foreach_all(PBL_Camera, camera) { camera->target = (Entity *)self; }
+        }
     }
 }
 

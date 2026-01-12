@@ -37,11 +37,13 @@ void LottoMachine_StaticUpdate(void)
 {
     LottoMachine->shineAnimator.frameID = SPZ2Setup->stageLightsFrame;
 
-    foreach_all(LottoMachine, lottoMachine)
-    {
-        int32 slot = RSDK.GetEntitySlot(lottoMachine);
-        RSDK.AddDrawListRef(Zone->objectDrawGroup[0], slot);
-        RSDK.AddDrawListRef(lottoMachine->drawGroupHigh, slot);
+{
+        foreach_all(LottoMachine, lottoMachine)
+        {
+            int32 slot = RSDK.GetEntitySlot(lottoMachine);
+            RSDK.AddDrawListRef(Zone->objectDrawGroup[0], slot);
+            RSDK.AddDrawListRef(lottoMachine->drawGroupHigh, slot);
+        }
     }
 }
 
@@ -51,6 +53,7 @@ void LottoMachine_Draw(void)
 
     Vector2 drawPos;
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
+        int32 i;
         self->direction = FLIP_NONE;
         self->rotation  = self->angle >> 16;
         RSDK.DrawSprite(&self->supportAnimator, NULL, false);
@@ -91,7 +94,7 @@ void LottoMachine_Draw(void)
         RSDK.DrawSprite(&LottoMachine->shineAnimator, NULL, false);
 
         self->inkEffect = INK_NONE;
-        for (int32 i = 0; i < 3; ++i) {
+        for (i = 0; i < 3; ++i) {
             self->direction               = FLIP_NONE;
             self->machineAnimator.frameID = i + 2;
             RSDK.DrawSprite(&self->machineAnimator, NULL, false);
@@ -196,9 +199,10 @@ void LottoMachine_CheckPlayerCollisions(void)
         if (self->playerAngles[playerID] <= 0) {
             // Inside the Machine
             if (RSDK.CheckObjectCollisionTouchCircle(self, 0x600000, player, 0x100000)) {
+                int32 p;
 
                 bool32 playerMatch = false;
-                for (int32 p = 0; p < self->playerCount; ++p) {
+                for (p = 0; p < self->playerCount; ++p) {
                     EntityPlayer *playerPtr = self->playerPtrs[p];
                     if (player == playerPtr)
                         playerMatch = true;
@@ -233,13 +237,15 @@ void LottoMachine_CheckPlayerCollisions(void)
                 }
             }
             else if (RSDK.CheckObjectCollisionTouchCircle(self, 0x730000, player, 0x100000)) { // Outside of the machine
+                int32 velX;
+                int32 velY;
                 int32 angle  = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
                 int32 vel    = MAX((abs(player->velocity.x) + abs(player->velocity.y)) >> 8, 0x400);
                 int32 radius = RSDK.Rand(512, vel);
 
                 angle += RSDK.Rand(-6, 6);
-                int32 velX = radius * RSDK.Cos256(angle);
-                int32 velY = radius * RSDK.Sin256(angle);
+                velX = radius * RSDK.Cos256(angle);
+                velY = radius * RSDK.Sin256(angle);
 
                 if ((player->characterID == ID_KNUCKLES && player->animator.animationID == ANI_GLIDE) || player->state == Player_State_FlyCarried
 #if MANIA_USE_PLUS
@@ -275,8 +281,9 @@ void LottoMachine_CheckPlayerCollisions_Bottom(void)
     {
         if (!player->sidekick || self->playerCount) {
             if (Player_CheckCollisionTouch(player, self, &LottoMachine->hitboxBottom)) {
+                int32 p;
                 bool32 hasPlayer = false;
-                for (int32 p = 0; p < self->playerCount; ++p) {
+                for (p = 0; p < self->playerCount; ++p) {
                     EntityPlayer *playerPtr = self->playerPtrs[p];
                     if (player == playerPtr)
                         hasPlayer = true;
@@ -309,10 +316,11 @@ void LottoMachine_CheckPlayerCollisions_Bottom(void)
 
 void LottoMachine_HandleMotor(void)
 {
+    int32 p;
     RSDK_THIS(LottoMachine);
 
     int32 vel = 0;
-    for (int32 p = 0; p < self->playerCount; ++p) {
+    for (p = 0; p < self->playerCount; ++p) {
         EntityPlayer *player = self->playerPtrs[p];
         if (player) {
             if (player->state != Player_State_Death) {
@@ -394,13 +402,15 @@ void LottoMachine_SetupUIBalls(void)
 
 void LottoMachine_GiveRings(void)
 {
+    int32 p;
+    int32 reward;
     RSDK_THIS(LottoMachine);
 
     int32 multiplier = 1;
     int32 bonus      = 0;
 
     int32 playerCount = 0;
-    for (int32 p = 0; p < PLAYER_COUNT; ++p) {
+    for (p = 0; p < PLAYER_COUNT; ++p) {
         uint8 reward = self->collectedBallTypes[p] & 0xFF;
         switch (self->collectedBallTypes[p] >> 8) {
             case LOTTOBALL_BLUE:
@@ -410,11 +420,13 @@ void LottoMachine_GiveRings(void)
             default: break;
         }
     }
-    int32 reward = bonus * multiplier;
+    reward = bonus * multiplier;
 
-    for (int32 p = 0; p < self->playerCount; ++p) {
+    for (p = 0; p < self->playerCount; ++p) {
         EntityPlayer *player = self->playerPtrs[p];
         if (player->state != Player_State_Death && !player->sidekick) {
+            int32 ringCount;
+            EntityLottoBall *ball;
             int32 rings = 0;
             int32 count = reward;
 
@@ -427,7 +439,7 @@ void LottoMachine_GiveRings(void)
                     count = reward >> playerCount;
             }
 
-            int32 ringCount = count - rings * multiplier;
+            ringCount = count - rings * multiplier;
             Player_GiveRings(player, ringCount, false);
 
             if (ringCount > 0) {
@@ -450,7 +462,7 @@ void LottoMachine_GiveRings(void)
                 player->nextGroundState = StateMachine_None;
             }
 
-            EntityLottoBall *ball             = CREATE_ENTITY(LottoBall, NULL, ScreenInfo->center.x << 16, (ScreenInfo->size.y - 48) << 16);
+            ball             = CREATE_ENTITY(LottoBall, NULL, ScreenInfo->center.x << 16, (ScreenInfo->size.y - 48) << 16);
             ball->type                        = LOTTOBALL_BIG;
             ball->isUIBall                    = true;
             ball->ringCount                   = ringCount;
@@ -479,10 +491,11 @@ void LottoMachine_State_Startup(void)
     if (self->timer > 0) {
         self->timer++;
         if (self->timer > 60) {
+            int32 p;
             self->timer = 0;
             RSDK.PlaySfx(Player->sfxRelease, false, 0xFF);
 
-            for (int32 p = 0; p < self->playerCount; ++p) {
+            for (p = 0; p < self->playerCount; ++p) {
                 EntityPlayer *player = self->playerPtrs[p];
 
                 if (player && player->state != Player_State_Death) {
@@ -602,6 +615,7 @@ void LottoMachine_State_CollectBall(void)
         }
 
         if (ballPtr) {
+            int32 p;
             ballPtr->position.x   = self->position.x;
             ballPtr->position.y   = self->position.y + 0x540000;
             ballPtr->velocity.x   = 0;
@@ -613,7 +627,7 @@ void LottoMachine_State_CollectBall(void)
             ballPtr->timer        = 0;
             ballPtr->isVisible[0] = false;
 
-            for (int32 p = 0; p < self->playerCount; ++p) {
+            for (p = 0; p < self->playerCount; ++p) {
                 EntityPlayer *player = self->playerPtrs[p];
                 if (player)
                     ballPtr->isVisible[RSDK.GetEntitySlot(player)] = true;
@@ -660,18 +674,20 @@ void LottoMachine_State_DropPlayers(void)
     self->glassAnimator.frameID = self->motorAnimator.frameID;
 
     if (self->chutePos == self->chuteTargetPos) {
+        int32 p;
         bool32 onGround = true;
-        for (int32 p = 0; p < self->playerCount; ++p) {
+        for (p = 0; p < self->playerCount; ++p) {
             EntityPlayer *player = self->playerPtrs[p];
             if (player && !player->onGround)
                 onGround = false;
         }
 
         if (onGround) {
-            for (int32 p = 0; p < self->playerCount; ++p) {
+            for (p = 0; p < self->playerCount; ++p) {
                 EntityPlayer *player = self->playerPtrs[p];
 
                 if (player && player->state != Player_State_Death) {
+                    int32 playerID;
                     player->state        = Player_State_Static;
                     player->nextAirState = StateMachine_None;
                     player->velocity.x   = 0;
@@ -680,7 +696,7 @@ void LottoMachine_State_DropPlayers(void)
                     player->onGround     = false;
                     player->applyJumpCap = false;
                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, true, 0);
-                    int32 playerID                = RSDK.GetEntitySlot(player);
+                    playerID                = RSDK.GetEntitySlot(player);
                     Zone->cameraBoundsB[playerID] = self->playerTimers[playerID];
                 }
             }
@@ -703,12 +719,13 @@ void LottoMachine_State_ReleasePlayers(void)
     self->glassAnimator.frameID = self->motorAnimator.frameID;
 
     if (++self->timer == 60) {
+        int32 p;
         self->timer          = 0;
         self->chuteVel       = 0x40000;
         self->chuteTargetPos = 0x180000;
         self->state          = LottoMachine_State_StopSpinning;
 
-        for (int32 p = 0; p < self->playerCount; ++p) {
+        for (p = 0; p < self->playerCount; ++p) {
             EntityPlayer *player = self->playerPtrs[p];
 
             if (player && player->state != Player_State_Death) {
@@ -733,7 +750,8 @@ void LottoMachine_State_StopSpinning(void)
     self->motorAnimator.speed -= self->motorAnimator.speed >> 4;
 
     if (self->timer == 30) {
-        for (int32 p = 0; p < PLAYER_COUNT; ++p) self->playerPtrs[p] = NULL;
+        int32 p;
+        for (p = 0; p < PLAYER_COUNT; ++p) self->playerPtrs[p] = NULL;
         self->playerCount           = 0;
         self->collectedBallCount    = 0;
         self->chuteAnimator.frameID = 0;

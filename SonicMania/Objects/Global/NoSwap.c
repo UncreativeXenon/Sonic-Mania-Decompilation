@@ -15,8 +15,9 @@ void NoSwap_Update(void)
     RSDK_THIS(NoSwap);
 
     if (Player->playerCount) {
+        int32 p;
         int32 cnt = 0;
-        for (int32 p = 0; p < Player->playerCount; ++p) {
+        for (p = 0; p < Player->playerCount; ++p) {
             EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
 
             if (!Player_CheckValidState(player)) {

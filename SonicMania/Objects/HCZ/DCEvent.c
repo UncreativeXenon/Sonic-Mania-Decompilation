@@ -33,9 +33,10 @@ void DCEvent_Create(void *data)
 
     self->drawFX = FX_FLIP;
     if (!SceneInfo->inEditor) {
+        int32 type;
         self->visible = true;
 
-        int32 type = VOID_TO_INT(data);
+        type = VOID_TO_INT(data);
         if (self->type == DCEVENT_BUBBLE)
             type = DCEVENT_BUBBLE;
 
@@ -117,20 +118,24 @@ void DCEvent_StageLoad(void)
 
 void DCEvent_State_Collapse(void)
 {
+    int32 slot;
+    int32 i;
     RSDK_THIS(DCEvent);
 
     TileLayer *move = RSDK.GetTileLayer(Zone->moveLayer);
     move->scrollPos -= 0x8000;
 
-    foreach_active(Player, player)
     {
-        player->collisionLayers |= Zone->moveLayerMask;
-        player->moveLayerPosition.x = move->scrollInfo[0].scrollPos;
-        player->moveLayerPosition.y = move->scrollPos;
+        foreach_active(Player, player)
+        {
+            player->collisionLayers |= Zone->moveLayerMask;
+            player->moveLayerPosition.x = move->scrollInfo[0].scrollPos;
+            player->moveLayerPosition.y = move->scrollPos;
+        }
     }
 
-    int32 slot = SceneInfo->entitySlot + 1;
-    for (int32 i = 0; i < self->numChildren; ++i) {
+    slot = SceneInfo->entitySlot + 1;
+    for (i = 0; i < self->numChildren; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(slot + i);
         child->position.y += 0x8000;
     }
@@ -149,16 +154,18 @@ void DCEvent_State_Collapse(void)
 
 void DCEvent_StateEggmanBomber_AwaitPlayer(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(DCEvent);
 
     RSDK.ProcessAnimation(&self->animator);
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
     if (player1->position.x > self->position.x - 0x100000)
         player1->stateInput = DCEvent_Input_MoveRight;
 
     if (player1->position.x > self->position.x) {
+        TileLayer *moveLayer;
         player1->velocity.x      = 0;
         player1->velocity.y      = 0;
         player1->groundVel       = 0;
@@ -168,7 +175,7 @@ void DCEvent_StateEggmanBomber_AwaitPlayer(void)
         Music_TransitionTrack(TRACK_MINIBOSS, 0.0125);
         RSDK.SetSpriteAnimation(DCEvent->aniFrames, 1, &self->animator, true, 0);
 
-        TileLayer *moveLayer    = RSDK.GetTileLayer(Zone->moveLayer);
+        moveLayer    = RSDK.GetTileLayer(Zone->moveLayer);
         moveLayer->drawGroup[0] = 6;
 
         self->position.x -= 0x1000000;
@@ -349,26 +356,29 @@ void DCEvent_State_Bomb(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (DCEvent->canExplodeBombs) {
+        EntityWater *water;
+        EntityPlayer *player1;
+        int32 i;
         CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSS), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
         RSDK.PlaySfx(DCEvent->sfxImpact6, false, 255);
         RSDK.PlaySfx(DCEvent->sfxExplosion, false, 255);
         Camera_ShakeScreen(0, 4, 0);
 
-        EntityWater *water = CREATE_ENTITY(Water, INT_TO_VOID(WATER_BUBBLE), self->position.x, self->position.y);
+        water = CREATE_ENTITY(Water, INT_TO_VOID(WATER_BUBBLE), self->position.x, self->position.y);
         water->velocity.y  = -0x8800;
         water->childPtr    = 0;
         water->angle       = 2 * RSDK.Rand(0, 256);
         water->bubbleX     = water->position.x;
         RSDK.SetSpriteAnimation(Water->aniFrames, 3, &water->animator, true, 0);
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         if (self->position.x >= player1->position.x)
             self->position.x += 0x260000;
         else
             self->position.x -= 0x260000;
 
         // Spawn Bricks
-        for (int32 i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, self->position.x, self->position.y);
 
             RSDK.SetSpriteAnimation(WaterGush->aniFrames, 4, &debris->animator, true, 0);

@@ -30,15 +30,17 @@ void KingClaw_Draw(void)
     RSDK_THIS(KingClaw);
 
     if (self->forceHighdrawGroup) {
+        int32 i;
         RSDK.DrawSprite(&self->clawBackAnimator, &self->drawPos, false);
 
-        for (int32 i = 0; i < KINGCLAW_CHAIN_COUNT; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
+        for (i = 0; i < KINGCLAW_CHAIN_COUNT; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
     }
     else {
+        int32 i;
         if (SceneInfo->currentDrawGroup != Zone->objectDrawGroup[0])
             RSDK.DrawSprite(&self->clawBackAnimator, &self->drawPos, false);
         else
-            for (int32 i = 0; i < KINGCLAW_CHAIN_COUNT; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
+            for (i = 0; i < KINGCLAW_CHAIN_COUNT; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
     }
 
     RSDK.DrawSprite(&self->hingeAnimator, &self->drawPos, false);
@@ -78,12 +80,13 @@ void KingClaw_StageLoad(void)
 
 void KingClaw_HandleJointPositions(void)
 {
+    int32 i;
     RSDK_THIS(KingClaw);
 
     self->drawPos.x = self->position.x;
     self->drawPos.y = self->position.y;
 
-    for (int32 i = 0; i < KINGCLAW_CHAIN_COUNT; ++i) {
+    for (i = 0; i < KINGCLAW_CHAIN_COUNT; ++i) {
         self->chainPos[i].x = self->drawPos.x;
         self->chainPos[i].y = self->drawPos.y;
         self->drawPos.x += RSDK.Sin256(self->angle) << 12;

@@ -104,10 +104,11 @@ void Localization_LoadStrings(void)
 
 void Localization_GetString(String *string, uint8 id)
 {
+    int32 c;
     memset(string, 0, sizeof(String));
     RSDK.InitString(string, "", 0);
     RSDK.CopyString(string, &Localization->strings[id]);
-    for (int32 c = 0; c < string->length; ++c) {
+    for (c = 0; c < string->length; ++c) {
         if (string->chars[c] == '\\')
             string->chars[c] = '\n';
     }

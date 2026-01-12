@@ -18,9 +18,10 @@ void UFO_SpeedLines_LateUpdate(void)
     EntityUFO_Player *player = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
 
     if (UFO_Setup->machLevel > 1 && player->groundVel > 0xC0000) {
+        int32 l;
         self->visible = true;
 
-        for (int32 l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
+        for (l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
             if (self->lineAlpha[l] < 0x100)
                 self->lineAlpha[l] += 0x20;
 
@@ -46,7 +47,8 @@ void UFO_SpeedLines_LateUpdate(void)
         }
     }
     else {
-        for (int32 l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
+        int32 l;
+        for (l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
             if (self->lineAlpha[l] <= 0)
                 self->visible = false;
             else
@@ -59,11 +61,12 @@ void UFO_SpeedLines_StaticUpdate(void) {}
 
 void UFO_SpeedLines_Draw(void)
 {
+    int32 l;
     RSDK_THIS(UFO_SpeedLines);
 
     Matrix *m = &UFO_Camera->matWorld;
 
-    for (int32 l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
+    for (l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
         int32 x = self->lineX[l] >> 8;
         int32 y = self->lineY[l] >> 8;
         int32 z = self->lineZ[l] >> 8;
@@ -84,14 +87,16 @@ void UFO_SpeedLines_Create(void *data)
 {
     RSDK_THIS(UFO_SpeedLines);
     if (!SceneInfo->inEditor) {
+        EntityUFO_Player *player;
+        int32 l;
         self->visible   = true;
         self->drawFX    = FX_SCALE | FX_FLIP;
         self->drawGroup = 5;
         self->active    = ACTIVE_NORMAL;
 
-        EntityUFO_Player *player = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
+        player = RSDK_GET_ENTITY(SLOT_PLAYER1, UFO_Player);
 
-        for (int32 l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
+        for (l = 0; l < UFO_SPEEDLINES_LINE_COUNT; ++l) {
             self->lineX[l] = player->position.x + RSDK.Rand(-0x800000, 0x800000);
             self->lineY[l] = RSDK.Rand(0x100000, 0x1000000);
             self->lineZ[l] = player->position.y + RSDK.Rand(-0x800000, 0x800000);

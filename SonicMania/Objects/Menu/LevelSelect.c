@@ -29,12 +29,13 @@ void LevelSelect_LateUpdate(void) {}
 void LevelSelect_StaticUpdate(void)
 {
     if (--LevelSelect->bgAniDuration <= 0) {
+        TileLayer *background;
         ++LevelSelect->bgAniFrame;
 
         LevelSelect->bgAniFrame &= 3;
         LevelSelect->bgAniDuration = LevelSelect->bgAniDurationTable[LevelSelect->bgAniFrame];
 
-        TileLayer *background = RSDK.GetTileLayer(0);
+        background = RSDK.GetTileLayer(0);
         background->scrollPos = (background->scrollPos + 0x1000000) & 0x7FF0000;
     }
 }
@@ -77,12 +78,14 @@ void LevelSelect_StageLoad(void)
 
     LevelSelect->startMusicID = 0;
     LevelSelect->soundTestMax = 0;
-    foreach_all(Music, music)
     {
-        if (!LevelSelect->startMusicID) {
-            LevelSelect->startMusicID = RSDK.GetEntitySlot(music);
+        foreach_all(Music, music)
+        {
+            if (!LevelSelect->startMusicID) {
+                LevelSelect->startMusicID = RSDK.GetEntitySlot(music);
+            }
+            ++LevelSelect->soundTestMax;
         }
-        ++LevelSelect->soundTestMax;
     }
     ++LevelSelect->startMusicID;
     --LevelSelect->soundTestMax;
@@ -121,10 +124,11 @@ void LevelSelect_StageLoad(void)
 #if MANIA_USE_PLUS
 void LevelSelect_Cheat_AllEmeralds(void)
 {
+    int32 e;
     Music_FadeOut(0.125);
     RSDK.PlaySfx(LevelSelect->sfxEmerald, false, 255);
 
-    for (int32 e = 0; e < 7; ++e) SaveGame_SetEmerald(e);
+    for (e = 0; e < 7; ++e) SaveGame_SetEmerald(e);
 }
 
 void LevelSelect_Cheat_ToggleSuperMusic(void)
@@ -195,30 +199,36 @@ void LevelSelect_Draw_Fade(void)
 
 void LevelSelect_State_Init(void)
 {
+    int32 i;
     RSDK_THIS(LevelSelect);
 
     int32 labelPos[32];
     int32 lastY = 0;
-    foreach_all(UIText, labelPosPtrL)
     {
-        if (labelPosPtrL->position.x < 0x1000000 && labelPosPtrL->position.y > lastY) {
-            lastY                        = labelPosPtrL->position.y;
-            labelPos[self->labelCount++] = labelPosPtrL->position.y;
+        foreach_all(UIText, labelPosPtrL)
+        {
+            if (labelPosPtrL->position.x < 0x1000000 && labelPosPtrL->position.y > lastY) {
+                lastY                        = labelPosPtrL->position.y;
+                labelPos[self->labelCount++] = labelPosPtrL->position.y;
+            }
         }
     }
 
-    foreach_all(UIText, labelL)
     {
-        if (labelL->position.x < 0x1000000) {
-            for (int32 i = 0; i < self->labelCount; ++i) {
-                if (labelL->position.y == labelPos[i]) {
-                    switch (labelL->align) {
-                        case UITEXT_ALIGN_LEFT: self->zoneNameLabels[i] = labelL; break;
+        foreach_all(UIText, labelL)
+        {
+            if (labelL->position.x < 0x1000000) {
+                int32 i;
+                for (i = 0; i < self->labelCount; ++i) {
+                    if (labelL->position.y == labelPos[i]) {
+                        switch (labelL->align) {
+                            case UITEXT_ALIGN_LEFT: self->zoneNameLabels[i] = labelL; break;
 
-                        default:
-                        case UITEXT_ALIGN_CENTER: break;
+                            default:
+                            case UITEXT_ALIGN_CENTER: break;
 
-                        case UITEXT_ALIGN_RIGHT: self->stageIDLabels[i] = labelL; break;
+                            case UITEXT_ALIGN_RIGHT: self->stageIDLabels[i] = labelL; break;
+                        }
                     }
                 }
             }
@@ -230,40 +240,46 @@ void LevelSelect_State_Init(void)
 
     lastY = 0;
 
-    foreach_all(UIText, labelPosPtrR)
     {
-        if (labelPosPtrR->position.x > 0x1000000 && labelPosPtrR->position.y > lastY) {
-            lastY                        = labelPosPtrR->position.y;
-            labelPos[self->labelCount++] = labelPosPtrR->position.y;
+        foreach_all(UIText, labelPosPtrR)
+        {
+            if (labelPosPtrR->position.x > 0x1000000 && labelPosPtrR->position.y > lastY) {
+                lastY                        = labelPosPtrR->position.y;
+                labelPos[self->labelCount++] = labelPosPtrR->position.y;
+            }
         }
     }
 
-    foreach_all(UIText, labelR)
     {
-        if (labelR->position.x > 0x1000000 && self->labelCount > 0) {
-            for (int32 i = 0; i < self->labelCount; ++i) {
-                if (labelR->position.y == labelPos[i]) {
-                    switch (labelR->align) {
-                        case UITEXT_ALIGN_LEFT: self->zoneNameLabels[i] = labelR; break;
+        foreach_all(UIText, labelR)
+        {
+            if (labelR->position.x > 0x1000000 && self->labelCount > 0) {
+                int32 i; 
+                for (i = 0; i < self->labelCount; ++i) {
+                    if (labelR->position.y == labelPos[i]) {
+                        switch (labelR->align) {
+                            case UITEXT_ALIGN_LEFT: self->zoneNameLabels[i] = labelR; break;
 
-                        default:
-                        case UITEXT_ALIGN_CENTER: break;
+                            default:
+                            case UITEXT_ALIGN_CENTER: break;
 
-                        case UITEXT_ALIGN_RIGHT: self->stageIDLabels[i] = labelR;
+                            case UITEXT_ALIGN_RIGHT: self->stageIDLabels[i] = labelR;
 #if MANIA_USE_PLUS
-                            if (!labelR->data0 && labelR->data1 == 15)
-                                self->pinballLabel = labelR;
+                                if (!labelR->data0 && labelR->data1 == 15)
+                                    self->pinballLabel = labelR;
 #endif
-                            break;
+                                break;
+                        }
                     }
                 }
             }
         }
     }
 
-    for (int32 i = 0; i < self->labelCount; ++i) {
+    for (i = 0; i < self->labelCount; ++i) {
         if (!self->zoneNameLabels[i]) {
-            for (int32 v = i; v >= 0; --v) {
+            int32 v;
+            for (v = i; v >= 0; --v) {
                 if (self->zoneNameLabels[v]) {
                     self->zoneNameLabels[i] = self->zoneNameLabels[v];
                     break;
@@ -274,32 +290,36 @@ void LevelSelect_State_Init(void)
 
     LevelSelect_SetLabelHighlighted(true);
 
-    foreach_all(UIText, soundTestLabel)
-    {
-        if (soundTestLabel->align == UITEXT_ALIGN_CENTER) {
-            self->soundTestLabel  = soundTestLabel;
-            soundTestLabel->align = UITEXT_ALIGN_LEFT;
+{
+        foreach_all(UIText, soundTestLabel)
+        {
+            if (soundTestLabel->align == UITEXT_ALIGN_CENTER) {
+                self->soundTestLabel  = soundTestLabel;
+                soundTestLabel->align = UITEXT_ALIGN_LEFT;
+            }
         }
     }
 
     self->leaderCharacterID   = HUD_CharacterIndexFromID(GET_CHARACTER_ID(1)) + 1;
     self->sidekickCharacterID = HUD_CharacterIndexFromID(GET_CHARACTER_ID(2)) + 1;
 
-    foreach_all(UIPicture, picture)
-    {
-        if (picture->listID == 1) {
-            self->zoneIcon = picture;
+{
+        foreach_all(UIPicture, picture)
+        {
+            if (picture->listID == 1) {
+                self->zoneIcon = picture;
 
-            // Bug Details(?):
-            // frameID is equal to... playerID...?
-            // this feels like a slight oversight, though idk what it is meant to be
-            picture->animator.frameID = self->leaderCharacterID;
-        }
-        else if (picture->listID == 3) {
-            if (picture->frameID)
-                self->player2Icon = picture;
-            else
-                self->player1Icon = picture;
+                // Bug Details(?):
+                // frameID is equal to... playerID...?
+                // this feels like a slight oversight, though idk what it is meant to be
+                picture->animator.frameID = self->leaderCharacterID;
+            }
+            else if (picture->listID == 3) {
+                if (picture->frameID)
+                    self->player2Icon = picture;
+                else
+                    self->player1Icon = picture;
+            }
         }
     }
 
@@ -326,6 +346,7 @@ void LevelSelect_State_FadeIn(void)
 
 void LevelSelect_State_Navigate(void)
 {
+    EntityUIPicture *zoneIcon;
     RSDK_THIS(LevelSelect);
 
     bool32 confirmPress = API_GetConfirmButtonFlip() ? ControllerInfo->keyB.press : ControllerInfo->keyA.press;
@@ -366,6 +387,7 @@ void LevelSelect_State_Navigate(void)
         self->timer = 0;
 
         if (self->labelID >= self->labelCount - 1) {
+            EntityUIText *soundTest;
             if (AnalogStickInfoL->keyLeft.press || ControllerInfo->keyLeft.press) {
                 if (--self->soundTestID < 0)
                     self->soundTestID = LevelSelect->soundTestMax - 1;
@@ -374,7 +396,7 @@ void LevelSelect_State_Navigate(void)
                 self->soundTestID = 0;
             }
 
-            EntityUIText *soundTest  = self->soundTestLabel;
+            soundTest  = self->soundTestLabel;
             soundTest->text.chars[0] = self->soundTestID >> 4;
             soundTest->text.chars[1] = self->soundTestID & 0xF;
         }
@@ -394,13 +416,14 @@ void LevelSelect_State_Navigate(void)
 #endif
         }
         else {
+            int32 i;
             EntityMusic *track = RSDK_GET_ENTITY(self->soundTestID + LevelSelect->startMusicID, Music);
             Music_PlayTrackPtr(track);
 
 #if MANIA_USE_PLUS
             self->offsetUFO = self->soundTestID % 14;
             self->offsetBSS = self->soundTestID & 0x1F;
-            for (int32 i = 0; i < 8; ++i) {
+            for (i = 0; i < 8; ++i) {
                 if (self->soundTestID != LevelSelect->cheatCodePtrs[i][LevelSelect->cheatCodePos[i]]) {
                     LevelSelect->cheatCodePos[i] = 0;
                 }
@@ -493,7 +516,7 @@ void LevelSelect_State_Navigate(void)
         LevelSelect_ManagePlayerIcon();
     }
 
-    EntityUIPicture *zoneIcon = self->zoneIcon;
+    zoneIcon = self->zoneIcon;
     if (self->labelID >= self->labelCount - 1)
         RSDK.SetSpriteAnimation(UIPicture->aniFrames, 2, &zoneIcon->animator, true, self->leaderCharacterID);
     else
@@ -579,27 +602,32 @@ void LevelSelect_ManagePlayerIcon(void)
 
 void LevelSelect_SetLabelHighlighted(bool32 highlight)
 {
+    EntityUIText *stageID;
     RSDK_THIS(LevelSelect);
 
     EntityUIText *zoneName = self->zoneNameLabels[self->labelID];
     if (zoneName)
         zoneName->highlighted = highlight;
 
-    EntityUIText *stageID = self->stageIDLabels[self->labelID];
+    stageID = self->stageIDLabels[self->labelID];
     if (stageID)
         stageID->highlighted = highlight;
 }
 
 void LevelSelect_HandleColumnChange(void)
 {
+    int32 distance;
+    EntityUIText *labelPtr;
+    int32 labelID;
+    int32 i;
     RSDK_THIS(LevelSelect);
 
     EntityUIText *curLabel = self->stageIDLabels[self->labelID];
     if (!curLabel)
         curLabel = self->zoneNameLabels[self->labelID];
 
-    int32 distance         = 0x1000000;
-    EntityUIText *labelPtr = NULL;
+    distance         = 0x1000000;
+    labelPtr = NULL;
     if (curLabel->position.x < 0x1000000) {
         foreach_active(UIText, label)
         {
@@ -625,8 +653,8 @@ void LevelSelect_HandleColumnChange(void)
         }
     }
 
-    int32 labelID = self->labelID;
-    for (int32 i = 0; i < self->labelCount; ++i) {
+    labelID = self->labelID;
+    for (i = 0; i < self->labelCount; ++i) {
         if (self->stageIDLabels[i] == labelPtr || self->zoneNameLabels[i] == labelPtr) {
             labelID = i;
             break;
@@ -650,6 +678,8 @@ void LevelSelect_HandleNewStagePos(void)
         curLabel = self->zoneNameLabels[self->labelID];
 
     if (curLabel->selectable) {
+        int32 leaderID;
+        int32 sidekickID = 0;
         char buffer[32];
         RSDK.GetCString(buffer, &curLabel->tag);
         RSDK.SetScene(buffer, "");
@@ -664,11 +694,11 @@ void LevelSelect_HandleNewStagePos(void)
             SceneInfo->listPos = Zone_GetListPos_EncoreMode();
 #endif
 
-        int32 leaderID = 0;
+        leaderID = 0;
         if (self->leaderCharacterID > 0)
             leaderID = 1 << (self->leaderCharacterID - 1);
 
-        int32 sidekickID = 0;
+        sidekickID = 0;
         if (self->sidekickCharacterID > 0)
             sidekickID = 1 << (self->sidekickCharacterID - 1);
 

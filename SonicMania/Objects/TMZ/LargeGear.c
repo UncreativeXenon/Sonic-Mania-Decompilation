@@ -11,65 +11,70 @@ ObjectLargeGear *LargeGear;
 
 void LargeGear_Update(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(LargeGear);
 
     self->angle = self->rotOffset + self->rotSpeed * Zone->timer;
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
-    foreach_active(Player, player)
-    {
-        int32 playerID = RSDK.GetEntitySlot(player);
+{
+        foreach_active(Player, player)
+        {
+            int32 angle;
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        int32 id        = 0;
-        int32 storedID  = -1;
-        bool32 collided = false;
+            int32 id        = 0;
+            int32 storedID  = -1;
+            bool32 collided = false;
 
-        for (int32 angle = 0x180; angle < 0x380; angle += 0x40) {
-            int32 ang = angle + self->angle;
-            int32 x   = (storeX + 0x2400 * RSDK.Cos512(ang)) & 0xFFFF0000;
-            int32 y   = (storeY + 0x2400 * RSDK.Sin512(ang)) & 0xFFFF0000;
+            for (angle = 0x180; angle < 0x380; angle += 0x40) {
+                int32 ang = angle + self->angle;
+                int32 x   = (storeX + 0x2400 * RSDK.Cos512(ang)) & 0xFFFF0000;
+                int32 y   = (storeY + 0x2400 * RSDK.Sin512(ang)) & 0xFFFF0000;
 
-            if (((1 << playerID) & self->activePlayers) && self->playerIDs[playerID] == id) {
-                player->position.x += x - self->positions[id].x;
-                player->position.y += y - self->positions[id].y;
+                if (((1 << playerID) & self->activePlayers) && self->playerIDs[playerID] == id) {
+                    player->position.x += x - self->positions[id].x;
+                    player->position.y += y - self->positions[id].y;
+                }
+
+                self->position.x = x;
+                self->position.y = y;
+
+                if (Player_CheckCollisionBox(player, self, &LargeGear->hitboxTooth) == C_TOP) {
+                    collided = true;
+                    storedID = id;
+                }
+
+                self->positions[id].x   = x;
+                self->positions[id++].y = y;
             }
 
-            self->position.x = x;
-            self->position.y = y;
+            self->position.x = storeX;
+            self->position.y = storeY;
 
-            if (Player_CheckCollisionBox(player, self, &LargeGear->hitboxTooth) == C_TOP) {
+            if (Player_CheckCollisionBox(player, self, &LargeGear->hitboxBase) == C_TOP) {
                 collided = true;
-                storedID = id;
+                storedID = -1;
+                self->activePlayers |= 1 << playerID;
+            }
+            else {
+                if (collided)
+                    self->activePlayers |= 1 << playerID;
+                else
+                    self->activePlayers &= ~(1 << playerID);
             }
 
-            self->positions[id].x   = x;
-            self->positions[id++].y = y;
-        }
+            self->playerIDs[playerID] = storedID;
+            if (collided) {
+                Hitbox *playerHitbox = Player_GetHitbox(player);
 
-        self->position.x = storeX;
-        self->position.y = storeY;
-
-        if (Player_CheckCollisionBox(player, self, &LargeGear->hitboxBase) == C_TOP) {
-            collided = true;
-            storedID = -1;
-            self->activePlayers |= 1 << playerID;
-        }
-        else {
-            if (collided)
-                self->activePlayers |= 1 << playerID;
-            else
-                self->activePlayers &= ~(1 << playerID);
-        }
-
-        self->playerIDs[playerID] = storedID;
-        if (collided) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
-
-            RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_RWALL, self->collisionPlane, playerHitbox->left << 16, 0, true);
-            RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_LWALL, self->collisionPlane, playerHitbox->right << 16, 0, true);
-            RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_FLOOR, self->collisionPlane, playerHitbox->bottom << 16, 0, true);
+                RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_RWALL, self->collisionPlane, playerHitbox->left << 16, 0, true);
+                RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_LWALL, self->collisionPlane, playerHitbox->right << 16, 0, true);
+                RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_FLOOR, self->collisionPlane, playerHitbox->bottom << 16, 0, true);
+            }
         }
     }
 
@@ -85,9 +90,10 @@ void LargeGear_StaticUpdate(void) {}
 
 void LargeGear_Draw(void)
 {
+    int32 i;
     RSDK_THIS(LargeGear);
 
-    for (int32 i = 0; i < 0x200; i += 0x40) {
+    for (i = 0; i < 0x200; i += 0x40) {
         self->rotation = i + self->angle;
 
         RSDK.SetSpriteAnimation(LargeGear->aniFrames, 1, &self->toothAnimator, true, 7 - abs(RSDK.Sin512(self->rotation) / 73));
@@ -107,7 +113,7 @@ void LargeGear_Draw(void)
     self->rotation = 0;
     RSDK.DrawSprite(&self->axleAnimator, NULL, false);
 
-    for (int32 i = 0; i < 0x200; i += 0x80) {
+    for (i = 0; i < 0x200; i += 0x80) {
         int32 angle = i + self->angle;
 
         Vector2 drawPos = self->position;

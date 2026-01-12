@@ -37,22 +37,28 @@ void LRZ3OutroK_Create(void *data)
 
 void LRZ3OutroK_StageLoad(void)
 {
-    foreach_all(EggPrison, prison)
     {
-        LRZ3OutroK->prison = prison;
-        foreach_break;
+        foreach_all(EggPrison, prison)
+        {
+            LRZ3OutroK->prison = prison;
+            foreach_break;
+        }
     }
 
-    foreach_all(SkyTeleporter, teleporter)
-    {
-        LRZ3OutroK->teleporter = teleporter;
-        foreach_break;
+{
+        foreach_all(SkyTeleporter, teleporter)
+        {
+            LRZ3OutroK->teleporter = teleporter;
+            foreach_break;
+        }
     }
 
-    foreach_all(FXRuby, fxRuby)
-    {
-        LRZ3OutroK->fxRuby = fxRuby;
-        foreach_break;
+{
+        foreach_all(FXRuby, fxRuby)
+        {
+            LRZ3OutroK->fxRuby = fxRuby;
+            foreach_break;
+        }
     }
 
     LRZ3OutroK->sfxWarp = RSDK.GetSfx("LRZ/Warp.wav");
@@ -74,14 +80,15 @@ void LRZ3OutroK_StartCutscene(void)
 
 bool32 LRZ3OutroK_Cutscene_RunToTeleporter(EntityCutsceneSeq *host)
 {
+    EntitySkyTeleporter *teleporter;
+    Vector2 size;
     RSDK_THIS(LRZ3OutroK);
 
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntitySkyTeleporter *teleporter = LRZ3OutroK->teleporter;
+    teleporter = LRZ3OutroK->teleporter;
 
-    Vector2 size;
     RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
     if (!host->timer) {
         LRZ3OutroK->prison->notSolid = true;
@@ -141,6 +148,8 @@ bool32 LRZ3OutroK_Cutscene_LandOnTeleporter(EntityCutsceneSeq *host)
 
 bool32 LRZ3OutroK_Cutscene_UseTeleporter(EntityCutsceneSeq *host)
 {
+    int32 x;
+    int32 y;
     RSDK_THIS(LRZ3OutroK);
 
     EntitySkyTeleporter *teleporter = LRZ3OutroK->teleporter;
@@ -170,8 +179,8 @@ bool32 LRZ3OutroK_Cutscene_UseTeleporter(EntityCutsceneSeq *host)
         foreach_active(Player, player) { RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_TWIRL, &player->animator, false, 3); }
     }
 
-    int32 x = teleporter->position.x;
-    int32 y = teleporter->position.y - 0x740000;
+    x = teleporter->position.x;
+    y = teleporter->position.y - 0x740000;
 
     if (host->timer >= 30) {
         int32 angle = 255 * (host->timer - 30) / 60;

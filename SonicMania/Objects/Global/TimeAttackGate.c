@@ -69,18 +69,25 @@ void TimeAttackGate_Create(void *data)
                 self->stateDraw = TimeAttackGate_Draw_Restarter;
             }
             else {
+                int32 left;
+                int32 top;
+                int32 right;
+                int32 bottom;
+                int32 extendTop;
+                int32 extendBottom;
+
                 self->active        = ACTIVE_NORMAL;
                 self->updateRange.x = TO_FIXED(64);
                 self->updateRange.y = TO_FIXED(64);
                 self->drawGroup     = Zone->playerDrawGroup[0] + 1;
 
-                int32 left   = self->boundsOffset.x - (self->boundsSize.x >> 1);
-                int32 top    = self->boundsOffset.y - (self->boundsSize.y >> 1);
-                int32 right  = self->boundsOffset.x + (self->boundsSize.x >> 1);
-                int32 bottom = self->boundsOffset.y + (self->boundsSize.y >> 1);
+                left   = self->boundsOffset.x - (self->boundsSize.x >> 1);
+                top    = self->boundsOffset.y - (self->boundsSize.y >> 1);
+                right  = self->boundsOffset.x + (self->boundsSize.x >> 1);
+                bottom = self->boundsOffset.y + (self->boundsSize.y >> 1);
 
-                int32 extendTop    = -(self->extendTop << 16);
-                int32 extendBottom = (self->extendBottom << 16);
+                extendTop    = -(self->extendTop << 16);
+                extendBottom = (self->extendBottom << 16);
 
                 if (extendTop < top)
                     top = extendTop;
@@ -136,6 +143,7 @@ void TimeAttackGate_StageLoad(void)
 
 void TimeAttackGate_HandleSpin(void)
 {
+    bool32 finishedSpinning;
     RSDK_THIS(TimeAttackGate);
 
     int32 top    = self->position.y + ((TimeAttackGate->hitboxGate.top - self->extendTop) << 16);
@@ -143,6 +151,7 @@ void TimeAttackGate_HandleSpin(void)
 
     foreach_active(Player, player)
     {
+        int32 xVel;
 #if MANIA_USE_PLUS
         if (!player->sidekick && !player->isGhost) {
 #else
@@ -152,7 +161,7 @@ void TimeAttackGate_HandleSpin(void)
                 foreach_break;
             }
 
-            int32 xVel = player->onGround ? player->groundVel : player->velocity.x;
+            xVel = player->onGround ? player->groundVel : player->velocity.x;
             if (xVel >> 15
                 && MathHelpers_CheckPositionOverlap(player->position.x, player->position.y, self->playerPos.x, self->playerPos.y, self->position.x,
                                                     bottom, self->position.x, top)) {
@@ -168,7 +177,7 @@ void TimeAttackGate_HandleSpin(void)
         }
     }
 
-    bool32 finishedSpinning = false;
+    finishedSpinning = false;
 
     self->angle += self->spinSpeed;
     if (self->spinSpeed <= 0) {
@@ -215,13 +224,14 @@ void TimeAttackGate_HandleStart(void)
         self->hasFinished = true;
         if (!self->finishLine) {
             if (!TimeAttackGate->started) {
+                EntityTimeAttackGate *restarter;
                 RSDK.PlaySfx(TimeAttackGate->sfxSignpost, false, 255);
 
                 TimeAttackGate->triggerPlayer = player1;
                 TimeAttackGate->started       = true;
                 SceneInfo->timeEnabled        = true;
 
-                EntityTimeAttackGate *restarter = CREATE_ENTITY(TimeAttackGate, INT_TO_VOID(true), self->position.x, self->position.y);
+                restarter = CREATE_ENTITY(TimeAttackGate, INT_TO_VOID(true), self->position.x, self->position.y);
                 TimeAttackGate->restartManager  = restarter;
                 restarter->isPermanent          = true;
 
@@ -260,18 +270,24 @@ void TimeAttackGate_HandleStart(void)
 void TimeAttackGate_AddRecord(void)
 {
     if (!TimeAttackGate->disableRecords) {
+        EntityMenuParam *param;
+        int32 characterID;
+        int32 zoneID;
+        int32 score;
+        int32 act;
+        bool32 encore;
         if (ActClear)
             ActClear->isSavingGame = true;
 
         if (UIWaitSpinner)
             UIWaitSpinner_StartWait();
 
-        EntityMenuParam *param = MenuParam_GetParam();
-        int32 characterID      = param->characterID;
-        int32 zoneID           = param->zoneID;
-        int32 score            = SceneInfo->milliseconds + 100 * (SceneInfo->seconds + 60 * SceneInfo->minutes);
-        int32 act              = param->actID;
-        bool32 encore          = SceneInfo->filter == (FILTER_BOTH | FILTER_ENCORE);
+        param = MenuParam_GetParam();
+        characterID      = param->characterID;
+        zoneID           = param->zoneID;
+        score            = SceneInfo->milliseconds + 100 * (SceneInfo->seconds + 60 * SceneInfo->minutes);
+        act              = param->actID;
+        encore          = SceneInfo->filter == (FILTER_BOTH | FILTER_ENCORE);
 
         param->timeAttackRank = TimeAttackData_AddRecord(zoneID, act, characterID, encore, score, TimeAttackGate_WaitSave_Leaderboards);
         TimeAttackData_AddLeaderboardEntry(zoneID, act, characterID, encore, score);
@@ -290,18 +306,21 @@ void TimeAttackGate_WaitSave_Leaderboards(bool32 success)
 
 void TimeAttackGate_CheckTouch(void)
 {
+    int32 x;
+    int32 y;
+    Hitbox hitbox;
+    int32 p;
     RSDK_THIS(TimeAttackGate);
 
-    int32 x = self->position.x + self->boundsOffset.x;
-    int32 y = self->position.y + self->boundsOffset.y;
+    x = self->position.x + self->boundsOffset.x;
+    y = self->position.y + self->boundsOffset.y;
 
-    Hitbox hitbox;
     hitbox.left   = -(self->boundsSize.x >> 17);
     hitbox.right  = self->boundsSize.x >> 17;
     hitbox.top    = -(self->boundsSize.y >> 17);
     hitbox.bottom = self->boundsSize.y >> 17;
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
 
         bool32 passedGate = false;
@@ -335,44 +354,46 @@ void TimeAttackGate_State_Gate(void)
     TimeAttackGate_HandleSpin();
     TimeAttackGate_HandleStart();
 
-    foreach_active(Player, player)
     {
-        player->lives = 1;
+        foreach_active(Player, player)
+        {
+            player->lives = 1;
 
-        if (!player->sidekick) {
-            if (!self->finishLine) {
-                if (!TimeAttackGate->started) {
-                    foreach_active(HUD, hud)
-                    {
-                        if (hud)
-                            hud->enableTimeFlash = true;
-                        foreach_break;
+            if (!player->sidekick) {
+                if (!self->finishLine) {
+                    if (!TimeAttackGate->started) {
+                        foreach_active(HUD, hud)
+                        {
+                            if (hud)
+                                hud->enableTimeFlash = true;
+                            foreach_break;
+                        }
                     }
                 }
-            }
-            else {
-                if (self->hasFinished && player->stateInput) {
-                    player->stateInput = StateMachine_None;
-                    player->up         = false;
-                    player->left       = false;
-                    player->right      = false;
-                    player->down       = false;
-                    player->jumpPress  = false;
-                    player->jumpHold   = false;
-                }
+                else {
+                    if (self->hasFinished && player->stateInput) {
+                        player->stateInput = StateMachine_None;
+                        player->up         = false;
+                        player->left       = false;
+                        player->right      = false;
+                        player->down       = false;
+                        player->jumpPress  = false;
+                        player->jumpHold   = false;
+                    }
 
-                if (!self->finishLine && !TimeAttackGate->started) {
-                    foreach_active(HUD, hud)
-                    {
-                        if (hud)
-                            hud->enableTimeFlash = true;
-                        foreach_break;
+                    if (!self->finishLine && !TimeAttackGate->started) {
+                        foreach_active(HUD, hud)
+                        {
+                            if (hud)
+                                hud->enableTimeFlash = true;
+                            foreach_break;
+                        }
                     }
                 }
-            }
 
-            self->playerPos.x = player->position.x;
-            self->playerPos.y = player->position.y;
+                self->playerPos.x = player->position.x;
+                self->playerPos.y = player->position.y;
+            }
         }
     }
 
@@ -429,10 +450,11 @@ void TimeAttackGate_State_Restarter(void)
                         TimeAttackGate->teleportChannel = RSDK.PlaySfx(TimeAttackGate->sfxTeleport, false, 255);
 
                     if (self->restartTimer == 35) {
+                        int32 c;
                         self->state                = NULL;
                         globals->suppressTitlecard = true;
 
-                        for (int32 c = 0; c < CHANNEL_COUNT; ++c) {
+                        for (c = 0; c < CHANNEL_COUNT; ++c) {
                             if (c != Music->channelID && c != TimeAttackGate->teleportChannel)
                                 RSDK.StopChannel(c);
                         }

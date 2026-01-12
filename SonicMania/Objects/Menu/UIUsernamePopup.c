@@ -51,12 +51,13 @@ void UIUsernamePopup_ShowPopup(void)
     EntityUIUsernamePopup *entity = (EntityUIUsernamePopup *)UIUsernamePopup->popup;
     if (entity->state == UIUsernamePopup_State_Init) {
         if (API_GetUsername(&entity->username)) {
+            int32 width;
 #if MANIA_USE_PLUS
             LogHelpers_PrintString(&entity->username);
 #endif
             RSDK.SetSpriteAnimation(UIWidgets->fontFrames, 0, &entity->animator, true, 0);
             RSDK.SetSpriteString(UIWidgets->fontFrames, 0, &entity->username);
-            int32 width    = RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &entity->username, 0, entity->username.length, 0);
+            width    = RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &entity->username, 0, entity->username.length, 0);
             entity->state  = UIUsernamePopup_State_Appear;
             entity->timer  = 0;
             entity->size.x = (width + 16) << 16;
@@ -70,11 +71,12 @@ void UIUsernamePopup_DrawSprites(void)
     RSDK_THIS(UIUsernamePopup);
 
     Vector2 drawPos;
+    int32 width;
     drawPos.x = self->drawPos.x + self->size.y + (ScreenInfo->position.x << 16) + (self->size.x >> 1);
     drawPos.y = self->drawPos.y + (ScreenInfo->center.y << 16) - (self->size.y >> 1) + ((ScreenInfo->center.y + ScreenInfo->position.y) << 16);
     UIWidgets_DrawParallelogram(drawPos.x, drawPos.y, self->size.x >> 16, self->size.y >> 16, self->size.y >> 16, 0x10, 0x7C, 0x10);
 
-    int32 width = RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &self->username, 0, self->username.length, 0);
+    width = RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &self->username, 0, self->username.length, 0);
     drawPos.y -= 0x10000;
     drawPos.x -= width << 15;
     RSDK.DrawText(&self->animator, &drawPos, &self->username, 0, self->username.length, ALIGN_LEFT, 0, 0, 0, false);
@@ -136,9 +138,10 @@ void UIUsernamePopup_State_Disappear(void)
         self->state     = UIUsernamePopup_State_Init;
     }
     else {
+        int32 percent;
         self->isVisible = true;
 
-        int32 percent = 0x20 * MAX(self->timer++, 0);
+        percent = 0x20 * MAX(self->timer++, 0);
         MathHelpers_LerpToPos(&self->drawPos, percent, -self->size.y, self->size.y);
     }
 }

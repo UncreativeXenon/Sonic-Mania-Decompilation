@@ -298,10 +298,12 @@ void Newtron_State_Projectile(void)
     else {
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Newtron->hitboxProjectile))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Newtron->hitboxProjectile))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
 }

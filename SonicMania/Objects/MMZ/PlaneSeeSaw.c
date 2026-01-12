@@ -83,6 +83,7 @@ void PlaneSeeSaw_State_WaitForPlayer(void)
 
 void PlaneSeeSaw_State_PlayerPushDown(void)
 {
+    Hitbox *hitboxNew;
     RSDK_THIS(PlaneSeeSaw);
 
     Hitbox *hitboxOld = RSDK.GetHitbox(&self->platformAnimator, 0);
@@ -102,11 +103,13 @@ void PlaneSeeSaw_State_PlayerPushDown(void)
         self->seeSawPos = RSDK.GetHitbox(&self->swingAnimator, 0)->top << 16;
     }
 
-    Hitbox *hitboxNew = RSDK.GetHitbox(&self->platformAnimator, 0);
-    foreach_active(Player, player)
+    hitboxNew = RSDK.GetHitbox(&self->platformAnimator, 0);
     {
-        if (Player_CheckCollisionPlatform(player, self, hitboxOld))
-            player->position.y += (hitboxNew->bottom - hitboxOld->bottom) << 16;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionPlatform(player, self, hitboxOld))
+                player->position.y += (hitboxNew->bottom - hitboxOld->bottom) << 16;
+        }
     }
 
     if (self->seeSawPos > -0x230000 && self->velocity.y > 0) {
@@ -119,6 +122,7 @@ void PlaneSeeSaw_State_PlayerPushDown(void)
 
 void PlaneSeeSaw_State_Launch(void)
 {
+    Hitbox *hitboxNew;
     RSDK_THIS(PlaneSeeSaw);
 
     Hitbox *hitboxOld = RSDK.GetHitbox(&self->platformAnimator, 0);
@@ -132,55 +136,58 @@ void PlaneSeeSaw_State_Launch(void)
         self->seeSawPos = RSDK.GetHitbox(&self->swingAnimator, 0)->top << 16;
     }
 
-    Hitbox *hitboxNew = RSDK.GetHitbox(&self->platformAnimator, 0);
-    foreach_active(Player, player)
+    hitboxNew = RSDK.GetHitbox(&self->platformAnimator, 0);
     {
-        if (Player_CheckCollisionPlatform(player, self, hitboxOld)) {
-            player->position.y += (hitboxNew->bottom - hitboxOld->bottom) << 16;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionPlatform(player, self, hitboxOld)) {
+                player->position.y += (hitboxNew->bottom - hitboxOld->bottom) << 16;
 
-            if (self->platformAnimator.frameID < 4) {
-                if (self->scale.x == 0x100) {
-                    player->position.x -= FarPlane->originPos.x;
-                    player->position.y -= FarPlane->originPos.y;
-                    player->position.x += FarPlane->position.x;
-                    player->position.y += FarPlane->position.y;
+                if (self->platformAnimator.frameID < 4) {
+                    EntityShield *shield;
+                    if (self->scale.x == 0x100) {
+                        player->position.x -= FarPlane->originPos.x;
+                        player->position.y -= FarPlane->originPos.y;
+                        player->position.x += FarPlane->position.x;
+                        player->position.y += FarPlane->position.y;
 
-                    if (player->camera) {
-                        player->camera->targetMoveVel.x = 0;
-                        player->camera->targetMoveVel.y = 0;
+                        if (player->camera) {
+                            player->camera->targetMoveVel.x = 0;
+                            player->camera->targetMoveVel.y = 0;
+                        }
+
+                        player->groundVel  = 0;
+                        player->velocity.x = 0;
+                        player->drawGroup  = Zone->playerDrawGroup[0];
+                        player->state      = PlaneSeeSaw_PlayerState_ToFG;
+                        player->velocity.y = -0x60000;
+                    }
+                    else {
+                        player->groundVel  = 0;
+                        player->velocity.x = 0;
+                        player->scale.x    = 0x200;
+                        player->scale.y    = 0x200;
+                        player->state      = PlaneSeeSaw_PlayerState_ToBG;
+                        player->velocity.y = -0xA0000;
                     }
 
-                    player->groundVel  = 0;
-                    player->velocity.x = 0;
-                    player->drawGroup  = Zone->playerDrawGroup[0];
-                    player->state      = PlaneSeeSaw_PlayerState_ToFG;
-                    player->velocity.y = -0x60000;
+                    player->abilityValues[0] = self->position.x;
+                    player->nextAirState     = StateMachine_None;
+                    player->nextGroundState  = StateMachine_None;
+                    player->interaction      = false;
+                    player->tileCollisions   = TILECOLLISION_NONE;
+                    player->jumpAbilityState = 0;
+                    player->drawFX |= FX_SCALE;
+                    player->applyJumpCap = false;
+                    player->onGround     = false;
+
+                    shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
+                    if (shield && shield->classID)
+                        shield->drawFX |= FX_SCALE;
+
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                    player->animator.speed = 0x80;
                 }
-                else {
-                    player->groundVel  = 0;
-                    player->velocity.x = 0;
-                    player->scale.x    = 0x200;
-                    player->scale.y    = 0x200;
-                    player->state      = PlaneSeeSaw_PlayerState_ToBG;
-                    player->velocity.y = -0xA0000;
-                }
-
-                player->abilityValues[0] = self->position.x;
-                player->nextAirState     = StateMachine_None;
-                player->nextGroundState  = StateMachine_None;
-                player->interaction      = false;
-                player->tileCollisions   = TILECOLLISION_NONE;
-                player->jumpAbilityState = 0;
-                player->drawFX |= FX_SCALE;
-                player->applyJumpCap = false;
-                player->onGround     = false;
-
-                EntityShield *shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
-                if (shield && shield->classID)
-                    shield->drawFX |= FX_SCALE;
-
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                player->animator.speed = 0x80;
             }
         }
     }
@@ -242,6 +249,7 @@ void PlaneSeeSaw_PlayerState_ToFG(void)
 
     self->tileCollisions = TILECOLLISION_NONE;
     if (self->scale.x >= 0x200) {
+        EntityShield *shield;
         self->interaction    = true;
         self->tileCollisions = TILECOLLISION_DOWN;
         Zone->deathBoundary[0] -= 0x8000000;
@@ -249,7 +257,7 @@ void PlaneSeeSaw_PlayerState_ToFG(void)
         self->drawFX &= ~FX_SCALE;
         self->state = Player_State_Air;
 
-        EntityShield *shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(self), Shield);
+        shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(self), Shield);
         if (shield && shield->classID)
             shield->drawFX &= ~FX_SCALE;
 

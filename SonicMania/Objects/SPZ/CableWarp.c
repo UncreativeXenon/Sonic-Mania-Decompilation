@@ -101,6 +101,7 @@ void CableWarp_State_CablePlug(void)
 #if MANIA_USE_PLUS
             if (player->animator.animationID == ANI_JUMP || player->state == Player_State_DropDash
                 || player->state == Player_State_MightyHammerDrop) {
+                EntityDebris *debris;
                 if (player->state == Player_State_DropDash) {
                     player->velocity.y = -0x10000;
                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
@@ -116,11 +117,12 @@ void CableWarp_State_CablePlug(void)
                 }
 #else
             if (player->animator.animationID == ANI_JUMP) {
+                EntityDebris *debris;
                 player->velocity.y = -0x10000;
 #endif
                 player->onGround = false;
 
-                EntityDebris *debris    = CREATE_ENTITY(Debris, Debris_State_Fall, self->position.x - 0x80000, self->position.y - 0x80000);
+                debris    = CREATE_ENTITY(Debris, Debris_State_Fall, self->position.x - 0x80000, self->position.y - 0x80000);
                 debris->velocity.x      = -0x20000;
                 debris->velocity.y      = -0x20000;
                 debris->gravityStrength = 0x3800;
@@ -150,6 +152,7 @@ void CableWarp_State_CheckPlayerEntry(void)
     foreach_active(Player, player)
     {
         if (Player_CheckCollisionBox(player, self, &CableWarp->hitboxTransport) == C_TOP && !self->type) {
+            EntityCableWarp *warp;
             player->state           = Player_State_Static;
             player->nextAirState    = StateMachine_None;
             player->nextGroundState = StateMachine_None;
@@ -160,20 +163,22 @@ void CableWarp_State_CheckPlayerEntry(void)
             player->velocity.y      = 0;
             RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
-            EntityCableWarp *warp = CREATE_ENTITY(CableWarp, INT_TO_VOID(CABLEWARP_TRANSPORT), self->position.x, self->position.y);
+            warp = CREATE_ENTITY(CableWarp, INT_TO_VOID(CABLEWARP_TRANSPORT), self->position.x, self->position.y);
             warp->isPermanent     = true;
             warp->player          = player;
 
             warp->slotID = SceneInfo->entitySlot;
             if (self->type) {
+                EntityCableWarp *nextNode;
                 warp->nextSlot            = warp->slotID - 1;
-                EntityCableWarp *nextNode = RSDK_GET_ENTITY(warp->nextSlot, CableWarp);
+                nextNode = RSDK_GET_ENTITY(warp->nextSlot, CableWarp);
                 if (nextNode->classID != CableWarp->classID || nextNode->type != CABLEWARP_NODE)
                     warp->nextSlot += 2;
             }
             else {
+                EntityCableWarp *nextNode;
                 warp->nextSlot            = warp->slotID + 1;
-                EntityCableWarp *nextNode = RSDK_GET_ENTITY(warp->nextSlot, CableWarp);
+                nextNode = RSDK_GET_ENTITY(warp->nextSlot, CableWarp);
                 if (nextNode->classID == CableWarp->classID) {
                     if (nextNode->type != CABLEWARP_NODE)
                         warp->nextSlot -= 2;
@@ -230,10 +235,12 @@ void CableWarp_StateTransport_Enter(void)
             RSDK.PlaySfx(CableWarp->sfxPulse, false, 0xFF);
         }
         else if (self->animator.frameID == self->animator.frameCount - 1) {
+            EntityCableWarp *nextNode;
+            int32 angle;
             RSDK.SetSpriteAnimation(CableWarp->aniFrames, 2, &self->animator, true, 0);
             self->inkEffect           = INK_ADD;
-            EntityCableWarp *nextNode = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
-            int32 angle        = RSDK.ATan2((nextNode->position.x - player->position.x) >> 16, (nextNode->position.y - player->position.y) >> 16);
+            nextNode = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
+            angle        = RSDK.ATan2((nextNode->position.x - player->position.x) >> 16, (nextNode->position.y - player->position.y) >> 16);
             self->angle        = angle;
             self->rotation     = 2 * angle;
             player->velocity.x = RSDK.Cos256(self->angle) << 12;
@@ -253,15 +260,19 @@ void CableWarp_StateTransport_MoveToNextNode(void)
 
     EntityPlayer *player = self->player;
     if (player->state == Player_State_Static) {
+        EntityCableWarp *nextNode;
+        int32 rx;
+        int32 ry;
         RSDK.ProcessAnimation(&self->animator);
         self->position.x = player->position.x;
         self->position.y = player->position.y;
         RSDK_GET_ENTITY(self->slotID, CableWarp);
 
-        EntityCableWarp *nextNode = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
-        int32 rx                  = (nextNode->position.x - player->position.x) >> 16;
-        int32 ry                  = (nextNode->position.y - player->position.y) >> 16;
+        nextNode = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
+        rx                  = (nextNode->position.x - player->position.x) >> 16;
+        ry                  = (nextNode->position.y - player->position.y) >> 16;
         if (rx * rx + ry * ry < 0x100) {
+            int32 angle;
             player->position.x = nextNode->position.x;
             player->position.y = nextNode->position.y;
 
@@ -275,7 +286,7 @@ void CableWarp_StateTransport_MoveToNextNode(void)
             }
 
             nextNode           = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
-            int32 angle        = RSDK.ATan2((nextNode->position.x - player->position.x) >> 16, (nextNode->position.y - player->position.y) >> 16);
+            angle        = RSDK.ATan2((nextNode->position.x - player->position.x) >> 16, (nextNode->position.y - player->position.y) >> 16);
             self->angle        = angle;
             self->rotation     = 2 * angle + 128;
             player->velocity.x = RSDK.Cos256(self->angle) << 12;
@@ -295,15 +306,18 @@ void CableWarp_StateTransport_EndNode(void)
     EntityPlayer *player = (EntityPlayer *)self->player;
 
     if (player->state == Player_State_Static) {
+        EntityCableWarp *nextNode;
+        int32 rx;
+        int32 ry;
         RSDK.ProcessAnimation(&self->animator);
         self->position.x = player->position.x;
         self->position.y = player->position.y;
 
         RSDK_GET_ENTITY(self->slotID, CableWarp);
-        EntityCableWarp *nextNode = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
+        nextNode = RSDK_GET_ENTITY(self->nextSlot, CableWarp);
 
-        int32 rx = (nextNode->position.x - player->position.x) >> 16;
-        int32 ry = (nextNode->position.y - player->position.y) >> 16;
+        rx = (nextNode->position.x - player->position.x) >> 16;
+        ry = (nextNode->position.y - player->position.y) >> 16;
         if (rx * rx + ry * ry < 0x100) {
             player->position.x = nextNode->position.x;
             player->position.y = nextNode->position.y;

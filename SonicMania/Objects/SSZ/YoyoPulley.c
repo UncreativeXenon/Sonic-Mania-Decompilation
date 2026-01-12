@@ -11,6 +11,8 @@ ObjectYoyoPulley *YoyoPulley;
 
 void YoyoPulley_Update(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(YoyoPulley);
 
     int32 speed = YoyoPulley_GetLength();
@@ -21,80 +23,82 @@ void YoyoPulley_Update(void)
         self->rotation += speed;
 
     YoyoPulley_UpdateHandlePos();
-    int32 storeX   = self->position.x;
-    int32 storeY   = self->position.y;
+    storeX   = self->position.x;
+    storeY   = self->position.y;
     self->position = self->handlePos;
 
-    foreach_active(Player, player)
-    {
-        int32 playerID = RSDK.GetEntitySlot(player);
+{
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (((1 << playerID) & self->activePlayers) || self->playerTimers[playerID]) {
-            if (player->state == Player_State_Static) {
-                // ???
-                RSDK.GetHitbox(&player->animator, 0);
+            if (((1 << playerID) & self->activePlayers) || self->playerTimers[playerID]) {
+                if (player->state == Player_State_Static) {
+                    // ???
+                    RSDK.GetHitbox(&player->animator, 0);
 
-                player->velocity.x = 0;
-                player->velocity.y = 0;
-                player->groundVel  = 0;
-                player->angle      = 0;
-                player->rotation   = 0;
-                player->position.x = self->position.x + (0xE0000 * (2 * (self->direction == FLIP_NONE) - 1));
-                player->position.y = self->position.y + 0xC0000;
+                    player->velocity.x = 0;
+                    player->velocity.y = 0;
+                    player->groundVel  = 0;
+                    player->angle      = 0;
+                    player->rotation   = 0;
+                    player->position.x = self->position.x + (0xE0000 * (2 * (self->direction == FLIP_NONE) - 1));
+                    player->position.y = self->position.y + 0xC0000;
 
-                if (player->jumpPress) {
-                    player->position.x += 0xA0000 * (2 * (self->direction == FLIP_NONE) - 1);
-                    player->position.y -= 0x40000;
-                    player->velocity.x = (2 * (self->direction == FLIP_NONE) - 1) << 17;
-                    player->velocity.y = -0x40000;
+                    if (player->jumpPress) {
+                        player->position.x += 0xA0000 * (2 * (self->direction == FLIP_NONE) - 1);
+                        player->position.y -= 0x40000;
+                        player->velocity.x = (2 * (self->direction == FLIP_NONE) - 1) << 17;
+                        player->velocity.y = -0x40000;
 
+                        self->activePlayers &= ~(1 << playerID);
+                        self->playerTimers[playerID] = 30;
+                        player->tileCollisions       = TILECOLLISION_DOWN;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                        player->animator.speed = 48;
+
+                        player->onGround = false;
+                        player->state    = Player_State_Air;
+                    }
+                }
+                else {
                     self->activePlayers &= ~(1 << playerID);
-                    self->playerTimers[playerID] = 30;
-                    player->tileCollisions       = TILECOLLISION_DOWN;
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                    player->animator.speed = 48;
-
-                    player->onGround = false;
-                    player->state    = Player_State_Air;
+                    player->tileCollisions = TILECOLLISION_DOWN;
                 }
             }
-            else {
-                self->activePlayers &= ~(1 << playerID);
-                player->tileCollisions = TILECOLLISION_DOWN;
+            else if (player->state != Player_State_Static && player->down == false && player->velocity.y >= 0) {
+                Hitbox hitboxPlayer;
+                Hitbox *playerHitbox = RSDK.GetHitbox(&player->animator, 0);
+
+                hitboxPlayer.top    = playerHitbox->top;
+                hitboxPlayer.left   = playerHitbox->left;
+                hitboxPlayer.right  = playerHitbox->right;
+                hitboxPlayer.bottom = hitboxPlayer.top + 4;
+
+                if (RSDK.CheckObjectCollisionTouchBox(self, &YoyoPulley->hitboxHandle, player, &hitboxPlayer)) {
+                    if (self->pullDir == FLIP_X)
+                        self->pullVelocity += 0x100;
+
+                    self->activePlayers |= 1 << playerID;
+                    player->velocity.x     = 0;
+                    player->velocity.y     = 0;
+                    player->groundVel      = 0;
+                    player->angle          = 0;
+                    player->rotation       = 0;
+                    player->position.x     = self->position.x + (0xE0000 * (2 * (self->direction == FLIP_NONE) - 1));
+                    player->position.y     = self->position.y + 0xC0000;
+                    player->direction      = self->direction ^ FLIP_X;
+                    player->tileCollisions = TILECOLLISION_NONE;
+
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_PULLEY_HOLD, &player->animator, true, 0);
+                    player->state = Player_State_Static;
+                    RSDK.PlaySfx(Player->sfxGrab, false, 255);
+                }
             }
+
+            if (self->playerTimers[playerID] > 0)
+                self->playerTimers[playerID]--;
         }
-        else if (player->state != Player_State_Static && player->down == false && player->velocity.y >= 0) {
-            Hitbox *playerHitbox = RSDK.GetHitbox(&player->animator, 0);
-
-            Hitbox hitboxPlayer;
-            hitboxPlayer.top    = playerHitbox->top;
-            hitboxPlayer.left   = playerHitbox->left;
-            hitboxPlayer.right  = playerHitbox->right;
-            hitboxPlayer.bottom = hitboxPlayer.top + 4;
-
-            if (RSDK.CheckObjectCollisionTouchBox(self, &YoyoPulley->hitboxHandle, player, &hitboxPlayer)) {
-                if (self->pullDir == FLIP_X)
-                    self->pullVelocity += 0x100;
-
-                self->activePlayers |= 1 << playerID;
-                player->velocity.x     = 0;
-                player->velocity.y     = 0;
-                player->groundVel      = 0;
-                player->angle          = 0;
-                player->rotation       = 0;
-                player->position.x     = self->position.x + (0xE0000 * (2 * (self->direction == FLIP_NONE) - 1));
-                player->position.y     = self->position.y + 0xC0000;
-                player->direction      = self->direction ^ FLIP_X;
-                player->tileCollisions = TILECOLLISION_NONE;
-
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_PULLEY_HOLD, &player->animator, true, 0);
-                player->state = Player_State_Static;
-                RSDK.PlaySfx(Player->sfxGrab, false, 255);
-            }
-        }
-
-        if (self->playerTimers[playerID] > 0)
-            self->playerTimers[playerID]--;
     }
 
     self->position.x = storeX;
@@ -193,11 +197,12 @@ void YoyoPulley_DrawSprites(void)
 
 int32 YoyoPulley_GetLength(void)
 {
+    EntityPlayer *player2;
     RSDK_THIS(YoyoPulley);
 
-    EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+    player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
 
-    if (!self->activePlayers || (self->activePlayers == 0b10 && player2->sidekick)) {
+    if (!self->activePlayers || (self->activePlayers == 0x02 && player2->sidekick)) {
         // Return to starting pos
 
         if (self->pullDir != FLIP_NONE) {

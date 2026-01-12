@@ -129,11 +129,13 @@ void ThoughtBubble_HaveOtherThoughts(void)
 }
 void ThoughtBubble_BubbleDisappear(void)
 {
+    int32 i;
     RSDK_THIS(ThoughtBubble);
 
     self->type = THOUGHTBUBBLE_2DOTS;
 
-    for (int32 i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
+        int32 scale;
         int32 x              = self->position.x + RSDK.Rand(-0x180000, 0x180000);
         int32 y              = self->position.y + RSDK.Rand(-0x100000, 0x100000);
         EntityDebris *debris = CREATE_ENTITY(Debris, NULL, x, y);
@@ -144,7 +146,7 @@ void ThoughtBubble_BubbleDisappear(void)
         debris->drawFX     = FX_SCALE | FX_FLIP;
         debris->direction  = i & 3;
 
-        int32 scale       = RSDK.Rand(0x200, 0x400);
+        scale       = RSDK.Rand(0x200, 0x400);
         debris->scale.x   = scale;
         debris->scale.y   = scale;
         debris->drawGroup = Zone->objectDrawGroup[1];

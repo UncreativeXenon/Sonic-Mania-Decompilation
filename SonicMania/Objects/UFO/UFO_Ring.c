@@ -37,9 +37,9 @@ void UFO_Ring_Draw(void)
     RSDK_THIS(UFO_Ring);
 
     if (self->zdepth >= 0x100) {
+        Vector2 drawPos;
         self->direction = self->animator.frameID > 8;
 
-        Vector2 drawPos;
         drawPos.x = (ScreenInfo->center.x + (self->worldX << 8) / self->zdepth) << 16;
         drawPos.y = (ScreenInfo->center.y - (self->worldY << 8) / self->zdepth) << 16;
 
@@ -100,13 +100,14 @@ void UFO_Ring_PlayRingSfx(void)
 
 void UFO_Ring_LoseRings(EntityUFO_Player *player)
 {
+    int32 r;
     int32 ringCount = CLAMP(UFO_Setup->rings, 0, 10);
 
     UFO_Setup->rings -= 10;
     if (UFO_Setup->rings < 0)
         UFO_Setup->rings = 0;
 
-    for (int32 r = 0; r < ringCount; ++r) {
+    for (r = 0; r < ringCount; ++r) {
         EntityUFO_Ring *ring = CREATE_ENTITY(UFO_Ring, NULL, player->position.x, player->position.y);
 
         ring->height         = player->height + 0x80000;

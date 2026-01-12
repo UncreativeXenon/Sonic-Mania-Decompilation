@@ -11,6 +11,12 @@ ObjectPSZDoor *PSZDoor;
 
 void PSZDoor_Update(void)
 {
+    int32 startX;
+    int32 startY;
+    int32 posX;
+    int32 posY;
+    bool32 autoOpen;
+    EntityDoorTrigger *trigger;
     RSDK_THIS(PSZDoor);
 
     int32 offsetX = 0;
@@ -41,8 +47,8 @@ void PSZDoor_Update(void)
         default: break;
     }
 
-    int32 startX = self->doorPos.x;
-    int32 startY = self->doorPos.y;
+    startX = self->doorPos.x;
+    startY = self->doorPos.y;
 
     if (self->shouldMove) {
         if (PSZDoor_GetRemainingDistance() > 0) {
@@ -62,53 +68,55 @@ void PSZDoor_Update(void)
         }
     }
 
-    int32 posX = self->doorPos.x - startX;
-    int32 posY = self->doorPos.y - startY;
+    posX = self->doorPos.x - startX;
+    posY = self->doorPos.y - startY;
 
-    bool32 autoOpen = false;
-    foreach_active(Player, player)
+    autoOpen = false;
     {
-        // this was a weird one where apparently it used doorPos directly which is very much undefined behavior lol
-        // so much so that it breaks as of v5U :]
-        Vector2 storePos = self->position;
-        self->position   = self->doorPos;
-        if (Player_CheckCollisionBox(player, self, &PSZDoor->hitboxes[self->doorAnimator.frameID]) == C_TOP) {
-            if (self->orientation >= PSZDOOR_ORIENATION_L)
-                player->position.x += posX;
-            else
-                player->position.y += posY;
-        }
-        self->position = storePos;
+        foreach_active(Player, player)
+        {
+            // this was a weird one where apparently it used doorPos directly which is very much undefined behavior lol
+            // so much so that it breaks as of v5U :]
+            Vector2 storePos = self->position;
+            self->position   = self->doorPos;
+            if (Player_CheckCollisionBox(player, self, &PSZDoor->hitboxes[self->doorAnimator.frameID]) == C_TOP) {
+                if (self->orientation >= PSZDOOR_ORIENATION_L)
+                    player->position.x += posX;
+                else
+                    player->position.y += posY;
+            }
+            self->position = storePos;
 
-        switch (self->automatic) {
-            default:
-            case PSZDOOR_AUTO_NONE: break;
+            switch (self->automatic) {
+                default:
+                case PSZDOOR_AUTO_NONE: break;
 
-            case PSZDOOR_AUTO_LEFT:
-                if (self->orientation >= PSZDOOR_ORIENATION_L) {
-                    if (player->position.y < self->position.y && abs(player->position.x - self->position.x) < 0x200000)
-                        autoOpen = true;
-                }
-                else {
-                    if (player->position.x < self->position.x && abs(player->position.y - self->position.y) < 0x200000)
-                        autoOpen = true;
-                }
-                break;
+                case PSZDOOR_AUTO_LEFT:
+                    if (self->orientation >= PSZDOOR_ORIENATION_L) {
+                        if (player->position.y < self->position.y && abs(player->position.x - self->position.x) < 0x200000)
+                            autoOpen = true;
+                    }
+                    else {
+                        if (player->position.x < self->position.x && abs(player->position.y - self->position.y) < 0x200000)
+                            autoOpen = true;
+                    }
+                    break;
 
-            case PSZDOOR_AUTO_RIGHT:
-                if (self->orientation >= PSZDOOR_ORIENATION_L) {
-                    if (player->position.y > self->position.y && abs(player->position.x - self->position.x) < 0x200000)
-                        autoOpen = true;
-                }
-                else {
-                    if (player->position.x > self->position.x && abs(player->position.y - self->position.y) < 0x200000)
-                        autoOpen = true;
-                }
-                break;
+                case PSZDOOR_AUTO_RIGHT:
+                    if (self->orientation >= PSZDOOR_ORIENATION_L) {
+                        if (player->position.y > self->position.y && abs(player->position.x - self->position.x) < 0x200000)
+                            autoOpen = true;
+                    }
+                    else {
+                        if (player->position.x > self->position.x && abs(player->position.y - self->position.y) < 0x200000)
+                            autoOpen = true;
+                    }
+                    break;
+            }
         }
     }
 
-    EntityDoorTrigger *trigger = self->trigger;
+    trigger = self->trigger;
     if (trigger && ((trigger->classID == DoorTrigger->classID && trigger->bulbAnimator.frameID == 1) || autoOpen)) {
         if (self->onScreen)
             RSDK.PlaySfx(PSZDoor->sfxOpen, false, 255);
@@ -127,9 +135,10 @@ void PSZDoor_StaticUpdate(void) {}
 
 void PSZDoor_Draw(void)
 {
+    int32 rotation;
+    Vector2 drawPos;
     RSDK_THIS(PSZDoor);
 
-    Vector2 drawPos;
     RSDK.DrawSprite(&self->doorAnimator, &self->doorPos, false);
 
     self->doorAnimator.frameID = 2;
@@ -143,7 +152,7 @@ void PSZDoor_Draw(void)
     else
         drawPos.y -= 2 * self->offset.y;
 
-    int32 rotation = self->rotation;
+    rotation = self->rotation;
     self->rotation = 0x100 - rotation;
     RSDK.DrawSprite(&self->cogAnimator, &drawPos, false);
     RSDK.DrawSprite(&self->doorAnimator, &drawPos, false);
@@ -212,12 +221,14 @@ void PSZDoor_Create(void *data)
             default: break;
         }
 
-        foreach_all(DoorTrigger, trigger)
-        {
-            if (trigger->id == self->id) {
-                self->updateRange.x += abs(self->position.x - trigger->position.x);
-                self->updateRange.y += abs(self->position.y - trigger->position.y);
-                self->trigger = trigger;
+{
+            foreach_all(DoorTrigger, trigger)
+            {
+                if (trigger->id == self->id) {
+                    self->updateRange.x += abs(self->position.x - trigger->position.x);
+                    self->updateRange.y += abs(self->position.y - trigger->position.y);
+                    self->trigger = trigger;
+                }
             }
         }
     }

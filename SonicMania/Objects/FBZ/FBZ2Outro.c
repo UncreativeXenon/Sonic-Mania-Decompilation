@@ -48,25 +48,30 @@ void FBZ2Outro_StartCutscene(EntityFBZ2Outro *outro)
 
 bool32 FBZ2Outro_Cutscene_SetupGliders(EntityCutsceneSeq *host)
 {
+    Vector2 size;
+    int32 p;
     CutsceneSeq_LockAllPlayerControl();
 
-    foreach_active(Player, player)
     {
-        player->state      = Player_State_Ground;
-        player->stateInput = StateMachine_None;
-        player->right      = true;
+        foreach_active(Player, player)
+        {
+            player->state      = Player_State_Ground;
+            player->stateInput = StateMachine_None;
+            player->right      = true;
+        }
     }
 
-    Vector2 size;
     RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
     size.x -= 128;
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         Zone->cameraBoundsR[p]      = size.x;
         Zone->playerBoundActiveR[p] = false;
     }
 
-    foreach_all(HangGlider, glider) { glider->active = ACTIVE_NORMAL; }
+    {
+        foreach_all(HangGlider, glider) { glider->active = ACTIVE_NORMAL; }
+    }
 
     return true;
 }
@@ -111,7 +116,8 @@ bool32 FBZ2Outro_Cutscene_RunToGlider(EntityCutsceneSeq *host)
         }
     }
     else {
-        for (int32 p = 0; p < Player->playerCount; ++p) Zone->cameraBoundsT[p] = Zone->cameraBoundsB[p] - ScreenInfo->size.y;
+        int32 p;
+        for (p = 0; p < Player->playerCount; ++p) Zone->cameraBoundsT[p] = Zone->cameraBoundsB[p] - ScreenInfo->size.y;
 
         return true;
     }

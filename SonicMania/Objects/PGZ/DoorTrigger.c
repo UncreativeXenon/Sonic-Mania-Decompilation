@@ -17,9 +17,13 @@ void DoorTrigger_Update(void)
 
     if (self->bulbAnimator.frameID) {
         if (!--self->id) {
+            int32 anim;
+            int32 x;
+            int32 y;
+            EntityDebris *shard;
             self->id = RSDK.Rand(15, 121);
 
-            int32 anim = 0;
+            anim = 0;
             switch (self->orientation) {
                 case DOORTRIGGER_ORIENATION_L:
                 case DOORTRIGGER_ORIENATION_R: anim = 3; break;
@@ -30,9 +34,9 @@ void DoorTrigger_Update(void)
                 default: break;
             }
 
-            int32 x             = self->position.x + (RSDK.Rand(-4, 5) << 16);
-            int32 y             = self->position.y + (RSDK.Rand(-4, 5) << 16);
-            EntityDebris *shard = CREATE_ENTITY(Debris, NULL, x, y);
+            x             = self->position.x + (RSDK.Rand(-4, 5) << 16);
+            y             = self->position.y + (RSDK.Rand(-4, 5) << 16);
+            shard = CREATE_ENTITY(Debris, NULL, x, y);
 
             shard->state     = Debris_State_Move;
             shard->drawFX    = FX_FLIP;
@@ -46,6 +50,9 @@ void DoorTrigger_Update(void)
         {
             if (!player->sidekick && Player_CheckAttackingNoInvTimer(player, self)) {
                 if (Player_CheckCollisionTouch(player, self, &DoorTrigger->hitboxBulb[self->baseAnimator.frameID])) {
+                    int32 spawnX;
+                    int32 spawnY;
+                    int32 i;
                     self->bulbAnimator.frameID = 1;
                     if (player->characterID == ID_KNUCKLES && player->animator.animationID == ANI_GLIDE) {
                         player->velocity.x = -player->velocity.x >> 1;
@@ -53,6 +60,7 @@ void DoorTrigger_Update(void)
                         player->state = Player_State_KnuxGlideDrop;
                     }
                     else {
+                        int32 angle;
                         int32 x = 0, y = 0;
                         if (self->baseAnimator.frameID) {
                             x = player->position.x - self->position.x;
@@ -71,7 +79,7 @@ void DoorTrigger_Update(void)
                             y = player->position.y - self->position.y;
                         }
 
-                        int32 angle = RSDK.ATan2(x, y);
+                        angle = RSDK.ATan2(x, y);
 #if MANIA_USE_PLUS
                         if (player->characterID == ID_MIGHTY && player->animator.animationID == ANI_HAMMERDROP) {
                             player->velocity.y -= 0x10000;
@@ -91,8 +99,8 @@ void DoorTrigger_Update(void)
 
                     RSDK.PlaySfx(DoorTrigger->sfxShatter, false, 255);
 
-                    int32 spawnX = self->position.x;
-                    int32 spawnY = self->position.y;
+                    spawnX = self->position.x;
+                    spawnY = self->position.y;
                     switch (self->orientation) {
                         case DOORTRIGGER_ORIENATION_L: spawnX -= 0x100000; break;
                         case DOORTRIGGER_ORIENATION_R: spawnX += 0x100000; break;
@@ -101,7 +109,7 @@ void DoorTrigger_Update(void)
                         default: break;
                     }
 
-                    for (int32 i = 0; i < 8; ++i) {
+                    for (i = 0; i < 8; ++i) {
                         EntityDebris *shard =
                             CREATE_ENTITY(Debris, NULL, spawnX + RSDK.Rand(-0xA0000, 0xA0000), spawnY + RSDK.Rand(-0xA0000, 0xA0000));
                         shard->state           = Debris_State_Fall;

@@ -95,6 +95,7 @@ void TwistingDoor_Draw(void)
 
 void TwistingDoor_Create(void *data)
 {
+    EntityButton *taggedButton;
     RSDK_THIS(TwistingDoor);
 
     self->collision = PLATFORM_C_SOLID;
@@ -112,7 +113,7 @@ void TwistingDoor_Create(void *data)
     }
 
     self->taggedButton         = NULL;
-    EntityButton *taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
+    taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
 
     if (self->buttonTag > 0) {
         foreach_all(Button, button)

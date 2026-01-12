@@ -284,14 +284,16 @@ void HeavyMystic_CheckPlayerCollisions_Fang(void)
         if (self->invincibilityTimer > 0)
             self->invincibilityTimer--;
 
-        foreach_active(Player, player)
-        {
-            if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self)) {
-                RSDK.PlaySfx(HeavyMystic->sfxImpact, false, 255);
-                self->velocity.x = player->position.x < self->position.x ? 0x20000 : -0x20000;
-                self->velocity.y = -0x40000;
-                RSDK.SetSpriteAnimation(HeavyMystic->roguesFrames, 3, &self->animator, true, 0);
-                self->state = HeavyMystic_StateBoss_RogueHit;
+{
+            foreach_active(Player, player)
+            {
+                if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self)) {
+                    RSDK.PlaySfx(HeavyMystic->sfxImpact, false, 255);
+                    self->velocity.x = player->position.x < self->position.x ? 0x20000 : -0x20000;
+                    self->velocity.y = -0x40000;
+                    RSDK.SetSpriteAnimation(HeavyMystic->roguesFrames, 3, &self->animator, true, 0);
+                    self->state = HeavyMystic_StateBoss_RogueHit;
+                }
             }
         }
     }
@@ -305,27 +307,29 @@ void HeavyMystic_CheckPlayerCollisions_Bark(void)
         if (self->invincibilityTimer > 0)
             self->invincibilityTimer--;
 
-        foreach_active(Player, player)
-        {
-            if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox)) {
+{
+            foreach_active(Player, player)
+            {
+                if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
 
-                if (self->animator.animationID == ANI_SKID_TURN
-                    && ((self->direction == FLIP_NONE && player->position.x > self->position.x)
-                        || (self->direction == FLIP_X && player->position.x < self->position.x))) {
-                    if (!Player_CheckMightyUnspin(player, 0x600, false, &player->uncurlTimer))
-                        Player_Hurt(player, self);
-                }
-                else
-#endif	
-                    if (Player_CheckBossHit(player, self)) {
-						
-                    RSDK.PlaySfx(HeavyMystic->sfxImpact, false, 255);
+                    if (self->animator.animationID == ANI_SKID_TURN
+                        && ((self->direction == FLIP_NONE && player->position.x > self->position.x)
+                            || (self->direction == FLIP_X && player->position.x < self->position.x))) {
+                        if (!Player_CheckMightyUnspin(player, 0x600, false, &player->uncurlTimer))
+                            Player_Hurt(player, self);
+                    }
+                    else
+#endif
+                        if (Player_CheckBossHit(player, self)) {
 
-                    self->velocity.x = player->position.x < self->position.x ? 0x20000 : -0x20000;
-                    self->velocity.y = -0x40000;
-                    RSDK.SetSpriteAnimation(HeavyMystic->roguesFrames, 15, &self->animator, true, 0);
-                    self->state = HeavyMystic_StateBoss_RogueHit;
+                        RSDK.PlaySfx(HeavyMystic->sfxImpact, false, 255);
+
+                        self->velocity.x = player->position.x < self->position.x ? 0x20000 : -0x20000;
+                        self->velocity.y = -0x40000;
+                        RSDK.SetSpriteAnimation(HeavyMystic->roguesFrames, 15, &self->animator, true, 0);
+                        self->state = HeavyMystic_StateBoss_RogueHit;
+                    }
                 }
             }
         }
@@ -341,15 +345,17 @@ void HeavyMystic_CheckPlayerCollisions_Bean(void)
         if (self->invincibilityTimer > 0)
             self->invincibilityTimer--;
 
-        foreach_active(Player, player)
-        {
-            if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self)) {
-                RSDK.PlaySfx(HeavyMystic->sfxImpact, false, 255);
+{
+            foreach_active(Player, player)
+            {
+                if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self)) {
+                    RSDK.PlaySfx(HeavyMystic->sfxImpact, false, 255);
 
-                self->velocity.x = player->position.x < self->position.x ? 0x20000 : -0x20000;
-                self->velocity.y = -0x40000;
-                RSDK.SetSpriteAnimation(HeavyMystic->roguesFrames, 9, &self->animator, true, 0);
-                self->state = HeavyMystic_StateBoss_RogueHit;
+                    self->velocity.x = player->position.x < self->position.x ? 0x20000 : -0x20000;
+                    self->velocity.y = -0x40000;
+                    RSDK.SetSpriteAnimation(HeavyMystic->roguesFrames, 9, &self->animator, true, 0);
+                    self->state = HeavyMystic_StateBoss_RogueHit;
+                }
             }
         }
     }
@@ -373,21 +379,23 @@ void HeavyMystic_Explode(void)
 
 void HeavyMystic_Scanline_Curtains(ScanlineInfo *scanlines)
 {
+    int32 i;
     int32 curtainPos = HeavyMystic->curtainLinePos;
     int32 moveY      = (0x1100000 - curtainPos) >> 6;
     int32 max        = MAX(curtainPos - 0x400000, 0x100000);
 
     int32 posY = (ScreenInfo->position.y + 207) << 16;
     if (curtainPos > max) {
+        int32 i;
         int32 scanlineID = HeavyMystic->curtainLinePos >> 16;
 
-        for (int32 i = 0; i < ((curtainPos - max - 1) >> 16) + 1; ++i) {
+        for (i = 0; i < ((curtainPos - max - 1) >> 16) + 1; ++i) {
             scanlines[scanlineID--].position.y = posY;
             posY -= moveY;
         }
     }
 
-    for (int32 i = HeavyMystic->curtainLinePos >> 16; i < 208; ++i) {
+    for (i = HeavyMystic->curtainLinePos >> 16; i < 208; ++i) {
         scanlines[i].position.y = 0x6200000;
     }
 }
@@ -447,7 +455,9 @@ void HeavyMystic_StateBoss_AwaitPlayer(void)
             self->state                                           = HeavyMystic_StateBoss_BeginShow;
             RSDK.GetTileLayer(Zone->fgLayer[1])->scanlineCallback = HeavyMystic_Scanline_Curtains;
 
-            foreach_active(MSZSpotlight, spotlight) { spotlight->state = MSZSpotlight_State_Appear; }
+{
+                foreach_active(MSZSpotlight, spotlight) { spotlight->state = MSZSpotlight_State_Appear; }
+            }
         }
     }
     else {
@@ -816,10 +826,12 @@ void HeavyMystic_StateBoss_AwaitBoxClosed(void)
         self->timer   = 0;
         self->visible = false;
 
-        foreach_active(HeavyMystic, boss)
-        {
-            if (boss->type == MYSTIC_BOX)
-                boss->state = HeavyMystic_StateBox_Transforming;
+{
+            foreach_active(HeavyMystic, boss)
+            {
+                if (boss->type == MYSTIC_BOX)
+                    boss->state = HeavyMystic_StateBox_Transforming;
+            }
         }
 
         self->state = HeavyMystic_StateBoss_Transforming;
@@ -1102,8 +1114,9 @@ void HeavyMystic_StateBoss_FangHop(void)
     }
 
     if (self->attackID && !(Zone->timer & 0x3F)) {
+        EntityHeavyMystic *cork;
         RSDK.PlaySfx(HeavyMystic->sfxPon, false, 255);
-        EntityHeavyMystic *cork = CREATE_ENTITY(HeavyMystic, INT_TO_VOID(MYSTIC_CORK), self->position.x, self->position.y - 0x40000);
+        cork = CREATE_ENTITY(HeavyMystic, INT_TO_VOID(MYSTIC_CORK), self->position.x, self->position.y - 0x40000);
         if (self->direction == FLIP_NONE) {
             cork->position.x += 0x180000;
             cork->velocity.x = 0x20000;
@@ -1285,10 +1298,11 @@ void HeavyMystic_StateBoss_BeanBomb1Throw(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (self->attackID == 1 && self->animator.frameID == 3) {
+        EntityHeavyMystic *bomb;
         self->attackID = 2;
         RSDK.PlaySfx(HeavyMystic->sfxDrop, false, 255);
 
-        EntityHeavyMystic *bomb = CREATE_ENTITY(HeavyMystic, INT_TO_VOID(MYSTIC_BOMB), self->position.x, self->position.y + 0x130000);
+        bomb = CREATE_ENTITY(HeavyMystic, INT_TO_VOID(MYSTIC_BOMB), self->position.x, self->position.y + 0x130000);
         if (self->direction) {
             bomb->position.x += 0xB0000;
             bomb->velocity.x = -0x40000;
@@ -1318,10 +1332,11 @@ void HeavyMystic_StateBoss_BeanBomb2Throw(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (self->attackID == 1 && self->animator.frameID == 2) {
+        EntityHeavyMystic *bomb;
         self->attackID = 2;
         RSDK.PlaySfx(HeavyMystic->sfxDrop, false, 255);
 
-        EntityHeavyMystic *bomb = CREATE_ENTITY(HeavyMystic, INT_TO_VOID(MYSTIC_BOMB), self->position.x, self->position.y - 0x130000);
+        bomb = CREATE_ENTITY(HeavyMystic, INT_TO_VOID(MYSTIC_BOMB), self->position.x, self->position.y - 0x130000);
         if (self->direction) {
             bomb->position.x += 0xB0000;
             bomb->velocity.x = -0x40000;
@@ -1396,20 +1411,23 @@ void HeavyMystic_StateCork_Fired(void)
 
     self->position.x += self->velocity.x;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (Player_CheckMightyShellHit(player, self, -0x300, -0x400))
-                self->state = HeavyMystic_StateCork_MightyRebound;
-            else
+                if (Player_CheckMightyShellHit(player, self, -0x300, -0x400))
+                    self->state = HeavyMystic_StateCork_MightyRebound;
+                else
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
 
-            RSDK.PlaySfx(HeavyMystic->sfxExplosion, false, 255);
-            CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1] + 2;
-            destroyEntity(self);
-            foreach_break;
+                RSDK.PlaySfx(HeavyMystic->sfxExplosion, false, 255);
+                CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y)->drawGroup =
+                    Zone->objectDrawGroup[1] + 2;
+                destroyEntity(self);
+                foreach_break;
+            }
         }
     }
 
@@ -1445,17 +1463,20 @@ void HeavyMystic_State_Bomb(void)
     self->position.y += self->velocity.y;
     self->velocity.y += 0x3800;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x300, false, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x300, false, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
-            RSDK.PlaySfx(HeavyMystic->sfxExplosion, false, 255);
-            CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1] + 2;
-            destroyEntity(self);
-            foreach_break;
+                    Player_Hurt(player, self);
+                RSDK.PlaySfx(HeavyMystic->sfxExplosion, false, 255);
+                CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y)->drawGroup =
+                    Zone->objectDrawGroup[1] + 2;
+                destroyEntity(self);
+                foreach_break;
+            }
         }
     }
 
@@ -1472,13 +1493,15 @@ void HeavyMystic_State_BarkDebris(void)
     self->position.y += self->velocity.y;
     self->velocity.y += 0x1800;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x300, false, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x300, false, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 
@@ -1538,9 +1561,10 @@ void HeavyMystic_StateBox_Transforming(void)
     RSDK_THIS(HeavyMystic);
 
     if (!(Zone->timer & 7)) {
+        int32 x, y;
         RSDK.PlaySfx(HeavyMystic->sfxMagicBox, false, 255);
-        int32 x                                                                 = self->position.x + (RSDK.Rand(-24, 25) << 16);
-        int32 y                                                                 = self->position.y + (RSDK.Rand(-24, 25) << 16);
+        x                                                                 = self->position.x + (RSDK.Rand(-24, 25) << 16);
+        y                                                                 = self->position.y + (RSDK.Rand(-24, 25) << 16);
         CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), x, y)->drawGroup = Zone->objectDrawGroup[1] + 2;
     }
 
@@ -1578,11 +1602,12 @@ void HeavyMystic_StateBox_Dropping(void)
     self->velocity.y += 0x2800;
 
     if (RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0x280000, true)) {
+        EntityDebris *debris;
         Camera_ShakeScreen(0, 0, 6);
         RSDK.PlaySfx(HeavyMystic->sfxImpact2, false, 255);
         RSDK.PlaySfx(HeavyMystic->sfxExplosion, false, 255);
 
-        EntityDebris *debris    = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
+        debris    = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
         debris->drawGroup       = Zone->objectDrawGroup[0];
         debris->drawFX          = FX_FLIP;
         debris->direction       = FLIP_NONE;
@@ -1662,11 +1687,11 @@ void HeavyMystic_Draw_BoxOpened(void)
     RSDK_THIS(HeavyMystic);
 
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
+        Vector2 drawPos;
         self->drawFX           = FX_NONE;
         self->animator.frameID = 0;
         RSDK.DrawSprite(&self->animator, NULL, false);
 
-        Vector2 drawPos;
         drawPos.x              = self->position.x - 0x280000;
         drawPos.y              = self->position.y;
         self->animator.frameID = self->timer;

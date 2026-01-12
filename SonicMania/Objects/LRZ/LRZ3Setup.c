@@ -23,7 +23,7 @@ void LRZ3Setup_StageLoad(void)
 {
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreLRZ3.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreLRZ3.act", 0xFF);
         RSDK.CopyPalette(0, 240, 1, 240, 16);
     }
 #endif

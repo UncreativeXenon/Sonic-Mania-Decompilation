@@ -25,9 +25,9 @@ void TimePost_Draw(void)
     RSDK_THIS(TimePost);
 
     if (self->state) {
+        Vector2 sidePos, faceplatePos;
         self->drawFX = FX_SCALE;
 
-        Vector2 sidePos, faceplatePos;
         switch (self->rotation >> 7) {
             case 0:
             case 2:
@@ -128,6 +128,7 @@ void TimePost_CheckPlayerCollisions(void)
     {
         if ((!RSDK.GetEntitySlot(player) || globals->gameMode == MODE_COMPETITION) && !((1 << playerID) & self->activePlayers)
             && player->position.x > self->position.x) {
+            int32 vel;
             RSDK.PlaySfx(TimePost->sfxFuture, false, 255);
 
             self->active = ACTIVE_NORMAL;
@@ -136,7 +137,7 @@ void TimePost_CheckPlayerCollisions(void)
 
             // Lol this was prolly copied from Global/SignPost, there's no reason for this obj to use YVelocity and the methods are the same as they
             // are there
-            int32 vel              = player->onGround ? player->groundVel : player->velocity.x;
+            vel              = player->onGround ? player->groundVel : player->velocity.x;
             self->velocity.y       = -(vel >> 1);
             self->gravityStrength  = vel / 96;
             SceneInfo->timeEnabled = false;

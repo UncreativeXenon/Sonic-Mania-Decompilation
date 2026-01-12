@@ -86,12 +86,14 @@ void TubeSpring_State_Pullback(void)
 
 bool32 TubeSpring_HandleInteractions(bool32 setState)
 {
+    int32 i;
+    bool32 sprung;
     RSDK_THIS(TubeSpring);
 
     Spring_State_Vertical();
 
-    bool32 sprung = false;
-    for (int32 i = 0; i < Player->playerCount; i++) {
+    sprung = false;
+    for (i = 0; i < Player->playerCount; i++) {
         EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
 
         if (Player_CheckValidState(player)) {

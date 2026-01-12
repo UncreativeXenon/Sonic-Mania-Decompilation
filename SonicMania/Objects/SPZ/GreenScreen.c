@@ -75,6 +75,7 @@ void GreenScreen_StageLoad(void)
 
 void GreenScreen_DrawBG(int32 x, int32 y, uint8 bgID, int32 parallaxFactor)
 {
+    int32 sizeX;
     RSDK_THIS(GreenScreen);
     Vector2 drawPos;
 
@@ -85,7 +86,7 @@ void GreenScreen_DrawBG(int32 x, int32 y, uint8 bgID, int32 parallaxFactor)
     drawPos.y += (self->paraYFactor * (-y / 128));
     drawPos.x += (GreenScreen->hitbox.left << 16) + paraX;
 
-    int32 sizeX = self->position.x + (GreenScreen->hitbox.right << 16);
+    sizeX = self->position.x + (GreenScreen->hitbox.right << 16);
     RSDK.SetSpriteAnimation(GreenScreen->aniFrames, 1, &self->animator, true, bgID);
     while (drawPos.x < sizeX) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
@@ -95,6 +96,7 @@ void GreenScreen_DrawBG(int32 x, int32 y, uint8 bgID, int32 parallaxFactor)
 
 void GreenScreen_DrawBackgrounds(void)
 {
+    int32 bgID;
     RSDK_THIS(GreenScreen);
 
     int32 clipX1 = 0, clipY1 = 0, clipX2 = 0, clipY2 = 0;
@@ -109,7 +111,7 @@ void GreenScreen_DrawBackgrounds(void)
                            (self->position.y >> 16) + GreenScreen->hitbox.bottom - ScreenInfo->position.y);
     }
 
-    for (int32 bgID = 0; bgID < 5; ++bgID) {
+    for (bgID = 0; bgID < 5; ++bgID) {
         GreenScreen_DrawBG(self->position.x - self->startPos.x + self->paraOffset.x, self->position.y - self->startPos.y + self->paraOffset.y, bgID,
                            GreenScreen->parallaxFactor[bgID]);
     }

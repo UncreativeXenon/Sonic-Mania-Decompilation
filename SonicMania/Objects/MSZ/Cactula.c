@@ -138,6 +138,7 @@ void Cactula_State_Rising(void)
 
 void Cactula_State_DropBomb(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Cactula);
 
     RSDK.ProcessAnimation(&self->propellerAnimator);
@@ -145,11 +146,12 @@ void Cactula_State_DropBomb(void)
     self->velocity.y += 0x100;
     self->position.y += self->velocity.y;
 
-    EntityPlayer *player = Player_GetNearestPlayerX();
+    player = Player_GetNearestPlayerX();
     if (RSDK.CheckOnScreen(self, NULL) || self->position.y <= player->position.y) {
         if (!self->droppedBomb && abs(self->position.x - player->position.x) < 0x100000) {
+            EntityProjectile *projectile;
             RSDK.PlaySfx(Cactula->sfxCactDrop, false, 255);
-            EntityProjectile *projectile = CREATE_ENTITY(Projectile, Projectile_State_MoveGravity, self->position.x, self->position.y);
+            projectile = CREATE_ENTITY(Projectile, Projectile_State_MoveGravity, self->position.x, self->position.y);
             projectile->gravityStrength  = 0x3800;
             projectile->drawGroup        = Zone->objectDrawGroup[0];
             projectile->hitbox.left      = -6;

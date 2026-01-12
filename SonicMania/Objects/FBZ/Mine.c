@@ -38,13 +38,15 @@ void Mine_Update(void)
             {
                 if (missile->type == FBZMISSILE_HULL
                     && RSDK.CheckObjectCollisionTouchBox(missile, &FBZMissile->hitboxHull, self, &FBZMissile->hitboxMissileV)) {
+                    int32 x;
+                    int32 y;        
                     if (--missile->timer <= 0) {
                         destroyEntity(missile);
                         RSDK.PlaySfx(Player->sfxRelease, false, 255);
                     }
 
-                    int32 x                                                                    = self->position.x;
-                    int32 y                                                                    = self->position.y + 0x30000;
+                    x                                                                    = self->position.x;
+                    y                                                                    = self->position.y + 0x30000;
                     CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), x, y)->drawGroup = Zone->objectDrawGroup[1];
                     RSDK.PlaySfx(FBZMissile->sfxExplosion, false, 255);
                     destroyEntity(self);
@@ -52,15 +54,17 @@ void Mine_Update(void)
                 }
             }
 
-            foreach_active(Player, player)
             {
-                if (Player_CheckCollisionTouch(player, self, &Mine->hitboxMine)) {
+                foreach_active(Player, player)
+                {
+                    if (Player_CheckCollisionTouch(player, self, &Mine->hitboxMine)) {
 #if MANIA_USE_PLUS
-                    if (Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
-                        player->onGround = false;
-                    else
+                        if (Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
+                            player->onGround = false;
+                        else
 #endif
-                        Player_Hurt(player, self);
+                            Player_Hurt(player, self);
+                    }
                 }
             }
 

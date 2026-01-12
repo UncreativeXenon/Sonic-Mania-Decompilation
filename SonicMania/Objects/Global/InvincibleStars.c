@@ -15,17 +15,19 @@ void InvincibleStars_Update(void)
 
     EntityPlayer *player = self->player;
     if (player) {
+        int32 i;
+        Hitbox *playerHitbox;
         self->starFrame[0] = (self->starAngle[0] + 1) % 12;
         self->starFrame[1] = (self->starAngle[1] + 1) % 10;
 
-        for (int32 i = 8 - 1; i > 0; --i) {
+        for (i = 8 - 1; i > 0; --i) {
             self->starPos[i].x = self->starPos[i - 1].x;
             self->starPos[i].y = self->starPos[i - 1].y;
         }
         self->starPos[0].x = player->position.x;
         self->starPos[0].y = player->position.y;
 
-        Hitbox *playerHitbox = Player_GetHitbox(player);
+        playerHitbox = Player_GetHitbox(player);
         if (player->direction & FLIP_X)
             self->starPos[0].x += (playerHitbox->left << 15) - (playerHitbox->right << 15) - (playerHitbox->left << 16);
         else
@@ -67,6 +69,7 @@ void InvincibleStars_StaticUpdate(void) {}
 void InvincibleStars_Draw(void)
 {
     RSDK_THIS(InvincibleStars);
+    Vector2 drawPos;
 
     EntityPlayer *player = self->player;
     if (player) {
@@ -85,7 +88,6 @@ void InvincibleStars_Draw(void)
         }
     }
 
-    Vector2 drawPos;
     drawPos.x                     = (RSDK.Cos512(self->starAngle[1] + 0x74) << self->starOffset) + self->starPos[7].x;
     drawPos.y                     = (RSDK.Sin512(self->starAngle[1] + 0x74) << self->starOffset) + self->starPos[7].y;
     self->starAnimator[3].frameID = self->starFrame[0];
@@ -131,10 +133,11 @@ void InvincibleStars_Create(void *data)
     RSDK_THIS(InvincibleStars);
 
     if (!SceneInfo->inEditor) {
+        int32 i;
         self->active  = ACTIVE_NORMAL;
         self->visible = true;
         self->player  = (EntityPlayer *)data;
-        for (int32 i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             self->starPos[i].x = self->player->position.x;
             self->starPos[i].y = self->player->position.y;
         }

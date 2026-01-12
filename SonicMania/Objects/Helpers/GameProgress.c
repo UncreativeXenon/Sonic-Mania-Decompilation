@@ -9,24 +9,24 @@
 
 // clang-format off
 AchievementID achievementList[] = {
-    { .idPS4 = 0,  .idUnknown = 19, .id = "ACH_GOLD_MEDAL" },
-    { .idPS4 = 1,  .idUnknown = 20, .id = "ACH_SILVER_MEDAL" },
-    { .idPS4 = 2,  .idUnknown = 21, .id = "ACH_EMERALDS" },
-    { .idPS4 = 3,  .idUnknown = 22, .id = "ACH_GAME_CLEARED" },
-    { .idPS4 = 4,  .idUnknown = 23, .id = "ACH_STARPOST" },
-    { .idPS4 = 5,  .idUnknown = 24, .id = "ACH_SIGNPOST" },
-    { .idPS4 = 6,  .idUnknown = 25, .id = "ACH_GHZ" },
-    { .idPS4 = 7,  .idUnknown = 26, .id = "ACH_CPZ" },
-    { .idPS4 = 8,  .idUnknown = 27, .id = "ACH_SPZ" },
-    { .idPS4 = 9,  .idUnknown = 28, .id = "ACH_FBZ" },
-    { .idPS4 = 10, .idUnknown = 29, .id = "ACH_PGZ" },
-    { .idPS4 = 11, .idUnknown = 30, .id = "ACH_SSZ" },
-    { .idPS4 = 12, .idUnknown = 31, .id = "ACH_HCZ" },
-    { .idPS4 = 13, .idUnknown = 32, .id = "ACH_MSZ" },
-    { .idPS4 = 14, .idUnknown = 33, .id = "ACH_OOZ" },
-    { .idPS4 = 15, .idUnknown = 34, .id = "ACH_LRZ" },
-    { .idPS4 = 16, .idUnknown = 35, .id = "ACH_MMZ" },
-    { .idPS4 = 17, .idUnknown = 36, .id = "ACH_TMZ" },
+    { 0,  19, "ACH_GOLD_MEDAL" },
+    { 1,  20, "ACH_SILVER_MEDAL" },
+    { 2,  21, "ACH_EMERALDS" },
+    { 3,  22, "ACH_GAME_CLEARED" },
+    { 4,  23, "ACH_STARPOST" },
+    { 5,  24, "ACH_SIGNPOST" },
+    { 6,  25, "ACH_GHZ" },
+    { 7,  26, "ACH_CPZ" },
+    { 8,  27, "ACH_SPZ" },
+    { 9,  28, "ACH_FBZ" },
+    { 10, 29, "ACH_PGZ" },
+    { 11, 30, "ACH_SSZ" },
+    { 12, 31, "ACH_HCZ" },
+    { 13, 32, "ACH_MSZ" },
+    { 14, 33, "ACH_OOZ" },
+    { 15, 34, "ACH_LRZ" },
+    { 16, 35, "ACH_MMZ" },
+    { 17, 36, "ACH_TMZ" },
 };
 // clang-format on
 
@@ -78,6 +78,7 @@ void GameProgress_ShuffleBSSID(void)
     int32 startID = globals->blueSpheresID;
     if (progress) {
         while (true) {
+            bool32 rotatedBSS;
             if (globals->blueSpheresInit) {
                 ++globals->blueSpheresID;
                 globals->blueSpheresID %= GAMEPROGRESS_MEDAL_COUNT;
@@ -90,7 +91,7 @@ void GameProgress_ShuffleBSSID(void)
             if (progress->goldMedalCount >= GAMEPROGRESS_MEDAL_COUNT)
                 break;
 
-            bool32 rotatedBSS = false;
+            rotatedBSS = false;
             if (progress->silverMedalCount < GAMEPROGRESS_MEDAL_COUNT)
                 rotatedBSS = progress->medals[globals->blueSpheresID] == 0;
             else
@@ -131,11 +132,18 @@ bool32 GameProgress_GetZoneUnlocked(int32 zoneID)
 
 float GameProgress_GetCompletionPercent(ProgressRAM *progress)
 {
+    int32 i;
+
+    float zonePercent;
+    float medalPercent;
+    float specialPercent;
+    float endingPercent;
+
     int32 completeZones  = 0;
     int32 medalsGotten   = 0;
     int32 emeraldsGotten = 0;
 
-    for (int32 i = 0; i < GAMEPROGRESS_MEDAL_COUNT; ++i) {
+    for (i = 0; i < GAMEPROGRESS_MEDAL_COUNT; ++i) {
         if (i < GAMEPROGRESS_EMERALD_COUNT)
             emeraldsGotten += progress->emeraldObtained[i] == 1;
 
@@ -149,10 +157,11 @@ float GameProgress_GetCompletionPercent(ProgressRAM *progress)
     // then multiply by its completion weight (in this case zones are worth 55% of completion percent)
     // then finally divide by the maximum count to normalize it
 
-    float zonePercent    = ((MIN(completeZones, GAMEPROGRESS_ZONE_COUNT) * 0.55) / (float)GAMEPROGRESS_ZONE_COUNT);
-    float medalPercent   = ((MIN(medalsGotten, GAMEPROGRESS_MEDAL_COUNT * 2) * 0.35) / (float)(GAMEPROGRESS_MEDAL_COUNT * 2));
-    float specialPercent = ((MIN(emeraldsGotten, GAMEPROGRESS_EMERALD_COUNT) * 0.05) / (float)GAMEPROGRESS_EMERALD_COUNT);
-    float endingPercent  = ((MIN(progress->unlockedEndingID, GAMEPROGRESS_ENDING_GOOD) * 0.05) / (float)GAMEPROGRESS_ENDING_GOOD);
+    zonePercent    = ((MIN(completeZones, GAMEPROGRESS_ZONE_COUNT) * 0.55) / (float)GAMEPROGRESS_ZONE_COUNT);
+    medalPercent   = ((MIN(medalsGotten, GAMEPROGRESS_MEDAL_COUNT * 2) * 0.35) / (float)(GAMEPROGRESS_MEDAL_COUNT * 2));
+    specialPercent = ((MIN(emeraldsGotten, GAMEPROGRESS_EMERALD_COUNT) * 0.05) / (float)GAMEPROGRESS_EMERALD_COUNT);
+    endingPercent  = ((MIN(progress->unlockedEndingID, GAMEPROGRESS_ENDING_GOOD) * 0.05) / (float)GAMEPROGRESS_ENDING_GOOD);
+
     return zonePercent + medalPercent + specialPercent + endingPercent;
 }
 
@@ -194,12 +203,13 @@ void GameProgress_TrackGameProgress(void (*callback)(void))
 }
 void GameProgress_ClearBSSSave(void)
 {
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to clear BSS before loading SaveGame file");
         return;
     }
 
-    ProgressRAM *progress      = GameProgress_GetProgressRAM();
+    progress      = GameProgress_GetProgressRAM();
     progress->allGoldMedals    = false;
     progress->allSilverMedals  = false;
     progress->goldMedalCount   = 0;
@@ -208,12 +218,14 @@ void GameProgress_ClearBSSSave(void)
 }
 void GameProgress_UnlockAll(void)
 {
+    int32 m;
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to unlock all before loading SaveGame file");
         return;
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
+    progress = GameProgress_GetProgressRAM();
 
     progress->allSpecialCleared   = true;
     progress->allEmeraldsObtained = true;
@@ -223,7 +235,7 @@ void GameProgress_UnlockAll(void)
     progress->allGoldMedals       = true;
     progress->allSilverMedals     = true;
 
-    for (int32 m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
+    for (m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
         if (m < GAMEPROGRESS_EMERALD_COUNT)
             progress->emeraldObtained[m] = true;
 
@@ -247,12 +259,14 @@ void GameProgress_LockAllSpecialClear(void)
 
 void GameProgress_ClearProgress(void)
 {
+    int32 m;
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to clear all before loading SaveGame file");
         return;
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
+    progress = GameProgress_GetProgressRAM();
 
     progress->allSpecialCleared   = false;
     progress->allEmeraldsObtained = false;
@@ -262,7 +276,7 @@ void GameProgress_ClearProgress(void)
     progress->allGoldMedals       = false;
     progress->allSilverMedals     = false;
 
-    for (int32 m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
+    for (m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
         if (m < GAMEPROGRESS_EMERALD_COUNT)
             progress->emeraldObtained[m] = false;
 
@@ -287,8 +301,9 @@ void GameProgress_MarkZoneCompleted(int32 zoneID)
     }
 
     if (zoneID > ZONE_INVALID) {
+        int32 z;
         ProgressRAM *progress = GameProgress_GetProgressRAM();
-        for (int32 z = 0; z <= zoneID; ++z) {
+        for (z = 0; z <= zoneID; ++z) {
             if (!progress->zoneCleared[z]) {
                 LogHelpers_Print("PROGRESS Cleared zone %d", z);
                 progress->zoneCleared[z] = true;
@@ -299,14 +314,16 @@ void GameProgress_MarkZoneCompleted(int32 zoneID)
 
 bool32 GameProgress_CheckZoneClear(void)
 {
+    int32 z;
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to check zone clear before loading SaveGame file");
         return false;
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
+    progress = GameProgress_GetProgressRAM();
 
-    for (int32 z = 0; z < GAMEPROGRESS_ZONE_COUNT; ++z) {
+    for (z = 0; z < GAMEPROGRESS_ZONE_COUNT; ++z) {
         if (!progress->zoneCleared[z]) {
             GameProgress_MarkZoneCompleted(z);
             return true;
@@ -318,16 +335,19 @@ bool32 GameProgress_CheckZoneClear(void)
 
 void GameProgress_GiveEmerald(int32 emeraldID)
 {
+    bool32 allEmeralds;
+    int32 i;
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to get emerald before loading SaveGame file");
         return;
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
+    progress = GameProgress_GetProgressRAM();
 
     progress->emeraldObtained[emeraldID] = true;
-    bool32 allEmeralds                   = true;
-    for (int32 i = 0; i < GAMEPROGRESS_EMERALD_COUNT; ++i) {
+    allEmeralds                   = true;
+    for (i = 0; i < GAMEPROGRESS_EMERALD_COUNT; ++i) {
         allEmeralds = allEmeralds && progress->emeraldObtained[i];
     }
 
@@ -337,15 +357,19 @@ void GameProgress_GiveEmerald(int32 emeraldID)
 
 void GameProgress_GiveMedal(uint8 medalID, uint8 type)
 {
+    ProgressRAM *progress;
+    int32 goldCount;
+    int32 silverCount;
+    int32 m;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to get medallion before loading SaveGame file");
         return;
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
-    int32 goldCount       = 0;
-    int32 silverCount     = 0;
-    for (int32 m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
+    progress = GameProgress_GetProgressRAM();
+    goldCount       = 0;
+    silverCount     = 0;
+    for (m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
         if (m == medalID && type > progress->medals[m])
             progress->medals[m] = type;
 
@@ -372,28 +396,33 @@ void GameProgress_GiveMedal(uint8 medalID, uint8 type)
 
 void GameProgress_GiveEnding(uint8 ending)
 {
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to get game ending before loading SaveGame file");
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
+    progress = GameProgress_GetProgressRAM();
     if (ending > progress->unlockedEndingID)
         progress->unlockedEndingID = ending;
 }
 
 void GameProgress_PrintSaveProgress(void)
 {
+    int32 e;
+    int32 z;
+    int32 m;
+    ProgressRAM *progress;
     if (SceneInfo->inEditor || API_GetNoSave() || globals->saveLoaded != STATUS_OK) {
         LogHelpers_Print("WARNING GameProgress Attempted to dump before loading SaveGame file");
         return;
     }
 
-    ProgressRAM *progress = GameProgress_GetProgressRAM();
+    progress = GameProgress_GetProgressRAM();
 
     LogHelpers_Print("=========================");
     LogHelpers_Print("Game Progress:\n");
 
-    for (int32 e = 0; e < GAMEPROGRESS_EMERALD_COUNT; ++e) {
+    for (e = 0; e < GAMEPROGRESS_EMERALD_COUNT; ++e) {
         if (progress->emeraldObtained[e])
             LogHelpers_Print("Emerald %d => TRUE", e);
         else
@@ -405,7 +434,7 @@ void GameProgress_PrintSaveProgress(void)
     else
         LogHelpers_Print("YOU'VE NOT ENOUGH EMERALDS!\n");
 
-    for (int32 z = 0; z < GAMEPROGRESS_ZONE_COUNT; ++z) {
+    for (z = 0; z < GAMEPROGRESS_ZONE_COUNT; ++z) {
         if (progress->zoneCleared[z])
             LogHelpers_Print("Zone %d clear => TRUE", z);
         else
@@ -421,7 +450,7 @@ void GameProgress_PrintSaveProgress(void)
         case GAMEPROGRESS_ENDING_GOOD: LogHelpers_Print("GOOD ENDING!\n"); break;
     }
 
-    for (int32 m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
+    for (m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
         switch (progress->medals[m]) {
             default:
             case GAMEPROGRESS_MEDAL_GOLD: LogHelpers_Print("Medallion %d => GOLD", m); break;
@@ -449,9 +478,10 @@ int32 GameProgress_CountUnreadNotifs(void)
         return 0;
     }
     else {
+        int32 i;
         int32 unreadCount     = 0;
         ProgressRAM *progress = GameProgress_GetProgressRAM();
-        for (int32 i = 0; i < GAMEPROGRESS_UNLOCK_COUNT; ++i) {
+        for (i = 0; i < GAMEPROGRESS_UNLOCK_COUNT; ++i) {
             bool32 unlocked = progress->unreadNotifs[i];
             bool32 notif    = GameProgress_CheckUnlock(i);
 
@@ -469,8 +499,9 @@ int32 GameProgress_GetNextNotif(void)
         return -1;
     }
     else {
+        int32 i;
         ProgressRAM *progress = GameProgress_GetProgressRAM();
-        for (int32 i = 0; i < GAMEPROGRESS_UNLOCK_COUNT; ++i) {
+        for (i = 0; i < GAMEPROGRESS_UNLOCK_COUNT; ++i) {
             bool32 unlocked = progress->unreadNotifs[i];
             bool32 notif    = GameProgress_CheckUnlock(i);
 

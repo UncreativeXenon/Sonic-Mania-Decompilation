@@ -32,6 +32,7 @@ void Animals_Draw(void)
 
 void Animals_Create(void *data)
 {
+    int32 type; 
     RSDK_THIS(Animals);
 
     if (self->behaviour == ANIMAL_BEHAVE_FIXED)
@@ -45,7 +46,7 @@ void Animals_Create(void *data)
     self->updateRange.y = TO_FIXED(64);
     self->drawGroup     = Zone->objectDrawGroup[0];
 
-    int32 type = ANIMAL_POCKY;
+    type = ANIMAL_POCKY;
 #if MANIA_USE_PLUS
     if (!(globals->secrets & SECRET_RICKYMODE))
 #endif

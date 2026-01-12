@@ -70,6 +70,7 @@ void Hatch_Create(void *data)
 
     self->drawFX = FX_FLIP;
     if (!SceneInfo->inEditor) {
+        EntityWarpDoor *warpDoor;
         self->active    = ACTIVE_BOUNDS;
         self->drawGroup = Zone->objectDrawGroup[0] + 1;
 
@@ -85,7 +86,7 @@ void Hatch_Create(void *data)
         self->hitbox.bottom = (self->subOff2.y >> 12) - ((self->position.y >> 16) & 0xF) + 16;
         self->startPos      = self->position;
 
-        EntityWarpDoor *warpDoor = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, WarpDoor);
+        warpDoor = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, WarpDoor);
         if (warpDoor->classID == WarpDoor->classID) {
             self->hitboxWarpDoor    = warpDoor->hitbox;
             warpDoor->hitbox.left   = 0;
@@ -176,60 +177,63 @@ void Hatch_StageLoad(void)
 
 void Hatch_State_SubEntryHatch(void)
 {
+    int32 entered;
     RSDK_THIS(Hatch);
 
     RSDK.ProcessAnimation(&self->hatchAnimator);
 
-    int32 entered = 0;
-    foreach_all(Player, player)
+    entered = 0;
     {
-        // Bug Details:
-        // this does foreach_all, instead of foreach_active
-        // meaning that even killed players are included
-        // Fix:
-        // this entire block of code should have a Player_CheckValidState call to make sure the player isn't dead or some other "invalid" state
+        foreach_all(Player, player)
+        {
+            // Bug Details:
+            // this does foreach_all, instead of foreach_active
+            // meaning that even killed players are included
+            // Fix:
+            // this entire block of code should have a Player_CheckValidState call to make sure the player isn't dead or some other "invalid" state
 
-        // Extra notes: if you manage to die and fall into the hatch, you'll be brought back (sorta, this is because it changes your state from
-        // Player_State_Death to Player_State_Static) though the death state stuff will still be applied so you'll be on the highest layer (until its
-        // changed) and the player->active var will be set to ACTIVE_ALWAYS this means you can do really weird stuff such as move during the pause
-        // menu
+            // Extra notes: if you manage to die and fall into the hatch, you'll be brought back (sorta, this is because it changes your state from
+            // Player_State_Death to Player_State_Static) though the death state stuff will still be applied so you'll be on the highest layer (until
+            // its changed) and the player->active var will be set to ACTIVE_ALWAYS this means you can do really weird stuff such as move during the
+            // pause menu
 
-        if (Player_CheckCollisionBox(player, self, &Hatch->hitboxL) == C_TOP) {
-            entered = 1;
-        }
-        else if (Player_CheckCollisionBox(player, self, &Hatch->hitboxR) == C_TOP) {
-            entered = 1;
-        }
-        else if (Player_CheckCollisionBox(player, self, &Hatch->hitboxEntry) == C_TOP) {
-            if (player->onGround) {
-                if (!player->sidekick) {
-                    self->active            = ACTIVE_NORMAL;
-                    self->playerPtr         = player;
-                    player->velocity.x      = 0;
-                    player->velocity.y      = 0;
-                    player->groundVel       = 0;
-                    player->nextAirState    = StateMachine_None;
-                    player->nextGroundState = StateMachine_None;
-                    player->interaction     = false;
+            if (Player_CheckCollisionBox(player, self, &Hatch->hitboxL) == C_TOP) {
+                entered = 1;
+            }
+            else if (Player_CheckCollisionBox(player, self, &Hatch->hitboxR) == C_TOP) {
+                entered = 1;
+            }
+            else if (Player_CheckCollisionBox(player, self, &Hatch->hitboxEntry) == C_TOP) {
+                if (player->onGround) {
+                    if (!player->sidekick) {
+                        self->active            = ACTIVE_NORMAL;
+                        self->playerPtr         = player;
+                        player->velocity.x      = 0;
+                        player->velocity.y      = 0;
+                        player->groundVel       = 0;
+                        player->nextAirState    = StateMachine_None;
+                        player->nextGroundState = StateMachine_None;
+                        player->interaction     = false;
 
-                    if (player->animator.animationID != ANI_JUMP)
-                        RSDK.PlaySfx(Player->sfxRoll, false, 0xFF);
+                        if (player->animator.animationID != ANI_JUMP)
+                            RSDK.PlaySfx(Player->sfxRoll, false, 0xFF);
 
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                    player->state = Player_State_Static;
-                    RSDK.SetSpriteAnimation(Hatch->aniFrames, 2, &self->hatchAnimator, false, 0);
-                    self->state = Hatch_State_PlayerEntered;
-                    entered     = 2;
-                    foreach_break;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                        player->state = Player_State_Static;
+                        RSDK.SetSpriteAnimation(Hatch->aniFrames, 2, &self->hatchAnimator, false, 0);
+                        self->state = Hatch_State_PlayerEntered;
+                        entered     = 2;
+                        foreach_break;
+                    }
+                }
+                else {
+                    entered = 1;
                 }
             }
             else {
-                entered = 1;
+                if (Player_CheckCollisionTouch(player, self, &Hatch->hitboxRange))
+                    entered = 1;
             }
-        }
-        else {
-            if (Player_CheckCollisionTouch(player, self, &Hatch->hitboxRange))
-                entered = 1;
         }
     }
 
@@ -254,6 +258,7 @@ void Hatch_State_PlayerEntered(void)
     RSDK.ProcessAnimation(&self->hatchAnimator);
 
     if (self->hatchAnimator.frameID == 4) {
+        EntityZone *zone;
         EntityPlayer *player = self->playerPtr;
 
         self->visible          = false;
@@ -272,7 +277,7 @@ void Hatch_State_PlayerEntered(void)
         RSDK.PlaySfx(Hatch->sfxDescend, false, 0xFF);
         self->state = Hatch_State_Descend;
 
-        EntityZone *zone = RSDK_GET_ENTITY(SLOT_ZONE, Zone);
+        zone = RSDK_GET_ENTITY(SLOT_ZONE, Zone);
         zone->fadeColor  = 0;
         zone->timer      = 0;
         zone->drawGroup  = 15;
@@ -301,8 +306,9 @@ void Hatch_State_Descend(void)
             self->state = Hatch_State_MoveToDestPos;
         }
         else { // Uses the WarpDoor obj for transport
+            EntityWarpDoor *warpDoor;
             player->state            = Player_State_Air;
-            EntityWarpDoor *warpDoor = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, WarpDoor);
+            warpDoor = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, WarpDoor);
             if (warpDoor->classID == WarpDoor->classID) {
                 Zone->cameraBoundsB[RSDK.GetEntitySlot(player)] = 0x7FFF;
                 warpDoor->hitbox                                = self->hitboxWarpDoor;

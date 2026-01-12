@@ -230,7 +230,9 @@ void PBL_HUD_StateMessage_FlashThenCrane(void)
         self->stateDraw = PBL_HUD_Draw_Basic;
         self->drawFX    = FX_SCALE;
 
-        foreach_active(PBL_Crane, crane) { crane->state = PBL_Crane_State_CreatePrizes; }
+        {
+            foreach_active(PBL_Crane, crane) { crane->state = PBL_Crane_State_CreatePrizes; }
+        }
     }
     else {
         self->timer--;
@@ -251,12 +253,12 @@ void PBL_HUD_Draw_Basic(void)
 
 void PBL_HUD_Draw_Message(void)
 {
+    Vector2 position;
     RSDK_THIS(PBL_HUD);
 
     RSDK.DrawSprite(&self->displayAnimator, NULL, true);
     RSDK.DrawSprite(&self->baseAnimator, NULL, true);
 
-    Vector2 position;
     position.x = self->position.x + self->offset.x;
     position.y = self->position.y + self->offset.y;
 
@@ -269,6 +271,8 @@ void PBL_HUD_Draw_Message(void)
 
 void PBL_HUD_Draw_Score(void)
 {
+    Vector2 drawPos;
+    int32 div;
     RSDK_THIS(PBL_HUD);
 
     int32 score = PBL_Setup->score;
@@ -280,13 +284,12 @@ void PBL_HUD_Draw_Score(void)
         score /= 10;
     }
 
-    Vector2 drawPos;
     drawPos.x = self->position.x + 0x320000;
     drawPos.y = self->position.y;
     RSDK.DrawSprite(&self->displayAnimator, NULL, true);
     RSDK.DrawSprite(&self->baseAnimator, NULL, true);
 
-    int32 div = 10;
+    div = 10;
     while (count > 0) {
         self->textAnimator.frameID = PBL_Setup->score / mult % div;
         RSDK.DrawSprite(&self->textAnimator, &drawPos, true);
@@ -327,10 +330,12 @@ void PBL_HUD_State_HideCrane(void)
         self->state      = StateMachine_None;
         self->stateDraw  = PBL_HUD_Draw_Score;
 
-        foreach_all(PBL_Player, player)
         {
-            player->active     = ACTIVE_NORMAL;
-            player->velocity.y = 0;
+            foreach_all(PBL_Player, player)
+            {
+                player->active     = ACTIVE_NORMAL;
+                player->velocity.y = 0;
+            }
         }
     }
 }

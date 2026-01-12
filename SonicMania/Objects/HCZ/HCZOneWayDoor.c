@@ -167,6 +167,7 @@ void HCZOneWayDoor_SetupHitboxes(void)
 
 void HCZOneWayDoor_DrawSprites(void)
 {
+    int32 i;
     RSDK_THIS(HCZOneWayDoor);
 
     Vector2 drawPos = self->position;
@@ -181,7 +182,7 @@ void HCZOneWayDoor_DrawSprites(void)
         offsetX   = self->initialSize.x;
     }
 
-    for (int32 i = 0; i < self->length; ++i) {
+    for (i = 0; i < self->length; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += offsetX;
         drawPos.y += offsetY;

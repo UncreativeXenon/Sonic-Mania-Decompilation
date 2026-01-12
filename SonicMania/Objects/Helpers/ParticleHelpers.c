@@ -23,8 +23,10 @@ void ParticleHelpers_StageLoad(void) {}
 
 void ParticleHelpers_SetupFallingParticles(int32 x, int32 y, void (*callback)(EntityDebris *))
 {
-    int32 pos = x - 0x80000;
-    for (int32 i = 0; i < 5; ++i) {
+    int32 i;
+    int32 pos;
+    pos = x - 0x80000;
+    for (i = 0; i < 5; ++i) {
         int32 spawnX            = pos + (i << 18);
         EntityDebris *debris    = CREATE_ENTITY(Debris, Debris_State_Fall, spawnX, y);
         debris->drawGroup       = Zone->objectDrawGroup[1];

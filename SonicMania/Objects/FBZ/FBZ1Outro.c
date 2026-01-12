@@ -36,32 +36,38 @@ void FBZ1Outro_Create(void *data)
 
 void FBZ1Outro_StageLoad(void)
 {
-    foreach_all(BigSqueeze, boss)
     {
-        switch (boss->type) {
-            default: break;
+        foreach_all(BigSqueeze, boss)
+        {
+            switch (boss->type) {
+                default: break;
 
-            case BIGSQUEEZE_CRUSHER_L: FBZ1Outro->bossBorderL = boss; break;
-            case BIGSQUEEZE_CRUSHER_R: FBZ1Outro->bossBorderR = boss; break;
-            case BIGSQUEEZE_MANAGER: FBZ1Outro->bossManager = boss; break;
+                case BIGSQUEEZE_CRUSHER_L: FBZ1Outro->bossBorderL = boss; break;
+                case BIGSQUEEZE_CRUSHER_R: FBZ1Outro->bossBorderR = boss; break;
+                case BIGSQUEEZE_MANAGER: FBZ1Outro->bossManager = boss; break;
+            }
         }
     }
 
-    foreach_all(CollapsingPlatform, platform)
     {
-        if (platform->eventOnly) {
-            FBZ1Outro->collapsingPlatform = platform;
-            foreach_break;
+        foreach_all(CollapsingPlatform, platform)
+        {
+            if (platform->eventOnly) {
+                FBZ1Outro->collapsingPlatform = platform;
+                foreach_break;
+            }
         }
     }
 
-    foreach_all(Crane, crane)
     {
-        if (crane->position.x == 0x33400000 && crane->position.y == 0x9100000)
-            FBZ1Outro->craneP1 = crane;
+        foreach_all(Crane, crane)
+        {
+            if (crane->position.x == 0x33400000 && crane->position.y == 0x9100000)
+                FBZ1Outro->craneP1 = crane;
 
-        if (crane->position.x == 0x33640000 && crane->position.y == 0x9100000)
-            FBZ1Outro->craneP2 = crane;
+            if (crane->position.x == 0x33640000 && crane->position.y == 0x9100000)
+                FBZ1Outro->craneP2 = crane;
+        }
     }
 
     FBZ1Outro->sfxDrop = RSDK.GetSfx("Stage/Drop.wav");
@@ -81,58 +87,76 @@ void FBZ1Outro_StartCutscene(void)
 
 void FBZ1Outro_HandleTrash(void)
 {
-    foreach_active(FBZTrash, trash) { trash->velocity.y = 0; }
-    foreach_active(FBZSinkTrash, sinkTrash) { sinkTrash->velocity.y = 0; }
-
-    foreach_active(SignPost, signPost)
     {
-        signPost->velocity.x = 0;
-        signPost->velocity.y = 0;
-        signPost->position.y = BigSqueeze->boundsB - 0x180000;
+        foreach_active(FBZTrash, trash) { trash->velocity.y = 0; }
+    }
+    {
+        foreach_active(FBZSinkTrash, sinkTrash) { sinkTrash->velocity.y = 0; }
+    }
 
-        int32 boundsL = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L] + 0x180000;
-        int32 boundsR = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - 0x180000;
+    {
+        foreach_active(SignPost, signPost)
+        {
+            int32 boundsL;
+            int32 boundsR;
+            signPost->velocity.x = 0;
+            signPost->velocity.y = 0;
+            signPost->position.y = BigSqueeze->boundsB - 0x180000;
 
-        signPost->position.x = CLAMP(signPost->position.x, boundsL, boundsR);
+            boundsL = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L] + 0x180000;
+            boundsR = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - 0x180000;
+
+            signPost->position.x = CLAMP(signPost->position.x, boundsL, boundsR);
+        }
     }
 }
 
 void FBZ1Outro_DispenseTrash(void)
 {
-    foreach_active(FBZTrash, trash)
     {
-        trash->state = StateMachine_None;
-        trash->position.y += trash->velocity.y;
-        trash->velocity.y += 0x3800;
+        foreach_active(FBZTrash, trash)
+        {
+            trash->state = StateMachine_None;
+            trash->position.y += trash->velocity.y;
+            trash->velocity.y += 0x3800;
+        }
     }
 
-    foreach_active(FBZSinkTrash, sinkTrash)
     {
-        sinkTrash->position.y += sinkTrash->velocity.y;
-        sinkTrash->velocity.y += 0x3800;
-        sinkTrash->type = FBZSINKTRASH_DECOR;
+        foreach_active(FBZSinkTrash, sinkTrash)
+        {
+            sinkTrash->position.y += sinkTrash->velocity.y;
+            sinkTrash->velocity.y += 0x3800;
+            sinkTrash->type = FBZSINKTRASH_DECOR;
+        }
     }
 
-    foreach_active(SignPost, signPost)
     {
-        signPost->position.y += signPost->velocity.y;
-        signPost->velocity.y += 0x3800;
-        signPost->type = SIGNPOST_COMP;
+        foreach_active(SignPost, signPost)
+        {
+            signPost->position.y += signPost->velocity.y;
+            signPost->velocity.y += 0x3800;
+            signPost->type = SIGNPOST_COMP;
+        }
     }
 }
 
 bool32 FBZ1Outro_Cutscene_CrushTrash(EntityCutsceneSeq *host)
 {
+    EntityBigSqueeze *bossBorderL;
+    EntityBigSqueeze *bossBorderR;
+    EntityBigSqueeze *bossManager;
+    EntityCollapsingPlatform *platform;
     RSDK_THIS(FBZ1Outro);
 
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityBigSqueeze *bossBorderL = FBZ1Outro->bossBorderL;
-    EntityBigSqueeze *bossBorderR = FBZ1Outro->bossBorderR;
-    EntityBigSqueeze *bossManager = FBZ1Outro->bossManager;
+    bossBorderL = FBZ1Outro->bossBorderL;
+    bossBorderR = FBZ1Outro->bossBorderR;
+    bossManager = FBZ1Outro->bossManager;
 
-    EntityCollapsingPlatform *platform = FBZ1Outro->collapsingPlatform;
+    platform = FBZ1Outro->collapsingPlatform;
 
     if (!host->timer) {
         player1->stateInput = StateMachine_None;
@@ -201,19 +225,22 @@ bool32 FBZ1Outro_Cutscene_CrushTrash(EntityCutsceneSeq *host)
 }
 bool32 FBZ1Outro_Cutscene_TrashDrop(EntityCutsceneSeq *host)
 {
+    EntityBigSqueeze *bossBorderL;
+    EntityBigSqueeze *bossBorderR;
+    EntityCrane *craneP1;
     RSDK_THIS(FBZ1Outro);
 
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityBigSqueeze *bossBorderL = FBZ1Outro->bossBorderL;
-    EntityBigSqueeze *bossBorderR = FBZ1Outro->bossBorderR;
+    bossBorderL = FBZ1Outro->bossBorderL;
+    bossBorderR = FBZ1Outro->bossBorderR;
     bossBorderL->setupTimer       = 0;
     bossBorderL->state            = BigSqueeze_StateCrusher_BeginCrushing;
     bossBorderR->setupTimer       = 0;
     bossBorderR->state            = BigSqueeze_StateCrusher_BeginCrushing;
 
-    EntityCrane *craneP1 = FBZ1Outro->craneP1;
+    craneP1 = FBZ1Outro->craneP1;
     craneP1->position.x  = player1->position.x;
     if (craneP1->state == Crane_State_RiseUp) {
         craneP1->startPos.x = player1->position.x;
@@ -270,18 +297,23 @@ bool32 FBZ1Outro_Cutscene_PrepareFBZ2(EntityCutsceneSeq *host)
             camera->offset.x -= 0x10000;
     }
     else {
+        int32 i;
+        int32 id;
+        TileLayer *layer;
         Zone_StoreEntities(13780 << 16, 2660 << 16);
         RSDK.LoadScene();
 
-        int32 id         = 0;
-        TileLayer *layer = RSDK.GetTileLayer(1);
-        for (int32 i = 0; i < layer->scrollInfoCount; ++i) {
+        id         = 0;
+        layer = RSDK.GetTileLayer(1);
+        for (i = 0; i < layer->scrollInfoCount; ++i) {
             globals->parallaxOffset[id++] = layer->scrollInfo[i].scrollPos + layer->scrollInfo[i].parallaxFactor * ScreenInfo->position.x;
         }
 
-        foreach_all(ParallaxSprite, parallaxSprite)
         {
-            globals->parallaxOffset[id++] = parallaxSprite->scrollPos.x + parallaxSprite->parallaxFactor.x * ScreenInfo->position.x;
+            foreach_all(ParallaxSprite, parallaxSprite)
+            {
+                globals->parallaxOffset[id++] = parallaxSprite->scrollPos.x + parallaxSprite->parallaxFactor.x * ScreenInfo->position.x;
+            }
         }
 
         return true;

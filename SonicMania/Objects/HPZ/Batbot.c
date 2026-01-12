@@ -129,22 +129,25 @@ void Batbot_State_Init(void)
 
 void Batbot_State_Idle(void)
 {
+    bool32 spin;
     RSDK_THIS(Batbot);
 
     self->arcAngle   = (self->arcAngle + 8) & 0x1FF;
     self->position.y = (RSDK.Sin512(self->arcAngle) << 9) + self->originY;
-    bool32 spin      = false;
+    spin      = false;
 
-    foreach_active(Player, player)
     {
-        if (RSDK.CheckObjectCollisionTouchBox(player, &Batbot->hitboxPlayer, self, &Batbot->hitboxSpinCheck)) {
-            RSDK.SetSpriteAnimation(Batbot->aniFrames, 1, &self->bodyAnimator, false, 0);
-            spin = true;
-        }
+        foreach_active(Player, player)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(player, &Batbot->hitboxPlayer, self, &Batbot->hitboxSpinCheck)) {
+                RSDK.SetSpriteAnimation(Batbot->aniFrames, 1, &self->bodyAnimator, false, 0);
+                spin = true;
+            }
 
-        if (RSDK.CheckObjectCollisionTouchBox(player, &Batbot->hitboxPlayer, self, &Batbot->hitboxAttack)) {
-            self->playerPtr = player;
-            self->state     = Batbot_State_Attack;
+            if (RSDK.CheckObjectCollisionTouchBox(player, &Batbot->hitboxPlayer, self, &Batbot->hitboxAttack)) {
+                self->playerPtr = player;
+                self->state     = Batbot_State_Attack;
+            }
         }
     }
 

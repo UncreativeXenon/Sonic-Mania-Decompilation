@@ -137,13 +137,15 @@ void Octus_State_CheckPlayerInRange(void)
 
     RSDK.ProcessAnimation(&self->animator);
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &Octus->hitboxRange)) {
-            self->timer = 32;
-            RSDK.SetSpriteAnimation(Octus->aniFrames, 1, &self->animator, true, 0);
-            self->state = Octus_State_JumpDelay;
-            foreach_break;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Octus->hitboxRange)) {
+                self->timer = 32;
+                RSDK.SetSpriteAnimation(Octus->aniFrames, 1, &self->animator, true, 0);
+                self->state = Octus_State_JumpDelay;
+                foreach_break;
+            }
         }
     }
 
@@ -240,10 +242,12 @@ void Octus_State_Shot(void)
 
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->animator);
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Octus->hitboxProjectile))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Octus->hitboxProjectile))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
     else {

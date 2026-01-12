@@ -11,9 +11,10 @@ ObjectFunnel *Funnel;
 
 void Funnel_Update(void)
 {
+    int32 p;
     RSDK_THIS(Funnel);
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         if (!self->playerTimers[p]) {
             EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
 
@@ -25,9 +26,11 @@ void Funnel_Update(void)
                 }
                 else {
                     if (Player_CheckValidState(player) && player->state == Player_State_Static) {
+                        int32 distX;
                         if (player->sidekick == false && ++self->playerScoreTimer[p] >= 30) {
+                            EntityScoreBonus *bonus;
                             self->playerScoreTimer[p] = 0;
-                            EntityScoreBonus *bonus   = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y - 0x180000);
+                            bonus   = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y - 0x180000);
                             bonus->drawGroup          = Zone->objectDrawGroup[1];
                             bonus->animator.frameID   = 0;
                             Player_GiveScore(player, 100);
@@ -35,7 +38,7 @@ void Funnel_Update(void)
 
                         self->playerYVel[p] += 64 + (self->playerYVel[p] >> 8);
 
-                        int32 distX = MAX(((self->position.y - player->position.y) >> 8) - 0xA00, 0x400);
+                        distX = MAX(((self->position.y - player->position.y) >> 8) - 0xA00, 0x400);
 
                         player->position.x = distX * RSDK.Cos256(self->playerAngle[p]) + self->position.x;
                         self->playerAngle[p] -= self->playerXVel[p] >> 16;
@@ -101,14 +104,16 @@ void Funnel_Update(void)
             }
             else {
                 if (Player_CheckValidState(player) && Player_CheckCollisionTouch(player, self, &Funnel->hitboxFunnel)) {
-
+                    int32 distX;
                     int32 dy    = 0;
                     int32 distY = (self->position.y - player->position.y) >> 16;
                     if (distY - 10 >= 0)
                         dy = distY - 10;
 
-                    int32 distX = abs(player->position.x - self->position.x) >> 16;
+                    distX = abs(player->position.x - self->position.x) >> 16;
                     if ((distX <= dy && player->position.y < self->position.y) || (player->position.y < self->position.y - 0x280000 && distX <= 64)) {
+                        int32 x;
+                        int32 y;
                         if (player->camera) {
                             player->scrollDelay = 0;
                             Camera_SetupLerp(CAMERA_LERP_SIN1024_2, p, self->position.x, self->position.y - 0x400000, 8);
@@ -125,8 +130,8 @@ void Funnel_Update(void)
 
                         self->playerXVel[p] = CLAMP(player->velocity.x, -0x100000, 0x100000);
 
-                        int32 x = ((player->position.x - self->position.x) >> 16) * ((player->position.x - self->position.x) >> 16);
-                        int32 y = dy * dy - x;
+                        x = ((player->position.x - self->position.x) >> 16) * ((player->position.x - self->position.x) >> 16);
+                        y = dy * dy - x;
                         if (player->position.x < self->position.x)
                             x = -x;
 

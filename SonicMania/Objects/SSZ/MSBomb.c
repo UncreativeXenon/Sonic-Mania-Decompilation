@@ -98,6 +98,7 @@ void MSBomb_State_SilverSonicExplode(void)
     self->velocity.y += 0x3800;
 
     if (self->scale.x >= 0x200) {
+        EntityMSBomb *bomb;
         int32 yVel = 0x18000;
         int32 xVel = 0x30000;
 
@@ -107,7 +108,7 @@ void MSBomb_State_SilverSonicExplode(void)
             yVel = abs(self->position.y - metal->position.y) >> 6;
         }
 
-        EntityMSBomb *bomb = CREATE_ENTITY(MSBomb, INT_TO_VOID(true), self->position.x, self->position.y);
+        bomb = CREATE_ENTITY(MSBomb, INT_TO_VOID(true), self->position.x, self->position.y);
         bomb->velocity.x   = -xVel;
         bomb->velocity.y   = -yVel;
 
@@ -184,26 +185,30 @@ void MSBomb_State_Projectile(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
-            Player_Hurt(player, self);
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+                Player_Hurt(player, self);
+            }
         }
     }
 
-    foreach_active(MetalSonic, metal)
-    {
-        if (RSDK.CheckObjectCollisionTouchBox(metal, metal->outerBox, self, &self->hitbox)) {
-            MetalSonic->invincibilityTimerPanel = 16;
+{
+        foreach_active(MetalSonic, metal)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(metal, metal->outerBox, self, &self->hitbox)) {
+                MetalSonic->invincibilityTimerPanel = 16;
 
-            if (--metal->health <= 0) {
-                metal->timer = 0;
-                metal->state = MetalSonic_State_PanelExplosion;
+                if (--metal->health <= 0) {
+                    metal->timer = 0;
+                    metal->state = MetalSonic_State_PanelExplosion;
+                }
+
+                RSDK.PlaySfx(MetalSonic->sfxHit, false, 255);
+                destroyEntity(self);
+                foreach_break;
             }
-
-            RSDK.PlaySfx(MetalSonic->sfxHit, false, 255);
-            destroyEntity(self);
-            foreach_break;
         }
     }
 

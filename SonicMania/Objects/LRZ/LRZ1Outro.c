@@ -34,6 +34,7 @@ void LRZ1Outro_StageLoad(void) {}
 
 void LRZ1Outro_StartCutscene(void)
 {
+    int32 i;
     RSDK_THIS(LRZ1Outro);
 
     if (Zone->actID) {
@@ -49,23 +50,26 @@ void LRZ1Outro_StartCutscene(void)
     CutsceneSeq_SetSkipType(SKIPTYPE_RELOADSCN);
 #endif
 
-    for (int32 i = 0; i < 0x100; ++i) RSDK.SetPaletteEntry(5, i, 0x000000);
+    for (i = 0; i < 0x100; ++i) RSDK.SetPaletteEntry(5, i, 0x000000);
 }
 
 bool32 LRZ1Outro_CutsceneAct1_SetupActors(EntityCutsceneSeq *host)
 {
+    int32 p;
+    Vector2 size;
     CutsceneSeq_LockAllPlayerControl();
 
-    foreach_active(Player, player)
     {
-        player->state      = Player_State_Ground;
-        player->stateInput = StateMachine_None;
+        foreach_active(Player, player)
+        {
+            player->state      = Player_State_Ground;
+            player->stateInput = StateMachine_None;
+        }
     }
 
-    Vector2 size;
     RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
 
-    for (int32 p = 0; p < Player->playerCount; ++p) Zone->cameraBoundsR[p] = size.x;
+    for (p = 0; p < Player->playerCount; ++p) Zone->cameraBoundsR[p] = size.x;
 
     return true;
 }
@@ -92,7 +96,9 @@ bool32 LRZ1Outro_CutsceneAct2_SetupActors(EntityCutsceneSeq *host)
         }
     }
 
-    foreach_all(DashLift, lift) { self->lift = lift; }
+    {
+        foreach_all(DashLift, lift) { self->lift = lift; }
+    }
 
     self->timer = 256;
     RSDK.SetLimitedFade(0, 1, 5, 0x100, 128, 256);
@@ -105,24 +111,28 @@ bool32 LRZ1Outro_CutsceneAct1_SetupDashLift(EntityCutsceneSeq *host)
 {
     RSDK_THIS(LRZ1Outro);
 
-    foreach_active(Player, player)
     {
-        player->left      = false;
-        player->right     = true;
-        player->jumpPress = false;
-        player->jumpHold  = true;
+        foreach_active(Player, player)
+        {
+            player->left      = false;
+            player->right     = true;
+            player->jumpPress = false;
+            player->jumpHold  = true;
 
-        if (player->onGround) {
-            if (player->animator.animationID == ANI_PUSH)
-                player->jumpPress = true;
+            if (player->onGround) {
+                if (player->animator.animationID == ANI_PUSH)
+                    player->jumpPress = true;
 
-            if (!RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_FLOOR, 0, 0x100000, 0x160000, false))
-                player->jumpPress = true;
+                if (!RSDK.ObjectTileCollision(player, player->collisionLayers, CMODE_FLOOR, 0, 0x100000, 0x160000, false))
+                    player->jumpPress = true;
+            }
         }
     }
 
     self->lift = NULL;
-    foreach_active(DashLift, lift) { self->lift = lift; }
+    {
+        foreach_active(DashLift, lift) { self->lift = lift; }
+    }
 
     return RSDK.GetEntityCount(DashLift->classID, true) > 0;
 }
@@ -268,20 +278,24 @@ bool32 LRZ1Outro_CutsceneAct2_ExitDashLift(EntityCutsceneSeq *host)
     }
 
     if (landedOnGround) {
-        foreach_active(Player, playerPtr)
         {
-            if (!playerPtr->sidekick)
-                playerPtr->stateInput = Player_Input_P1;
-            else
-                playerPtr->stateInput = Player_Input_P2_AI;
+            foreach_active(Player, playerPtr)
+            {
+                if (!playerPtr->sidekick)
+                    playerPtr->stateInput = Player_Input_P1;
+                else
+                    playerPtr->stateInput = Player_Input_P2_AI;
+            }
         }
 
-        foreach_all(TitleCard, titleCard)
         {
-            titleCard->active    = ACTIVE_NORMAL;
-            titleCard->state     = TitleCard_State_SetupBGElements;
-            titleCard->stateDraw = TitleCard_Draw_SlideIn;
-            foreach_break;
+            foreach_all(TitleCard, titleCard)
+            {
+                titleCard->active    = ACTIVE_NORMAL;
+                titleCard->state     = TitleCard_State_SetupBGElements;
+                titleCard->stateDraw = TitleCard_Draw_SlideIn;
+                foreach_break;
+            }
         }
 
         globals->suppressAutoMusic = false;

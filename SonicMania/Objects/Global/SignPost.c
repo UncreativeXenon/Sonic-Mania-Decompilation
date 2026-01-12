@@ -23,16 +23,19 @@ void SignPost_Draw(void)
 {
     RSDK_THIS(SignPost);
     Vector2 drawPos;
+    Animator *face;
+    int32 scale;
+
     if (self->state) {
         self->drawFX = FX_SCALE;
         drawPos.y    = self->position.y;
 
-        Animator *face = &self->facePlateAnimator;
+        face = &self->facePlateAnimator;
         if (self->rotation <= 128 || self->rotation >= 384)
             face = &self->eggPlateAnimator;
 
         self->scale.x = abs(RSDK.Cos512(self->rotation));
-        int32 scale   = abs(RSDK.Sin512(self->rotation));
+        scale   = abs(RSDK.Sin512(self->rotation));
 
         switch (self->rotation >> 7) {
             case 0:
@@ -75,6 +78,7 @@ void SignPost_Create(void *data)
 
     if (!SceneInfo->inEditor) {
         if (globals->gameMode != MODE_TIMEATTACK) {
+            bool32 destroy;
             RSDK.SetSpriteAnimation(SignPost->aniFrames, SIGNPOSTANI_EGGMAN, &self->eggPlateAnimator, true, 0);
             switch (GET_CHARACTER_ID(1)) {
                 default:
@@ -131,7 +135,7 @@ void SignPost_Create(void *data)
             self->maxAngle  = 0x10000;
             self->scale.y   = 0x200;
 
-            bool32 destroy = true;
+            destroy = true;
             switch (self->type) {
                 default: break;
                 case SIGNPOST_RUNPAST: // Normal (Main Game Only)
@@ -237,6 +241,7 @@ void SignPost_HandleSparkles(void)
 {
     RSDK_THIS(SignPost);
     if (!(Zone->timer & 3)) {
+        int32 cnt;
         int32 x          = self->position.x + RSDK.Rand(-TO_FIXED(24), TO_FIXED(24));
         int32 y          = self->position.y + RSDK.Rand(-TO_FIXED(32), TO_FIXED(8));
         EntityRing *ring = CREATE_ENTITY(Ring, NULL, x, y);
@@ -246,7 +251,7 @@ void SignPost_HandleSparkles(void)
         ring->active    = ACTIVE_NORMAL;
         ring->visible   = false;
         RSDK.SetSpriteAnimation(Ring->aniFrames, self->sparkleType + 2, &ring->animator, true, 0);
-        int32 cnt = ring->animator.frameCount;
+        cnt = ring->animator.frameCount;
         if (ring->animator.animationID == 2) {
             ring->alpha = 0xE0;
             cnt >>= 1;
@@ -259,16 +264,17 @@ void SignPost_HandleSparkles(void)
 void SignPost_HandleCamBounds(void)
 {
     RSDK_THIS(SignPost);
+    int32 p;
+    Hitbox hitbox;
     int32 x = self->vsBoundsOffset.x + self->position.x;
     int32 y = self->vsBoundsOffset.y + self->position.y;
 
-    Hitbox hitbox;
     hitbox.left   = -self->vsBoundsSize.x >> 17;
     hitbox.top    = -self->vsBoundsSize.y >> 17;
     hitbox.right  = self->vsBoundsSize.x >> 17;
     hitbox.bottom = self->vsBoundsSize.y >> 17;
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
         if (player->classID == Player->classID && !player->sidekick) {
             if (globals->gameMode == MODE_COMPETITION) {
@@ -299,9 +305,10 @@ void SignPost_HandleCamBounds(void)
 }
 void SignPost_CheckTouch(void)
 {
+    int32 p;
     RSDK_THIS(SignPost);
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
         if (self->activePlayers && RSDK_GET_ENTITY(p + Player->playerCount, Player)->classID == GameOver->classID) {
             self->activePlayers |= 1 << p;
@@ -319,6 +326,7 @@ void SignPost_CheckTouch(void)
                 }
 
                 if (passedSignpost) {
+                    int32 vel;
                     if (!((1 << p) & self->activePlayers) && globals->gameMode == MODE_COMPETITION)
                         Announcer_AnnounceGoal(player->camera->screenID);
 
@@ -327,7 +335,7 @@ void SignPost_CheckTouch(void)
                     if (player->superState == SUPERSTATE_SUPER)
                         player->superState = SUPERSTATE_FADEOUT;
 
-                    int32 vel = 0;
+                    vel = 0;
                     if (player->onGround)
                         vel = player->groundVel;
                     else
@@ -336,6 +344,8 @@ void SignPost_CheckTouch(void)
                     self->velocity.y      = -(vel >> 1);
                     self->gravityStrength = vel / 96;
                     if (globals->gameMode == MODE_COMPETITION) {
+                        EntityCompetitionSession *session;
+                        EntityCompetition *manager;
                         self->active = ACTIVE_NORMAL;
                         if (!self->activePlayers) {
                             switch (player->characterID) {
@@ -362,8 +372,8 @@ void SignPost_CheckTouch(void)
                             RSDK.PlaySfx(SignPost->sfxSignPost2P, false, 255);
                         }
 
-                        EntityCompetitionSession *session = CompetitionSession_GetSession();
-                        EntityCompetition *manager        = Competition->sessionManager;
+                        session = CompetitionSession_GetSession();
+                        manager        = Competition->sessionManager;
                         if (!manager)
                             manager = Competition->sessionManager = CREATE_ENTITY(Competition, NULL, self->position.x, self->position.y);
 
@@ -514,18 +524,21 @@ void SignPost_State_Falling(void)
         }
     }
 
-    foreach_active(Player, player)
     {
-        if (self->velocity.y >= 0) {
-            if (player->velocity.y < 0 && player->animator.animationID == ANI_JUMP && !player->onGround) {
-                if (Player_CheckCollisionTouch(player, self, &SignPost->hitboxSignPost)) {
-                    self->velocity.x = (self->position.x - player->position.x) >> 4;
-                    self->velocity.y = -TO_FIXED(2);
-                    RSDK.PlaySfx(SignPost->sfxTwinkle, false, 255);
-                    EntityScoreBonus *scoreBonus = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y);
-                    scoreBonus->drawGroup        = Zone->objectDrawGroup[1];
-                    scoreBonus->animator.frameID = 0;
-                    Player_GiveScore(player, 100);
+        foreach_active(Player, player)
+        {
+            if (self->velocity.y >= 0) {
+                if (player->velocity.y < 0 && player->animator.animationID == ANI_JUMP && !player->onGround) {
+                    EntityScoreBonus *scoreBonus;
+                    if (Player_CheckCollisionTouch(player, self, &SignPost->hitboxSignPost)) {
+                        self->velocity.x = (self->position.x - player->position.x) >> 4;
+                        self->velocity.y = -TO_FIXED(2);
+                        RSDK.PlaySfx(SignPost->sfxTwinkle, false, 255);
+                        scoreBonus = CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y);
+                        scoreBonus->drawGroup        = Zone->objectDrawGroup[1];
+                        scoreBonus->animator.frameID = 0;
+                        Player_GiveScore(player, 100);
+                    }
                 }
             }
         }

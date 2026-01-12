@@ -172,6 +172,9 @@ void MagnetSphere_CheckPlayerCollision(void)
 
 void MagnetSphere_MovePlayer(EntityPlayer *player, int32 playerID)
 {
+    uint8 angle;
+    uint32 angVal;
+    uint8 angValPrev;
     RSDK_THIS(MagnetSphere);
 
     int32 ang          = 56 * RSDK.Cos256(MagnetSphere->sphereAngle[playerID]) >> 8;
@@ -189,11 +192,11 @@ void MagnetSphere_MovePlayer(EntityPlayer *player, int32 playerID)
         player->velocity.y = -player->velocity.y;
     }
 
-    uint8 angle = MagnetSphere->sphereAngle[playerID];
+    angle = MagnetSphere->sphereAngle[playerID];
     MagnetSphere->sphereAngle[playerID] += 4;
 
-    uint32 angVal    = (((uint32)MagnetSphere->sphereAngle[playerID] + 64) >> 7) & 1;
-    uint8 angValPrev = ((angle + 64) >> 7) & 1;
+    angVal    = (((uint32)MagnetSphere->sphereAngle[playerID] + 64) >> 7) & 1;
+    angValPrev = ((angle + 64) >> 7) & 1;
     if (angVal != angValPrev && !player->sidekick)
         RSDK.PlaySfx(MagnetSphere->sfxPlasmaBall, false, 255);
 }

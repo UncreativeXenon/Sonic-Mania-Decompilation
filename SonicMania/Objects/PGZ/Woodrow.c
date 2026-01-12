@@ -51,11 +51,13 @@ void Woodrow_Create(void *data)
             self->state = Woodrow_State_Bomb;
         }
         else {
+            int32 slot;
+            EntityWoodrow *bombSpawn;
             self->drawGroup = Zone->objectDrawGroup[1];
             self->bombCount = 0;
 
-            int32 slot               = SceneInfo->entitySlot + 1;
-            EntityWoodrow *bombSpawn = RSDK_GET_ENTITY(slot, Woodrow);
+            slot               = SceneInfo->entitySlot + 1;
+            bombSpawn = RSDK_GET_ENTITY(slot, Woodrow);
             while (bombSpawn->classID == Woodrow->classID) {
                 if (bombSpawn->type != WOODROW_BOMB)
                     break;
@@ -244,6 +246,7 @@ void Woodrow_State_Idle(void)
                 self->rangeMask     = 0;
             }
             else {
+                EntityWoodrow *bomb;
                 int32 bombSlot = SceneInfo->entitySlot + 1;
 
                 EntityWoodrow *bombSpawn = RSDK_GET_ENTITY(bombSlot + RSDK.Rand(0, self->bombCount), Woodrow);
@@ -251,7 +254,7 @@ void Woodrow_State_Idle(void)
                     bombSpawn = RSDK_GET_ENTITY(bombSlot + RSDK.Rand(0, self->bombCount), Woodrow);
                 }
 
-                EntityWoodrow *bomb = CREATE_ENTITY(Woodrow, INT_TO_VOID(true), bombSpawn->position.x, bombSpawn->position.y);
+                bomb = CREATE_ENTITY(Woodrow, INT_TO_VOID(true), bombSpawn->position.x, bombSpawn->position.y);
                 bombSpawn->position.y -= 0x100000;
                 bombSpawn->bombFallDelay   = 120;
                 bombSpawn->activeBombCount = 32;
@@ -336,18 +339,20 @@ void Woodrow_State_Bomb(void)
 
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionTouch(player, self, &Woodrow->hitboxBomb)) {
+{
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Woodrow->hitboxBomb)) {
 #if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(player, 0x300, 2, &player->uncurlTimer))
+                    if (!Player_CheckMightyUnspin(player, 0x300, 2, &player->uncurlTimer))
 #endif
-                    Player_Hurt(player, self);
-                RSDK.PlaySfx(Woodrow->sfxExplosion, false, 0xFF);
+                        Player_Hurt(player, self);
+                    RSDK.PlaySfx(Woodrow->sfxExplosion, false, 0xFF);
 
-                CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
-                destroyEntity(self);
-                foreach_break;
+                    CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
+                    destroyEntity(self);
+                    foreach_break;
+                }
             }
         }
     }

@@ -268,10 +268,11 @@ void Fan_StageLoad(void)
 
 void Fan_SetupTagLink(void)
 {
+    EntityButton *taggedButton;
     RSDK_THIS(Fan);
 
     self->taggedButton         = NULL;
-    EntityButton *taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
+    taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
 
     if (self->buttonTag > 0) {
         bool32 matchedTag = false;
@@ -315,47 +316,51 @@ void Fan_SetupTagLink(void)
 
 void Fan_HandlePlayerInteractions_Top(void)
 {
+    int32 playerID;
     RSDK_THIS(Fan);
 
     Fan->hitboxTop.top    = (RSDK.Sin256(2 * Zone->timer) >> 5) - self->size;
     Fan->hitboxTop.bottom = 48;
 
-    int32 playerID = 1;
-    foreach_active(Player, player)
+    playerID = 1;
     {
-        if (player->state != Player_State_Static) {
-            int32 anim = player->animator.animationID;
-            if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN
-                && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxTop, player, &Fan->playerHitbox)) {
-                if (Water && player->position.y > Water->waterLevel)
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 1);
-                else
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 1);
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static) {
+                int32 anim = player->animator.animationID;
+                if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN
+                    && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxTop, player, &Fan->playerHitbox)) {
+                    int32 velocity;
+                    if (Water && player->position.y > Water->waterLevel)
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 1);
+                    else
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 1);
 
-                player->state          = Player_State_Air;
-                player->tileCollisions = TILECOLLISION_DOWN;
-                player->onGround       = false;
+                    player->state          = Player_State_Air;
+                    player->tileCollisions = TILECOLLISION_DOWN;
+                    player->onGround       = false;
 
-                int32 velocity = MAX((self->position.y + (Fan->hitboxTop.top << 16) - player->position.y) >> 4, Fan->minVelocity);
-                if (player->velocity.y <= velocity) {
-                    player->velocity.y = velocity;
-                }
-                else {
-                    player->velocity.y = player->velocity.y + (velocity >> 2) + (velocity >> 1);
-                    if (player->velocity.y < velocity)
+                    velocity = MAX((self->position.y + (Fan->hitboxTop.top << 16) - player->position.y) >> 4, Fan->minVelocity);
+                    if (player->velocity.y <= velocity) {
                         player->velocity.y = velocity;
-                }
+                    }
+                    else {
+                        player->velocity.y = player->velocity.y + (velocity >> 2) + (velocity >> 1);
+                        if (player->velocity.y < velocity)
+                            player->velocity.y = velocity;
+                    }
 
-                if (!(playerID & Fan->activePlayers)) {
-                    if (player->velocity.y > -0x40000 && player->velocity.y < 0)
-                        player->velocity.x += (32 * player->velocity.x / 31) >> 5;
+                    if (!(playerID & Fan->activePlayers)) {
+                        if (player->velocity.y > -0x40000 && player->velocity.y < 0)
+                            player->velocity.x += (32 * player->velocity.x / 31) >> 5;
 
-                    Fan->activePlayers |= playerID;
+                        Fan->activePlayers |= playerID;
+                    }
                 }
             }
-        }
 
-        playerID <<= 1;
+            playerID <<= 1;
+        }
     }
 
     if (Water) {
@@ -379,16 +384,18 @@ void Fan_HandlePlayerInteractions_Bottom(void)
 
     Fan->hitboxBottom.bottom = self->size - (RSDK.Sin256(2 * Zone->timer) >> 5);
 
-    foreach_active(Player, player)
     {
-        if (player->state != Player_State_Static) {
-            int32 anim = player->animator.animationID;
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static) {
+                int32 anim = player->animator.animationID;
 
-            if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN
-                && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxBottom, player, &Fan->playerHitbox)) {
-                int32 max = (self->position.y - player->position.y + 0xA00000) >> 4;
-                if (player->velocity.y < max)
-                    player->velocity.y += ((self->position.y - player->position.y + 0xA00000) >> 9);
+                if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN
+                    && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxBottom, player, &Fan->playerHitbox)) {
+                    int32 max = (self->position.y - player->position.y + 0xA00000) >> 4;
+                    if (player->velocity.y < max)
+                        player->velocity.y += ((self->position.y - player->position.y + 0xA00000) >> 9);
+                }
             }
         }
     }
@@ -402,14 +409,16 @@ void Fan_HandlePlayerInteractions_Left(void)
 
     Fan->hitboxSides.left = (RSDK.Sin256(2 * Zone->timer) >> 5) - self->size;
 
-    foreach_active(Player, player)
     {
-        if (player->state != Player_State_Static) {
-            int32 anim = player->animator.animationID;
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static) {
+                int32 anim = player->animator.animationID;
 
-            if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN && player->collisionMode != CMODE_LWALL
-                && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxSides, player, &Fan->playerHitbox)) {
-                player->position.x += (self->position.x - player->position.x - 0xA00000) >> 4;
+                if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN && player->collisionMode != CMODE_LWALL
+                    && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxSides, player, &Fan->playerHitbox)) {
+                    player->position.x += (self->position.x - player->position.x - 0xA00000) >> 4;
+                }
             }
         }
     }
@@ -423,15 +432,17 @@ void Fan_HandlePlayerInteractions_Right(void)
 
     Fan->hitboxSides.left = (RSDK.Sin256(2 * Zone->timer) >> 5) - self->size;
 
-    foreach_active(Player, player)
     {
-        if (player->state != Player_State_Static) {
-            int32 anim = player->animator.animationID;
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static) {
+                int32 anim = player->animator.animationID;
 
-            if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN) {
-                if (player->collisionMode != CMODE_LWALL && player->collisionMode != CMODE_RWALL
-                    && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxSides, player, &Fan->playerHitbox)) {
-                    player->position.x += (self->position.x - player->position.x + 0xA00000) >> 4;
+                if (anim != ANI_HURT && anim != ANI_DIE && anim != ANI_DROWN) {
+                    if (player->collisionMode != CMODE_LWALL && player->collisionMode != CMODE_RWALL
+                        && RSDK.CheckObjectCollisionTouchBox(self, &Fan->hitboxSides, player, &Fan->playerHitbox)) {
+                        player->position.x += (self->position.x - player->position.x + 0xA00000) >> 4;
+                    }
                 }
             }
         }

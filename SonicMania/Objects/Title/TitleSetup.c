@@ -199,10 +199,12 @@ void TitleSetup_State_FlashIn(void)
             }
         }
 
-        foreach_all(TitleSonic, titleSonic)
-        {
-            titleSonic->active  = ACTIVE_NORMAL;
-            titleSonic->visible = true;
+{
+            foreach_all(TitleSonic, titleSonic)
+            {
+                titleSonic->active  = ACTIVE_NORMAL;
+                titleSonic->visible = true;
+            }
         }
 
         TitleBG_SetupFX();
@@ -248,11 +250,12 @@ void TitleSetup_State_SetupLogo(void)
         foreach_all(TitleLogo, titleLogo)
         {
             if (titleLogo->type == TITLELOGO_PRESSSTART) {
+                Entity *store;
                 titleLogo->active  = ACTIVE_NORMAL;
                 titleLogo->visible = true;
 
 #if MANIA_USE_PLUS
-                Entity *store     = SceneInfo->entity;
+                store     = SceneInfo->entity;
                 SceneInfo->entity = (Entity *)titleLogo;
                 TitleLogo_SetupPressStart();
                 SceneInfo->entity = store;
@@ -319,10 +322,12 @@ void TitleSetup_State_WaitForEnter(void)
     self->touched   = TouchInfo->count > 0;
 
     if (anyClick || anyButton) {
+        int32 id;
+        const char *nextScene;
         RSDK.PlaySfx(TitleSetup->sfxMenuAccept, false, 0xFF);
         self->timer = 0;
 
-        const char *nextScene = "Menu";
+        nextScene = "Menu";
         // Switch 1.0 dev level select cheat (Skips all the funky API setup stuff the menu does, so it was known for causin a bunch of issues)
 #if GAME_VERSION == VER_100
         if (ControllerInfo->keyA.down && (ControllerInfo->keyX.down || ControllerInfo->keyC.down))
@@ -331,9 +336,9 @@ void TitleSetup_State_WaitForEnter(void)
         RSDK.SetScene("Presentation", nextScene);
 
 #if MANIA_USE_PLUS
-        int32 id = API_GetFilteredInputDeviceID(false, false, 5);
+        id = API_GetFilteredInputDeviceID(false, false, 5);
 #else
-        int32 id = API_GetFilteredInputDeviceID(INPUT_NONE);
+        id = API_GetFilteredInputDeviceID(INPUT_NONE);
 #endif
         API_ResetInputSlotAssignments();
         API_AssignInputSlotToDevice(CONT_P1, id);

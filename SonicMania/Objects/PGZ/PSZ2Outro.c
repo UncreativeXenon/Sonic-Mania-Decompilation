@@ -47,6 +47,7 @@ void PSZ2Outro_StageLoad(void) {}
 
 bool32 PSZ2Outro_Cutscene_SetupCameraMove(EntityCutsceneSeq *host)
 {
+    EntityCamera *camera;
     RSDK_THIS(PSZ2Outro);
 
     EntityPSZEggman *eggman = self->eggman;
@@ -64,7 +65,7 @@ bool32 PSZ2Outro_Cutscene_SetupCameraMove(EntityCutsceneSeq *host)
         }
     }
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     camera->position.x   = (camera->boundsR + camera->boundsL) << 15;
     camera->boundsR += 512;
     Zone->playerBoundActiveR[0] = false;
@@ -103,6 +104,7 @@ bool32 PSZ2Outro_Cutscene_HandleCameraMovement(EntityCutsceneSeq *host)
 
 bool32 PSZ2Outro_Cutscene_WalkIntoPlace(EntityCutsceneSeq *host)
 {
+    EntityPlayer *player1;
     RSDK_THIS(PSZ2Outro);
 
     EntityPSZEggman *eggman = self->eggman;
@@ -132,7 +134,7 @@ bool32 PSZ2Outro_Cutscene_WalkIntoPlace(EntityCutsceneSeq *host)
         }
     }
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (player1->skidding == 4) {
         foreach_active(Player, playerPtr)
         {
@@ -230,14 +232,17 @@ bool32 PSZ2Outro_Cutscene_RubyWarp(EntityCutsceneSeq *host)
             }
 
             if (host->timer >= host->storedTimer + 52) {
+                int32 i;
                 EntityPlayer *players[2] = {player1, player2};
-                for (int32 i = 0; i < 2; ++i) {
+                for (i = 0; i < 2; ++i) {
                     EntityPlayer *player = players[i];
                     if (player->classID == Player->classID) {
+                        int32 valX;
+                        int32 valY;
                         RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
 
-                        int32 valX = (player->position.x - player->position.x) >> 3;
-                        int32 valY =
+                        valX = (player->position.x - player->position.x) >> 3;
+                        valY =
                             (0xA00 * RSDK.Sin256(2 * ((i * 0x40) + host->timer - host->storedTimer)) + (ruby->position.y - 0x200000) - player->position.y)
                             >> 3;
 

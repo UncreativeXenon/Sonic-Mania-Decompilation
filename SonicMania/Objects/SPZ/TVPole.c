@@ -22,6 +22,7 @@ void TVPole_StaticUpdate(void) {}
 
 void TVPole_Draw(void)
 {
+    int32 i;
     RSDK_THIS(TVPole);
 
     Vector2 drawPos;
@@ -33,7 +34,7 @@ void TVPole_Draw(void)
 
     drawPos.x += 0x80000;
     self->animator.frameID = 1;
-    for (int32 i = 0; i < self->length; ++i) {
+    for (i = 0; i < self->length; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += 0x80000;
     }
@@ -51,10 +52,11 @@ void TVPole_Create(void *data)
     self->visible   = true;
     self->drawFX    = FX_FLIP;
     if (!SceneInfo->inEditor) {
+        int32 len;
         self->updateRange.x = 0x1000000;
         self->updateRange.y = 0x1000000;
 
-        int32 len           = (8 * self->length) >> 1;
+        len           = (8 * self->length) >> 1;
         self->hitbox.left   = -8 - len;
         self->hitbox.right  = len + 8;
         self->hitbox.top    = -32;
@@ -96,16 +98,18 @@ void TVPole_State_CheckGrab(void)
             player->position.y = self->position.y - 0x140000;
 
             if (player->left) {
+                int32 x;
                 player->position.x -= 0x10000;
 
-                int32 x = self->position.x + ((self->hitbox.left + 16) << 16);
+                x = self->position.x + ((self->hitbox.left + 16) << 16);
                 if (player->position.x < x)
                     player->position.x = x;
             }
             else if (player->right) {
+                int32 x;
                 player->position.x += 0x10000;
 
-                int32 x = self->position.x + ((self->hitbox.right - 16) << 16);
+                x = self->position.x + ((self->hitbox.right - 16) << 16);
                 if (player->position.x > x)
                     player->position.x = x;
             }

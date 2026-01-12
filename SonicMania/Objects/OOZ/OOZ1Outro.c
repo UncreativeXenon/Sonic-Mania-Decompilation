@@ -37,10 +37,12 @@ void OOZ1Outro_Create(void *data)
     RSDK_THIS(OOZ1Outro);
 
     if (!SceneInfo->inEditor) {
+        int32 rangeX;
+        int32 rangeY;
         self->active  = ACTIVE_NORMAL;
         self->visible = false;
-        int32 rangeX  = self->updateRange.x + self->size.x;
-        int32 rangeY  = self->updateRange.y + self->size.y;
+        rangeX  = self->updateRange.x + self->size.x;
+        rangeY  = self->updateRange.y + self->size.y;
 
         CutsceneRules_SetupEntity(self, &self->size, &self->hitbox);
 
@@ -65,6 +67,7 @@ bool32 OOZ1Outro_Cutscene_FadeIn(EntityCutsceneSeq *host)
     }
 
     if (host->timer == 1) {
+        EntityCamera *camera;
         foreach_all(Player, player)
         {
             player->position.x = self->position.x;
@@ -79,7 +82,7 @@ bool32 OOZ1Outro_Cutscene_FadeIn(EntityCutsceneSeq *host)
         Zone->cameraBoundsR[0] = (self->position.x >> 16) + ScreenInfo->center.x;
         Zone->cameraBoundsT[0] = (self->position.y >> 16) - ScreenInfo->center.y;
         Zone->cameraBoundsB[0] = (self->position.y >> 16) + ScreenInfo->center.y;
-        EntityCamera *camera   = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera   = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         camera->boundsL        = Zone->cameraBoundsL[0];
         camera->boundsR        = Zone->cameraBoundsR[0];
         camera->boundsT        = Zone->cameraBoundsT[0];
@@ -90,10 +93,12 @@ bool32 OOZ1Outro_Cutscene_FadeIn(EntityCutsceneSeq *host)
     if (host->timer == 30) {
         ActClear->displayedActID = 1;
 
-        foreach_active(SignPost, signpost)
-        {
-            signpost->state  = SignPost_State_Falling;
-            signpost->active = ACTIVE_NORMAL;
+{
+            foreach_active(SignPost, signpost)
+            {
+                signpost->state  = SignPost_State_Falling;
+                signpost->active = ACTIVE_NORMAL;
+            }
         }
 
         RSDK.PlaySfx(SignPost->sfxTwinkle, false, 0xFF);
@@ -165,12 +170,14 @@ bool32 OOZ1Outro_Cutscene_BeginAct(EntityCutsceneSeq *host)
     if (host->timer == 120) {
         globals->suppressTitlecard = true;
 
-        foreach_all(TitleCard, titlecard)
-        {
-            titlecard->active    = ACTIVE_NORMAL;
-            titlecard->state     = TitleCard_State_SetupBGElements;
-            titlecard->stateDraw = TitleCard_Draw_SlideIn;
-            foreach_break;
+{
+            foreach_all(TitleCard, titlecard)
+            {
+                titlecard->active    = ACTIVE_NORMAL;
+                titlecard->state     = TitleCard_State_SetupBGElements;
+                titlecard->stateDraw = TitleCard_Draw_SlideIn;
+                foreach_break;
+            }
         }
 
         Music_PlayTrack(TRACK_STAGE);

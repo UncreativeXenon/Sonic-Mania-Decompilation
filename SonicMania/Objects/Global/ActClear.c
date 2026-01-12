@@ -310,6 +310,7 @@ void ActClear_Create(void *data)
 {
     RSDK_THIS(ActClear);
     if (!SceneInfo->inEditor) {
+        EntityPlayer *player1;
 #if MANIA_USE_PLUS
         ActClear->actClearActive = true;
 #endif
@@ -320,7 +321,7 @@ void ActClear_Create(void *data)
         self->stageFinishTimer = 0;
         self->newRecordTimer   = 0;
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         self->targetPlayer    = player1;
 
         if (Zone_GetZoneID() > ZONE_INVALID) {
@@ -563,9 +564,10 @@ void ActClear_SetupRecoverPlayers(void)
         if (player2->state != Player_State_FlyToPlayer && player2->state != Player_State_ReturnToPlayer) {
             if (player2->position.x <= TO_FIXED(ScreenInfo->size.x + ScreenInfo->position.x)
                 || abs(player2->position.y - player1->position.y) > TO_FIXED(16)) {
+                Entity *entStore;
                 Player->respawnTimer = 240;
 
-                Entity *entStore  = SceneInfo->entity;
+                entStore  = SceneInfo->entity;
                 SceneInfo->entity = (Entity *)player2;
                 Player_HandleSidekickRespawn();
                 SceneInfo->entity = entStore;
@@ -920,10 +922,12 @@ void ActClear_State_ExitActClear(void)
             SceneInfo->milliseconds  = 0;
             SceneInfo->seconds       = 0;
             SceneInfo->minutes       = 0;
-            foreach_active(Player, player)
             {
-                player->ringExtraLife = 100;
-                player->rings         = 0;
+                foreach_active(Player, player)
+                {
+                    player->ringExtraLife = 100;
+                    player->rings         = 0;
+                }
             }
         }
 

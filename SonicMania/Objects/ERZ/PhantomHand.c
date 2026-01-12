@@ -63,6 +63,8 @@ void PhantomHand_Create(void *data)
 
 void PhantomHand_StageLoad(void)
 {
+    int32 pos;
+    int32 i;
     PhantomHand->aniFrames = RSDK.LoadSpriteAnimation("Phantom/PhantomHand.bin", SCOPE_STAGE);
 
     PhantomHand->hitbox.left   = -20;
@@ -70,8 +72,8 @@ void PhantomHand_StageLoad(void)
     PhantomHand->hitbox.right  = 20;
     PhantomHand->hitbox.bottom = 20;
 
-    int32 pos = 3;
-    for (int32 i = 0; i < PhantomHand->debrisInfo[0]; ++i) {
+    pos = 3;
+    for (i = 0; i < PhantomHand->debrisInfo[0]; ++i) {
         PhantomHand->debrisInfo[pos + 0] = RSDK.Rand(-0x20000, 0x20000);
         PhantomHand->debrisInfo[pos + 1] = RSDK.Rand(-0x10000, -0x40000);
 
@@ -107,15 +109,17 @@ void PhantomHand_CheckPlayerGrab(int32 playerX, int32 playerY)
     else
         self->position.y = self->targetPos.y;
 
-    foreach_active(Player, player)
     {
-        if (player->state != Player_State_Static) {
-            int32 rx = (player->position.x - self->position.x) >> 16;
-            int32 ry = (player->position.y - self->position.y) >> 16;
-            if (rx * rx + ry * ry < 0x100) {
-                if (!PhantomHand->grabbedPlayers[player->playerID]) {
-                    PhantomHand->grabbedPlayers[player->playerID] = true;
-                    self->state                                   = PhantomHand_State_GrabbedPlayer;
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static) {
+                int32 rx = (player->position.x - self->position.x) >> 16;
+                int32 ry = (player->position.y - self->position.y) >> 16;
+                if (rx * rx + ry * ry < 0x100) {
+                    if (!PhantomHand->grabbedPlayers[player->playerID]) {
+                        PhantomHand->grabbedPlayers[player->playerID] = true;
+                        self->state                                   = PhantomHand_State_GrabbedPlayer;
+                    }
                 }
             }
         }
@@ -172,11 +176,12 @@ void PhantomHand_State_Appear(void)
 
 void PhantomHand_State_TryGrabPlayer(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(PhantomHand);
 
     RSDK.ProcessAnimation(&self->handAnimator);
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
     if (player1->interaction == true && player1->state == Player_State_Static) {
         self->state = PhantomHand_State_Disappear;
@@ -191,12 +196,14 @@ void PhantomHand_State_TryGrabPlayer(void)
 
 void PhantomHand_State_TryGrabPlayers(void)
 {
+    bool32 playersActive;
+    int32 i;
     RSDK_THIS(PhantomHand);
 
     RSDK.ProcessAnimation(&self->handAnimator);
 
-    bool32 playersActive = true;
-    for (int32 i = SLOT_PLAYER1; i < SLOT_PLAYER1 + 2; ++i) {
+    playersActive = true;
+    for (i = SLOT_PLAYER1; i < SLOT_PLAYER1 + 2; ++i) {
         EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
         if (player->classID == Player->classID)
             playersActive = playersActive && player->interaction && player->state == Player_State_Static;
@@ -316,15 +323,17 @@ void PhantomHand_State_BreakApart(void)
     Debris_CreateFromEntries(PhantomHand->aniFrames, PhantomHand->debrisInfo, 4);
     RSDK.PlaySfx(PhantomEgg->sfxExplosion2, false, 255);
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &PhantomHand->hitbox)) {
-            player->state                                 = Player_State_Air;
-            player->velocity.y                            = -0x40000;
-            player->onGround                              = false;
-            player->groundVel                             = 0;
-            PhantomHand->grabbedPlayers[player->playerID] = false;
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &PhantomHand->hitbox)) {
+                player->state                                 = Player_State_Air;
+                player->velocity.y                            = -0x40000;
+                player->onGround                              = false;
+                player->groundVel                             = 0;
+                PhantomHand->grabbedPlayers[player->playerID] = false;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+            }
         }
     }
 

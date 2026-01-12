@@ -35,84 +35,88 @@ void RockemSockem_Update(void)
     self->velocity.x = self->velocity.x + ((self->startPos.x - self->position.x) >> 6) - (self->velocity.x >> 4);
     self->velocity.y = self->velocity.y + ((self->startPos.y - self->position.y) >> 6) - (self->velocity.y >> 4);
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckBadnikTouch(player, self, &RockemSockem->hitbox)) {
-            int32 vel = abs(player->velocity.x) <= abs(player->velocity.y) ? abs(player->velocity.y) : abs(player->velocity.x);
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &RockemSockem->hitbox)) {
+                int32 dx;
+                int32 dy;
+                int32 vel = abs(player->velocity.x) <= abs(player->velocity.y) ? abs(player->velocity.y) : abs(player->velocity.x);
 
-            int32 angle        = RSDK.ATan2((player->position.x - self->position.x) / 3, player->position.y - self->position.y);
-            int32 distX        = abs(self->position.x - self->startPos.x);
-            int32 distY        = abs(self->position.y - self->startPos.y);
-            self->reboundTimer = 120;
+                int32 angle        = RSDK.ATan2((player->position.x - self->position.x) / 3, player->position.y - self->position.y);
+                int32 distX        = abs(self->position.x - self->startPos.x);
+                int32 distY        = abs(self->position.y - self->startPos.y);
+                self->reboundTimer = 120;
 
-            int32 dx = (distX >> 16) * (distX >> 16);
-            int32 dy = (distY >> 16) * (distY >> 16);
+                dx = (distX >> 16) * (distX >> 16);
+                dy = (distY >> 16) * (distY >> 16);
 
-            if (dx + dy < 0x100 && !self->bounceTimer) {
-                if ((angle - 0x20) & 0xC0) {
-                    self->velocity.x -= vel * RSDK.Cos256(angle) >> 8;
-                    self->velocity.y -= vel * RSDK.Sin256(angle) >> 8;
+                if (dx + dy < 0x100 && !self->bounceTimer) {
+                    if ((angle - 0x20) & 0xC0) {
+                        self->velocity.x -= vel * RSDK.Cos256(angle) >> 8;
+                        self->velocity.y -= vel * RSDK.Sin256(angle) >> 8;
+                    }
+                    else {
+                        self->velocity.x -= vel * RSDK.Cos256(angle) >> 9;
+                        self->velocity.y -= 0x2000;
+                    }
+
+                    self->velocity.x = CLAMP(self->velocity.x, -0x40000, 0x40000);
+                    player->velocity.x -= player->velocity.x >> 4;
+                    if (player->velocity.y <= 0)
+                        player->velocity.y -= player->velocity.y >> 5;
+                    else
+                        player->velocity.y -= player->velocity.y >> 4;
+
+                    self->active = ACTIVE_NORMAL;
+                }
+                else if (player->velocity.y < 0) {
+                    self->active = ACTIVE_NORMAL;
                 }
                 else {
-                    self->velocity.x -= vel * RSDK.Cos256(angle) >> 9;
-                    self->velocity.y -= 0x2000;
+                    int32 angleVal = ((angle - 0x20) >> 6) & 3;
+
+                    int32 anim = player->animator.animationID;
+                    switch (angleVal) {
+                        default:
+                        case 0:
+                            player->velocity.x = ((RSDK.Cos256(angle) << 9) + player->velocity.x) >> 1;
+                            player->velocity.y = -(abs(RSDK.Sin256(angle)) * 0x400);
+
+                            if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                                player->animator.animationID = ANI_WALK;
+                            break;
+
+                        case 1:
+                            player->velocity.x = (0x500 * RSDK.Cos256(angle) + player->velocity.x) >> 1;
+                            player->velocity.y = -(abs(RSDK.Sin256(angle)) * 0x500);
+
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 0);
+                            break;
+
+                        case 2:
+                            player->velocity.x = (0x700 * RSDK.Cos256(angle) + player->velocity.x) >> 1;
+                            player->velocity.y = -(abs(RSDK.Sin256(angle)) * 0x700);
+
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 0);
+                            break;
+
+                        case 3: break;
+                    }
+
+                    if (self->ballAnimator.animationID != 3)
+                        RSDK.PlaySfx(RockemSockem->sfxRockemSockem, false, 0xFF);
+
+                    // Bug Details:
+                    // this one's actually the opposite of normal, since its fixed in release builds
+                    // but if you comment out this Player_State_Air line and glide into the rockem sockem as knux
+                    // you'll get the funny anim bug they showed off at SDCC 2017
+                    player->state    = Player_State_Air;
+                    player->onGround = false;
+                    RSDK.SetSpriteAnimation(RockemSockem->aniFrames, 3, &self->ballAnimator, true, self->ballAnimator.frameID);
+                    self->bounceTimer = 16;
+                    self->active      = ACTIVE_NORMAL;
                 }
-
-                self->velocity.x = CLAMP(self->velocity.x, -0x40000, 0x40000);
-                player->velocity.x -= player->velocity.x >> 4;
-                if (player->velocity.y <= 0)
-                    player->velocity.y -= player->velocity.y >> 5;
-                else
-                    player->velocity.y -= player->velocity.y >> 4;
-
-                self->active = ACTIVE_NORMAL;
-            }
-            else if (player->velocity.y < 0) {
-                self->active = ACTIVE_NORMAL;
-            }
-            else {
-                int32 angleVal = ((angle - 0x20) >> 6) & 3;
-
-                int32 anim = player->animator.animationID;
-                switch (angleVal) {
-                    default:
-                    case 0:
-                        player->velocity.x = ((RSDK.Cos256(angle) << 9) + player->velocity.x) >> 1;
-                        player->velocity.y = -(abs(RSDK.Sin256(angle)) * 0x400);
-
-                        if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                            player->animator.animationID = ANI_WALK;
-                        break;
-
-                    case 1:
-                        player->velocity.x = (0x500 * RSDK.Cos256(angle) + player->velocity.x) >> 1;
-                        player->velocity.y = -(abs(RSDK.Sin256(angle)) * 0x500);
-
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 0);
-                        break;
-
-                    case 2:
-                        player->velocity.x = (0x700 * RSDK.Cos256(angle) + player->velocity.x) >> 1;
-                        player->velocity.y = -(abs(RSDK.Sin256(angle)) * 0x700);
-
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 0);
-                        break;
-
-                    case 3: break;
-                }
-
-                if (self->ballAnimator.animationID != 3)
-                    RSDK.PlaySfx(RockemSockem->sfxRockemSockem, false, 0xFF);
-
-                // Bug Details:
-                // this one's actually the opposite of normal, since its fixed in release builds
-                // but if you comment out this Player_State_Air line and glide into the rockem sockem as knux
-                // you'll get the funny anim bug they showed off at SDCC 2017
-                player->state    = Player_State_Air;
-                player->onGround = false;
-                RSDK.SetSpriteAnimation(RockemSockem->aniFrames, 3, &self->ballAnimator, true, self->ballAnimator.frameID);
-                self->bounceTimer = 16;
-                self->active      = ACTIVE_NORMAL;
             }
         }
     }
@@ -135,9 +139,10 @@ void RockemSockem_StaticUpdate(void) {}
 
 void RockemSockem_Draw(void)
 {
+    int32 i;
     RSDK_THIS(RockemSockem);
 
-    for (int32 i = 0; i < ROCKEMSOCKEM_COIL_COUNT; ++i) {
+    for (i = 0; i < ROCKEMSOCKEM_COIL_COUNT; ++i) {
         self->rotation = self->jointRotations[i];
         RSDK.DrawSprite(&self->jointAnimator, &self->jointPositions[i], false);
     }

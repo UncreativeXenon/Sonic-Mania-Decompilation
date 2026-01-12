@@ -95,6 +95,7 @@ void SPZ2Setup_Create(void *data)
 
 void SPZ2Setup_StageLoad(void)
 {
+    int32 i;
     SPZ2Setup->aniTiles1 = RSDK.LoadSpriteSheet("SPZ2/AniTiles1.gif", SCOPE_STAGE);
     SPZ2Setup->aniTiles2 = RSDK.LoadSpriteSheet("SPZ2/AniTiles2.gif", SCOPE_STAGE);
 
@@ -102,7 +103,7 @@ void SPZ2Setup_StageLoad(void)
     SPZ2Setup->fgHigh = RSDK.GetTileLayer(Zone->fgLayer[1]);
 
     // Sun Attack Deform
-    for (int32 i = 0; i < 0x400; ++i) {
+    for (i = 0; i < 0x400; ++i) {
         SPZ2Setup->fgLow->deformationData[i]  = SPZ2Setup->fgSunAtkDeform[i & 0x1F];
         SPZ2Setup->fgHigh->deformationData[i] = SPZ2Setup->fgSunAtkDeform[i & 0x1F];
     }
@@ -128,8 +129,8 @@ void SPZ2Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(4, "EncoreSPZ1.act", 0b0000000011111111);
-        RSDK.LoadPalette(0, "EncoreSPZ2.act", 0b0000000011111111);
+        RSDK.LoadPalette(4, "EncoreSPZ1.act", 0xFF);
+        RSDK.LoadPalette(0, "EncoreSPZ2.act", 0xFF);
         RSDK.CopyPalette(0, 128, 5, 128, 128);
     }
 #endif

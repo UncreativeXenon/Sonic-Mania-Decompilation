@@ -49,8 +49,12 @@ void GHZ2Outro_Create(void *data)
     if (!SceneInfo->inEditor) {
         self->activated = data != NULL;
 
-        foreach_all(DERobot, robot) { self->DERobot = robot; }
-        foreach_all(Eggman, eggman) { self->eggman = eggman; }
+        {
+            foreach_all(DERobot, robot) { self->DERobot = robot; }
+        }
+        {
+            foreach_all(Eggman, eggman) { self->eggman = eggman; }
+        }
 
         self->active  = ACTIVE_NORMAL;
         self->visible = false;
@@ -74,16 +78,18 @@ bool32 GHZ2Outro_Cutscene_FinishActClear(EntityCutsceneSeq *host)
 
     CutsceneSeq_LockAllPlayerControl();
 
-    foreach_active(Player, player)
     {
-        player->state = Player_State_Ground;
-        if (!player->sidekick) {
-            player->stateInput = StateMachine_None;
-            player->left       = true;
-            player->right      = false;
-            player->up         = false;
-            player->down       = false;
-            player->jumpPress  = false;
+        foreach_active(Player, player)
+        {
+            player->state = Player_State_Ground;
+            if (!player->sidekick) {
+                player->stateInput = StateMachine_None;
+                player->left       = true;
+                player->right      = false;
+                player->up         = false;
+                player->down       = false;
+                player->jumpPress  = false;
+            }
         }
     }
 
@@ -91,7 +97,9 @@ bool32 GHZ2Outro_Cutscene_FinishActClear(EntityCutsceneSeq *host)
     Zone->deathBoundary[1] += 0x4000 << 16;
     Music_PlayTrack(TRACK_STAGE);
 
-    foreach_active(EggPrison, prison) { prison->state = EggPrison_State_FlyOffScreen; }
+    {
+        foreach_active(EggPrison, prison) { prison->state = EggPrison_State_FlyOffScreen; }
+    }
 
     return true;
 }
@@ -135,43 +143,53 @@ bool32 GHZ2Outro_Cutscene_JumpIntoHole(EntityCutsceneSeq *host)
 
 bool32 GHZ2Outro_Cutscene_HoleSceneFadeIn(EntityCutsceneSeq *host)
 {
+    EntityDERobot *deRobot;
+    EntityEggman *eggman;
     RSDK_THIS(GHZ2Outro);
 
     if (host->timer >= 8) {
         CutsceneSeq_LockAllPlayerControl();
 
-        foreach_active(Player, player)
         {
-            player->stateInput = StateMachine_None;
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+            foreach_active(Player, player)
+            {
+                player->stateInput = StateMachine_None;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+            }
         }
 
-        foreach_all(CutsceneHBH, cutsceneHBH) { cutsceneHBH->drawGroup = Zone->objectDrawGroup[0]; }
-
-        foreach_all(DERobot, robot)
         {
-            robot->state   = StateMachine_None;
-            robot->active  = ACTIVE_NORMAL;
-            robot->visible = true;
+            foreach_all(CutsceneHBH, cutsceneHBH) { cutsceneHBH->drawGroup = Zone->objectDrawGroup[0]; }
         }
 
-        EntityDERobot *deRobot = self->DERobot;
+        {
+            foreach_all(DERobot, robot)
+            {
+                robot->state   = StateMachine_None;
+                robot->active  = ACTIVE_NORMAL;
+                robot->visible = true;
+            }
+        }
+
+        deRobot = self->DERobot;
         deRobot->state         = DERobot_State_CutsceneExplode;
 
         CutsceneHBH_ShinobiBounceSetup();
         CutsceneHBH_KingSetup();
         CutsceneHBH_RiderSetup();
 
-        EntityEggman *eggman = self->eggman;
+        eggman = self->eggman;
         RSDK.SetSpriteAnimation(Eggman->aniFrames, 9, &eggman->animator, true, 0);
         eggman->direction = FLIP_NONE;
         eggman->state     = Eggman_State_ProcessAnimation;
 
-        foreach_all(PhantomRuby, ruby)
         {
-            self->phantomRuby = ruby;
-            ruby->state       = PhantomRuby_State_MoveRotateGravity;
-            ruby->drawFX      = FX_ROTATE;
+            foreach_all(PhantomRuby, ruby)
+            {
+                self->phantomRuby = ruby;
+                ruby->state       = PhantomRuby_State_MoveRotateGravity;
+                ruby->drawFX      = FX_ROTATE;
+            }
         }
 
         FXRuby_SetupLayerDeformation();
@@ -239,6 +257,7 @@ bool32 GHZ2Outro_Cutscene_SpyOnEggman(EntityCutsceneSeq *host)
 }
 bool32 GHZ2Outro_Cutscene_BreakupGroup(EntityCutsceneSeq *host)
 {
+    EntityPhantomRuby *ruby;
     RSDK_THIS(GHZ2Outro);
 
     EntityEggman *eggman = self->eggman;
@@ -307,21 +326,24 @@ bool32 GHZ2Outro_Cutscene_BreakupGroup(EntityCutsceneSeq *host)
         }
 
         case 320: {
+            EntityCutsceneHBH *king; 
             EntityCutsceneHBH *gunner = CutsceneHBH_GetEntity(HBH_GUNNER);
             if (gunner) {
                 RSDK.SetSpriteAnimation(gunner->aniFrames, 4, &gunner->mainAnimator, true, 0);
                 gunner->state = CutsceneHBH_State_GunnerExit;
             }
 
-            EntityCutsceneHBH *king = CutsceneHBH_GetEntity(HBH_KING);
+            king = CutsceneHBH_GetEntity(HBH_KING);
             if (king) {
                 king->direction ^= FLIP_X;
                 king->state = CutsceneHBH_State_KingExit;
             }
 
             RSDK.PlaySfx(GHZ2Outro->sfxRocketJet, false, 0xFF);
-            foreach_active(Player, player) { player->down = false; }
-            EntityPhantomRuby *ruby = self->phantomRuby;
+            {
+                foreach_active(Player, player) { player->down = false; }
+            }
+            ruby = self->phantomRuby;
             ruby->startPos.x        = ruby->position.x;
             ruby->startPos.y        = ruby->position.y;
             ruby->state             = PhantomRuby_State_Oscillate;
@@ -410,15 +432,18 @@ bool32 GHZ2Outro_Cutscene_HandleRubyWarp(EntityCutsceneSeq *host)
             }
 
             if (host->timer >= host->storedTimer + 52) {
+                int32 angle;
+                int32 valX;
+                int32 valY;
                 int32 id = 0;
-                for (int32 angle = 0; angle < 0x80; angle += 0x10) {
+                for (angle = 0; angle < 0x80; angle += 0x10) {
                     EntityPlayer *player = RSDK_GET_ENTITY(id++, Player);
                     if (!player || player->classID == TYPE_BLANK)
                         break;
                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
 
-                    int32 valX = (ruby->position.x - 0x400000) - player->position.x;
-                    int32 valY = (ruby->position.y - (0xA00000 + 944)) - player->position.y;
+                    valX = (ruby->position.x - 0x400000) - player->position.x;
+                    valY = (ruby->position.y - (0xA00000 + 944)) - player->position.y;
 
                     player->position.x += ((RSDK.Cos256(2 * (angle + host->timer - host->storedTimer)) << 12) + valX) >> 5;
                     player->position.y += ((RSDK.Sin256(2 * (angle + host->timer - host->storedTimer)) << 12) + valY) >> 5;

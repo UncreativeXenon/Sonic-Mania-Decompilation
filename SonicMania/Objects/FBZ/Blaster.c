@@ -298,10 +298,12 @@ void Blaster_State_Shot(void)
 
     if (RSDK.CheckOnScreen(self, &self->updateRange)) {
         RSDK.ProcessAnimation(&self->animator);
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Blaster->hitboxProjectile)) {
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Blaster->hitboxProjectile)) {
+                    Player_ProjectileHurt(player, self);
+                }
             }
         }
     }

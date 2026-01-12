@@ -93,19 +93,25 @@ void TitleBG_StageLoad(void)
 
 void TitleBG_SetupFX(void)
 {
+    TileLayer *cloudLayer;
+    TileLayer *islandLayer;
     RSDK.GetTileLayer(0)->drawGroup[0] = DRAWGROUP_COUNT;
     RSDK.GetTileLayer(1)->drawGroup[0] = 0;
 
-    TileLayer *cloudLayer        = RSDK.GetTileLayer(2);
+    cloudLayer        = RSDK.GetTileLayer(2);
     cloudLayer->drawGroup[0]     = 0;
     cloudLayer->scanlineCallback = TitleBG_Scanline_Clouds;
 
-    TileLayer *islandLayer        = RSDK.GetTileLayer(3);
+    islandLayer        = RSDK.GetTileLayer(3);
     islandLayer->drawGroup[0]     = 1;
     islandLayer->scanlineCallback = TitleBG_Scanline_Island;
 
-    foreach_all(TitleBG, titleBG) { titleBG->visible = true; }
+{
+        foreach_all(TitleBG, titleBG) { titleBG->visible = true; }
+    }
+{
     foreach_all(Title3DSprite, title3DSprite) { title3DSprite->visible = true; }
+}
 
     RSDK.SetPaletteEntry(0, 55, 0x00FF00);
     RSDK.SetPaletteMask(0x00FF00);
@@ -114,13 +120,17 @@ void TitleBG_SetupFX(void)
 
 void TitleBG_Scanline_Clouds(ScanlineInfo *scanlines)
 {
+    int32 sine;
+    int32 cosine;
+    int32 off;
+    int32 i;
     RSDK.SetClipBounds(0, 0, 0, ScreenInfo->size.x, SCREEN_YSIZE / 2);
 
-    int32 sine   = RSDK.Sin256(0);
-    int32 cosine = RSDK.Cos256(0);
+    sine   = RSDK.Sin256(0);
+    cosine = RSDK.Cos256(0);
 
-    int32 off = 0x1000000;
-    for (int32 i = 0xA0; i > 0x20; --i) {
+    off = 0x1000000;
+    for (i = 0xA0; i > 0x20; --i) {
         int32 id  = off / (8 * i);
         int32 sin = sine * id;
         int32 cos = cosine * id;
@@ -137,13 +147,17 @@ void TitleBG_Scanline_Clouds(ScanlineInfo *scanlines)
 
 void TitleBG_Scanline_Island(ScanlineInfo *scanlines)
 {
+    int32 sine;
+    int32 cosine;
+    ScanlineInfo *scanlinePtr;
+    int32 i;
     RSDK.SetClipBounds(0, 0, 168, ScreenInfo->size.x, SCREEN_YSIZE);
 
-    int32 sine   = RSDK.Sin1024(-TitleBG->angle) >> 2;
-    int32 cosine = RSDK.Cos1024(-TitleBG->angle) >> 2;
+    sine   = RSDK.Sin1024(-TitleBG->angle) >> 2;
+    cosine = RSDK.Cos1024(-TitleBG->angle) >> 2;
 
-    ScanlineInfo *scanlinePtr = &scanlines[168];
-    for (int32 i = 16; i < 88; ++i) {
+    scanlinePtr = &scanlines[168];
+    for (i = 16; i < 88; ++i) {
         int32 id  = 0xA00000 / (8 * i);
         int32 sin = sine * id;
         int32 cos = cosine * id;

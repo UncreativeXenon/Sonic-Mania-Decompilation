@@ -24,26 +24,30 @@ void LEDPanel_StaticUpdate(void) {}
 
 void LEDPanel_Draw(void)
 {
+    RSDKScreenInfo *screen;
+    int32 clipX1, clipX2, clipY1, clipY2;
+    int32 clipBound_X1, clipBound_X2, clipBound_Y1, clipBound_Y2;
+    int32 r;
     RSDK_THIS(LEDPanel);
 
     RSDK.DrawRect(self->position.x - (self->size.x >> 1) + 0x80000, self->position.y - (self->size.y >> 1), self->size.x - 0x100000, self->size.y,
                   LEDPanel->panelColor, 512, INK_NONE, false);
 
-    RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
+    screen = &ScreenInfo[SceneInfo->currentScreenID];
 
-    int32 clipX1 = screen->clipBound_X1;
-    int32 clipX2 = screen->clipBound_X2;
-    int32 clipY1 = screen->clipBound_Y1;
-    int32 clipY2 = screen->clipBound_Y2;
+    clipX1 = screen->clipBound_X1;
+    clipX2 = screen->clipBound_X2;
+    clipY1 = screen->clipBound_Y1;
+    clipY2 = screen->clipBound_Y2;
 
-    int32 clipBound_X1 = self->left - screen->position.x + (self->position.x >> 16) + 8;
-    int32 clipBound_X2 = self->right - screen->position.x + (self->position.x >> 16) - 8;
-    int32 clipBound_Y1 = (self->position.y >> 16) + self->top - screen->position.y;
-    int32 clipBound_Y2 = (self->position.y >> 16) + self->bottom - screen->position.y;
+    clipBound_X1 = self->left - screen->position.x + (self->position.x >> 16) + 8;
+    clipBound_X2 = self->right - screen->position.x + (self->position.x >> 16) - 8;
+    clipBound_Y1 = (self->position.y >> 16) + self->top - screen->position.y;
+    clipBound_Y2 = (self->position.y >> 16) + self->bottom - screen->position.y;
 
     RSDK.SetClipBounds(SceneInfo->currentScreenID, clipBound_X1, clipBound_Y1, clipBound_X2, clipBound_Y2);
 
-    for (int32 r = 0; r < LEDPANEL_ROW_COUNT; ++r)
+    for (r = 0; r < LEDPANEL_ROW_COUNT; ++r)
         RSDK.DrawText(&self->animatorText, &self->textPos[r], &self->activeText[r], 0, self->activeText[r].length, ALIGN_CENTER, 0, 0, NULL, false);
 
     screen->clipBound_X1 = clipX1;
@@ -64,7 +68,10 @@ void LEDPanel_Create(void *data)
     RSDK.SetSpriteAnimation(LEDPanel->aniFrames, 0, &self->animatorText, true, 0);
 
     if (!SceneInfo->inEditor) {
-        for (int32 i = 0; i < LEDPANEL_TEXT_COUNT; ++i) {
+        int32 i;
+        int32 offset;
+        int32 r;
+        for (i = 0; i < LEDPANEL_TEXT_COUNT; ++i) {
             RSDK.SetSpriteString(LEDPanel->aniFrames, 0, &self->text[i]);
             self->textPtrs[i] = &self->text[i];
         }
@@ -86,8 +93,8 @@ void LEDPanel_Create(void *data)
         self->boundsMoveSpeed.x = 0x10000;
         self->boundsMoveSpeed.y = 0x10000;
 
-        int32 offset = 0;
-        for (int32 r = 0; r < LEDPANEL_ROW_COUNT; ++r) {
+        offset = 0;
+        for (r = 0; r < LEDPANEL_ROW_COUNT; ++r) {
             LEDPanel_SetupActiveText(r, self->textPtrs[r]);
 
             self->seqPtrs[r]       = &self->seq[r];
@@ -126,12 +133,13 @@ void LEDPanel_StageLoad(void)
 
 void LEDPanel_SetupActiveText(int32 row, String *src)
 {
+    int32 i;
     RSDK_THIS(LEDPanel);
 
     RSDK.CopyString(&self->activeText[row], src);
 
     self->activeTextSize[row] = self->activeText[row].length;
-    for (int32 i = 0; i < self->activeText[row].length; ++i) {
+    for (i = 0; i < self->activeText[row].length; ++i) {
         if (self->activeText[row].chars[i] != 27) {
             self->activeTextSize[row] = i;
             break;
@@ -139,7 +147,7 @@ void LEDPanel_SetupActiveText(int32 row, String *src)
     }
 
     self->activeTextLen[row] = 0;
-    for (int32 i = self->activeText[row].length - 1; i >= 0; --i) {
+    for (i = self->activeText[row].length - 1; i >= 0; --i) {
         if (self->activeText[row].chars[i] != 27) {
             self->activeTextLen[row] = i;
             break;
@@ -157,10 +165,11 @@ void LEDPanel_SetupTextPos(int32 row, int32 x, int32 y)
 
 void LEDPanel_HandleCharacters(void)
 {
+    bool32 finished;
     RSDK_THIS(LEDPanel);
 
     self->rowSignaled[self->row] = false;
-    bool32 finished              = false;
+    finished              = false;
 
     while (!finished) {
         int32 action    = -1;

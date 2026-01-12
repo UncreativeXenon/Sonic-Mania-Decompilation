@@ -11,11 +11,12 @@ ObjectAnimalHBH *AnimalHBH;
 
 void AnimalHBH_Update(void)
 {
+    int32 pos;
     RSDK_THIS(AnimalHBH);
 
     self->position.x -= 0x10000;
 
-    int32 pos = self->position.x - (ScreenInfo->position.x << 16) - (ScreenInfo->center.x << 16);
+    pos = self->position.x - (ScreenInfo->position.x << 16) - (ScreenInfo->center.x << 16);
 
     if (pos < 0)
         pos = ((ScreenInfo->position.x + ScreenInfo->center.x) << 16) - self->position.x;

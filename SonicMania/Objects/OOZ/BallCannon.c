@@ -250,13 +250,17 @@ void BallCannon_State_CorkBlocked(void)
 
     foreach_active(Player, player)
     {
+        int32 storeX;
+        int32 storeY;
+        int32 storeVelX;
+        int32 storeVelY;
         Animator animator;
 
         memcpy(&animator, &player->animator, sizeof(Animator));
-        int32 storeX    = player->position.x;
-        int32 storeY    = player->position.y;
-        int32 storeVelX = player->velocity.x;
-        int32 storeVelY = player->velocity.y;
+        storeX    = player->position.x;
+        storeY    = player->position.y;
+        storeVelX = player->velocity.x;
+        storeVelY = player->velocity.y;
 
         if (Player_CheckCollisionBox(player, self, &BallCannon->hitboxCorkBlock) == C_TOP) {
             if (player->animator.animationID == ANI_JUMP || player->state == Player_State_DropDash
@@ -265,7 +269,8 @@ void BallCannon_State_CorkBlocked(void)
 #endif
             ) {
                 if (storeVelY >= 0 && !player->groundedStore) {
-                    for (int32 i = 0; i < 16; ++i) {
+                    int32 i;
+                    for (i = 0; i < 16; ++i) {
                         // Bug Details:
                         // The original starts iterating 1 element before each corkDebris____ array.
                         // The code below was fixed. To reproduce the bug, change the offsets: "+ 0" ---> "- 1" and "+ 1" ---> "+ 0"
@@ -326,8 +331,9 @@ void BallCannon_State_CorkOpened(void)
         }
     }
     else {
+        int32 i;
         self->visible = true;
-        for (int32 i = 0; i < Player->playerCount; ++i) self->playerTimers[i] = 0;
+        for (i = 0; i < Player->playerCount; ++i) self->playerTimers[i] = 0;
         self->state = BallCannon_State_CorkBlocked;
     }
 }

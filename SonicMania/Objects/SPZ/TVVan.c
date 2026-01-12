@@ -501,60 +501,64 @@ void TVVan_Draw_ExitTV_Destroyed(void)
 
 void TVVan_StateVan_Idle(void)
 {
+    bool32 entered;
     RSDK_THIS(TVVan);
 
     TVVan_HandleVanTilt();
 
     self->stood    = false;
     self->stoodPos = 0;
-    bool32 entered = false;
+    entered = false;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionBox(player, self, &TVVan->hitboxRoof) == C_TOP) {
-            player->position.y += self->moveOffsetY;
-            player->position.y &= 0xFFFF0000;
-            self->stood = true;
-
-            int32 dist = player->position.x - self->position.x;
-            if (self->direction == FLIP_NONE)
-                dist += 0x100000;
-            self->stoodPos += dist >> 20;
-        }
-
-        Player_CheckCollisionBox(player, self, &TVVan->hitboxFront);
-
-        if (self->direction)
-            TVVan->hitboxFloor.top = (player->position.x - self->position.x) >> 17;
-        else
-            TVVan->hitboxFloor.top = (self->position.x - player->position.x) >> 17;
-
-        TVVan->hitboxFloor.top = CLAMP(TVVan->hitboxFloor.top, 22, 32);
-
-        if (Player_CheckCollisionPlatform(player, self, &TVVan->hitboxFloor) == C_TOP) {
-            player->position.y += self->moveOffsetY;
-            player->position.y &= 0xFFFF0000;
-
-            if (TVVan->hitboxFloor.top == 22)
+{
+        foreach_active(Player, player)
+        {
+            int32 dist; 
+            if (Player_CheckCollisionBox(player, self, &TVVan->hitboxRoof) == C_TOP) {
+                player->position.y += self->moveOffsetY;
+                player->position.y &= 0xFFFF0000;
                 self->stood = true;
-        }
 
-        if (!player->sidekick && Player_CheckCollisionTouch(player, self, &TVVan->hitboxEntry)) {
-            player->state           = Player_State_Static;
-            player->nextAirState    = StateMachine_None;
-            player->nextGroundState = StateMachine_None;
-            player->velocity.x      = 0;
-            player->velocity.y      = 0;
-            player->groundVel       = 0;
-            player->tileCollisions  = TILECOLLISION_NONE;
-            player->interaction     = false;
-            player->visible         = false;
-            player->blinkTimer      = 0;
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-            player->animator.speed = 120;
-            entered                = true;
-            self->player           = player;
-            foreach_break;
+                dist = player->position.x - self->position.x;
+                if (self->direction == FLIP_NONE)
+                    dist += 0x100000;
+                self->stoodPos += dist >> 20;
+            }
+
+            Player_CheckCollisionBox(player, self, &TVVan->hitboxFront);
+
+            if (self->direction)
+                TVVan->hitboxFloor.top = (player->position.x - self->position.x) >> 17;
+            else
+                TVVan->hitboxFloor.top = (self->position.x - player->position.x) >> 17;
+
+            TVVan->hitboxFloor.top = CLAMP(TVVan->hitboxFloor.top, 22, 32);
+
+            if (Player_CheckCollisionPlatform(player, self, &TVVan->hitboxFloor) == C_TOP) {
+                player->position.y += self->moveOffsetY;
+                player->position.y &= 0xFFFF0000;
+
+                if (TVVan->hitboxFloor.top == 22)
+                    self->stood = true;
+            }
+
+            if (!player->sidekick && Player_CheckCollisionTouch(player, self, &TVVan->hitboxEntry)) {
+                player->state           = Player_State_Static;
+                player->nextAirState    = StateMachine_None;
+                player->nextGroundState = StateMachine_None;
+                player->velocity.x      = 0;
+                player->velocity.y      = 0;
+                player->groundVel       = 0;
+                player->tileCollisions  = TILECOLLISION_NONE;
+                player->interaction     = false;
+                player->visible         = false;
+                player->blinkTimer      = 0;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                player->animator.speed = 120;
+                entered                = true;
+                self->player           = player;
+                foreach_break;
+            }
         }
     }
 
@@ -656,13 +660,14 @@ void TVVan_StateRadio_StartBroadcast(void)
 
 void TVVan_StateRadio_HandleMovement(void)
 {
+    EntityDebris *debris;
     RSDK_THIS(TVVan);
     EntityPlayer *player = self->player;
 
     self->position.x += 0xC00 * RSDK.Cos256(self->angle);
     self->position.y += 0xC00 * RSDK.Sin256(self->angle);
 
-    EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Move, self->position.x, self->position.y);
+    debris = CREATE_ENTITY(Debris, Debris_State_Move, self->position.x, self->position.y);
     debris->timer        = 16;
     debris->drawGroup    = self->drawGroup;
     debris->drawFX       = FX_ROTATE;
@@ -899,6 +904,8 @@ void TVVan_StateTV_Destroyed(void)
 
 void TVVan_StateRadio_EnterTV(void)
 {
+    EntityExplosion *explosion;
+    int32 i;
     RSDK_THIS(TVVan);
     EntityPlayer *player = self->player;
 
@@ -924,12 +931,12 @@ void TVVan_StateRadio_EnterTV(void)
 
     RSDK.PlaySfx(TVVan->sfxExplosion, false, 255);
 
-    EntityExplosion *explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ITEMBOX), self->position.x, self->position.y - 0x100000);
+    explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ITEMBOX), self->position.x, self->position.y - 0x100000);
     explosion->drawFX          = FX_SCALE;
     explosion->scale.x         = 0x300;
     explosion->scale.y         = 0x300;
 
-    for (int32 i = 0; i < 12; ++i) {
+    for (i = 0; i < 12; ++i) {
         int32 x              = self->position.x + RSDK.Rand(-0xC0000, 0xC0000);
         int32 y              = self->position.y + RSDK.Rand(-0xC0000, 0xC0000);
         EntityDebris *debris = CREATE_ENTITY(Debris, NULL, x, y);
@@ -946,11 +953,13 @@ void TVVan_StateRadio_EnterTV(void)
         RSDK.SetSpriteAnimation(ItemBox->aniFrames, 6, &debris->animator, true, RSDK.Rand(0, 4));
     }
 
-    foreach_active(ShopWindow, window)
     {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &TVVan->hitboxShopWindow, window, &window->hitboxWindowX)) {
-            window->stateDraw = ShopWindow_Draw_Shattered;
-            window->state     = ShopWindow_State_Shattered;
+        foreach_active(ShopWindow, window)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &TVVan->hitboxShopWindow, window, &window->hitboxWindowX)) {
+                window->stateDraw = ShopWindow_Draw_Shattered;
+                window->state     = ShopWindow_State_Shattered;
+            }
         }
     }
 

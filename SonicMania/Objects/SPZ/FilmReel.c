@@ -11,6 +11,7 @@ ObjectFilmReel *FilmReel;
 
 void FilmReel_Update(void)
 {
+    int32 prevPathFlags;
     RSDK_THIS(FilmReel);
 
     self->velocity.x = (self->spinSpeed * RSDK.Cos256(self->angle)) >> 9;
@@ -18,7 +19,7 @@ void FilmReel_Update(void)
     self->lastPos.x += self->velocity.x;
     self->lastPos.y += self->velocity.y;
 
-    int32 prevPathFlags = self->pathFlags;
+    prevPathFlags = self->pathFlags;
     self->pathFlags     = 0;
     switch (self->pathDir) {
         case 0:
@@ -185,6 +186,8 @@ void FilmReel_StaticUpdate(void) {}
 
 void FilmReel_Draw(void)
 {
+    color color1;
+    color color2;
     RSDK_THIS(FilmReel);
 
     int32 angle = (self->angle - 64) & 0xFF;
@@ -193,8 +196,8 @@ void FilmReel_Draw(void)
 
     self->celluoidAnimator.frameID = (self->rotation >> 4) & 1;
 
-    color color1 = self->celluoidAnimator.frameID ? 0x204078 : 0x3868A8;
-    color color2 = self->celluoidAnimator.frameID ? 0x182850 : 0x204078;
+    color1 = self->celluoidAnimator.frameID ? 0x204078 : 0x3868A8;
+    color2 = self->celluoidAnimator.frameID ? 0x182850 : 0x204078;
 
     if (self->lineDir) {
         RSDK.DrawLine(self->drawPos.x, self->drawPos.y, x2, y2, color1, 255, INK_NONE, false);

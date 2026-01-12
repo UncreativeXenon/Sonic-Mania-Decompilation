@@ -210,6 +210,8 @@ void Hotaru_State_Init(void)
 
 void Hotaru_State_CheckPlayerInRange(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(Hotaru);
 
     if (self->hotaruDir) {
@@ -233,43 +235,45 @@ void Hotaru_State_CheckPlayerInRange(void)
 
     Hotaru_CheckPlayerCollisions();
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
-    foreach_active(Player, player)
+    storeX = self->position.x;
+    storeY = self->position.y;
     {
-        bool32 inRange = false;
+        foreach_active(Player, player)
+        {
+            bool32 inRange = false;
 
-        if (!(self->destroyedHotarus & 1)) {
-            self->position.x += self->offset1.x;
-            self->position.y += self->offset1.y;
+            if (!(self->destroyedHotarus & 1)) {
+                self->position.x += self->offset1.x;
+                self->position.y += self->offset1.y;
 
-            if (Player_CheckCollisionTouch(player, self, &Hotaru->hitboxTrigger))
-                inRange = true;
-        }
-
-        self->position.x = storeX;
-        self->position.y = storeY;
-
-        if (!(self->destroyedHotarus & 2) && !inRange) {
-            self->position.x += self->offset2.x;
-            self->position.y += self->offset2.y;
-
-            if (Player_CheckCollisionTouch(player, self, &Hotaru->hitboxTrigger))
-                inRange = true;
-        }
-
-        if (inRange) {
-            self->playerPtr = player;
-            self->screenID  = player->sidekick ? 0 : player->camera->screenID;
+                if (Player_CheckCollisionTouch(player, self, &Hotaru->hitboxTrigger))
+                    inRange = true;
+            }
 
             self->position.x = storeX;
             self->position.y = storeY;
-            self->state      = Hotaru_State_FoundPlayer;
-            foreach_break;
-        }
 
-        self->position.x = storeX;
-        self->position.y = storeY;
+            if (!(self->destroyedHotarus & 2) && !inRange) {
+                self->position.x += self->offset2.x;
+                self->position.y += self->offset2.y;
+
+                if (Player_CheckCollisionTouch(player, self, &Hotaru->hitboxTrigger))
+                    inRange = true;
+            }
+
+            if (inRange) {
+                self->playerPtr = player;
+                self->screenID  = player->sidekick ? 0 : player->camera->screenID;
+
+                self->position.x = storeX;
+                self->position.y = storeY;
+                self->state      = Hotaru_State_FoundPlayer;
+                foreach_break;
+            }
+
+            self->position.x = storeX;
+            self->position.y = storeY;
+        }
     }
 }
 
@@ -365,10 +369,12 @@ void Hotaru_State_Charging(void)
             hitboxCharge.bottom = self->offset1.y >> 16;
         }
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionTouch(player, self, &hitboxCharge)) {
-                self->attackState = HOTARU_ATTACK_CHARGING;
+{
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &hitboxCharge)) {
+                    self->attackState = HOTARU_ATTACK_CHARGING;
+                }
             }
         }
     }
@@ -410,10 +416,11 @@ void Hotaru_State_Attacking(void)
 
         foreach_active(Player, player)
         {
+            int32 i;
             self->position.x += self->offset2.x;
             self->position.y += self->offset2.y;
 
-            for (int32 i = 0; i < 3; ++i) {
+            for (i = 0; i < 3; ++i) {
                 self->position.x += self->electricityOffset.x;
                 self->position.y += self->electricityOffset.y;
 

@@ -31,6 +31,7 @@ void TippingPlatform_Update(void)
         }
     }
     else {
+        bool32 isSolid;
         if (self->state == Platform_State_Fixed) {
             int32 timer = (Zone->timer + self->intervalOffset) % self->interval;
             if (timer >= self->duration) {
@@ -59,7 +60,7 @@ void TippingPlatform_Update(void)
             }
         }
 
-        bool32 isSolid = false;
+        isSolid = false;
         if (self->animator.animationID == 1)
             isSolid = self->animator.frameID == 0;
         else
@@ -216,6 +217,8 @@ void TippingPlatform_EditorDraw(void)
     TippingPlatform_Draw();
 
     if (showGizmos()) {
+        int32 s;
+        int32 i;
         RSDK_DRAWING_OVERLAY(true);
 
         if (self->bossID > TIPPINGPLATFORM_PLAYER) {
@@ -228,7 +231,7 @@ void TippingPlatform_EditorDraw(void)
             }
         }
 
-        for (int32 s = SceneInfo->entitySlot + 1, i = 0; i < self->childCount; ++i) {
+        for (s = SceneInfo->entitySlot + 1, i = 0; i < self->childCount; ++i) {
             Entity *child = RSDK_GET_ENTITY_GEN(s + i);
             if (!child)
                 continue;

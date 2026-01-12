@@ -30,6 +30,7 @@ void TryAgainE_Draw(void)
 
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
         Vector2 drawPos;
+        int32 drawY;
 
         RSDK.SetActivePalette(3, 0, ScreenInfo->size.y);
         self->mainAnimator.frameID = 0;
@@ -50,7 +51,7 @@ void TryAgainE_Draw(void)
 
         RSDK.DrawSprite(&self->player1Animator, &drawPos, false);
 
-        int32 drawY = drawPos.y;
+        drawY = drawPos.y;
         if (self->player1Animator.animationID == 2) {
             drawY = drawPos.y - 0x40000;
             drawPos.y -= 0x40000;
@@ -172,9 +173,10 @@ void TryAgainE_State_Stinger(void)
         self->timer = 600;
 
     if (self->timer == 600) {
+        EntityFXFade *fxFade;
         PhantomRuby_PlaySfx(RUBYSFX_ATTACK4);
 
-        EntityFXFade *fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xFFFFFF), self->position.x, self->position.y);
+        fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xFFFFFF), self->position.x, self->position.y);
         fxFade->speedIn      = 24;
         fxFade->speedOut     = 24;
         fxFade->fadeOutBlack = true;

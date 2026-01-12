@@ -69,14 +69,17 @@ void Letterboard_StageLoad(void)
 
 void Letterboard_State_Controller(void)
 {
+    bool32 revealedAll;
+    int32 slot;
+    int32 i;
     RSDK_THIS(Letterboard);
 
     self->active = ACTIVE_BOUNDS;
 
-    bool32 revealedAll = true;
-    int32 slot         = SceneInfo->entitySlot + 1;
+    revealedAll = true;
+    slot         = SceneInfo->entitySlot + 1;
 
-    for (int32 i = 0; i < self->letterID; ++i) {
+    for (i = 0; i < self->letterID; ++i) {
         EntityLetterboard *letterboard = RSDK_GET_ENTITY(slot + i, Letterboard);
         if (letterboard->state)
             revealedAll = false;
@@ -104,6 +107,8 @@ void Letterboard_State_CheckPlayerSpin(void)
         self->spinSpeed = (abs(player->velocity.x) + abs(player->velocity.y)) >> 14;
         if (self->spinSpeed > 0) {
             if (Player_CheckCollisionTouch(player, self, &Letterboard->hitboxBoard)) {
+                int32 slot;
+                EntityLetterboard *letterboard;
                 self->drawFX = FX_SCALE;
                 self->state  = Letterboard_State_Spun;
                 if (self->spinSpeed > 16)
@@ -112,9 +117,9 @@ void Letterboard_State_CheckPlayerSpin(void)
                     self->spinSpeed = 8;
 
                 self->timer = 2;
-                int32 slot  = SceneInfo->entitySlot;
+                slot  = SceneInfo->entitySlot;
 
-                EntityLetterboard *letterboard = self;
+                letterboard = self;
                 while (slot >= 0) {
                     letterboard = RSDK_GET_ENTITY(slot--, Letterboard);
                     if (letterboard->state == Letterboard_State_Controller)

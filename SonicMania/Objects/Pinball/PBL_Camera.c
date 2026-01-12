@@ -50,11 +50,12 @@ void PBL_Camera_Create(void *data)
 
 void PBL_Camera_StageLoad(void)
 {
+    EntityPBL_Camera *entity;
     RSDK.ResetEntitySlot(SLOT_PBL_CAMERA, PBL_Camera->classID, NULL);
 
     RSDK.ClearCameras();
 
-    EntityPBL_Camera *entity = RSDK_GET_ENTITY(SLOT_PBL_CAMERA, PBL_Camera);
+    entity = RSDK_GET_ENTITY(SLOT_PBL_CAMERA, PBL_Camera);
     RSDK.AddCamera(&entity->targetPos, 0x100 << 16, 0x100 << 16, true);
 
     PBL_Camera->useAltMatNormal = false;
@@ -62,14 +63,17 @@ void PBL_Camera_StageLoad(void)
 
 void PBL_Camera_HandleScreenPos(void)
 {
+    int32 ang;
+    int32 ang2;
+    int32 height;
     RSDK_THIS(PBL_Camera);
 
     int32 angle = RSDK.Cos1024(-self->rotationY) << 12;
     if (angle < 0x3C0000)
         angle = 0x3C0000;
 
-    int32 ang  = self->angle - self->prevAngle;
-    int32 ang2 = ang - 0x400;
+    ang  = self->angle - self->prevAngle;
+    ang2 = ang - 0x400;
     if (self->angle <= 0x200)
         ang2 = ang + 0x400;
 
@@ -78,7 +82,7 @@ void PBL_Camera_HandleScreenPos(void)
     else
         ScreenInfo->position.x -= 2 * ang;
 
-    int32 height           = ((RSDK.Sin1024(-self->rotationY) << 12) << 8) / angle;
+    height           = ((RSDK.Sin1024(-self->rotationY) << 12) << 8) / angle;
     ScreenInfo->position.y = height - ScreenInfo->center.y + 512;
     self->prevAngle        = self->angle;
     self->centerY          = CLAMP(ScreenInfo->center.y - height + 8, -64, ScreenInfo->size.y);

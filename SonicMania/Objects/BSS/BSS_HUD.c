@@ -63,10 +63,12 @@ void BSS_HUD_StageLoad(void)
 
 void BSS_HUD_DrawNumbers(int32 value, Vector2 *drawPos)
 {
+    int32 mult;
+    int32 i;
     RSDK_THIS(BSS_HUD);
 
-    int32 mult = 1;
-    for (int32 i = 0; i < 3; ++i) {
+    mult = 1;
+    for (i = 0; i < 3; ++i) {
         self->numbersAnimator.frameID = value / mult % 10;
         RSDK.DrawSprite(&self->numbersAnimator, drawPos, true);
         drawPos->x -= TO_FIXED(16);

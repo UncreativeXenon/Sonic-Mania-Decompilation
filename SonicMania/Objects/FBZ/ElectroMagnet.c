@@ -125,28 +125,34 @@ void ElectroMagnet_State_MagnetActive(void)
     else {
         self->timer--;
 
-        foreach_all(Blaster, blaster)
         {
-            if (RSDK.CheckObjectCollisionTouchBox(blaster, &ElectroMagnet->hitboxPlayer, self, &self->hitboxMagnetRange)
-                && blaster->animator.animationID < 2 && blaster->state != Blaster_State_Init) {
-                blaster->state  = Blaster_State_MagnetAttract;
-                blaster->active = ACTIVE_NORMAL;
+            foreach_all(Blaster, blaster)
+            {
+                if (RSDK.CheckObjectCollisionTouchBox(blaster, &ElectroMagnet->hitboxPlayer, self, &self->hitboxMagnetRange)
+                    && blaster->animator.animationID < 2 && blaster->state != Blaster_State_Init) {
+                    blaster->state  = Blaster_State_MagnetAttract;
+                    blaster->active = ACTIVE_NORMAL;
+                }
             }
         }
 
-        foreach_all(MagSpikeBall, spikeBall)
         {
-            if (RSDK.CheckObjectCollisionTouchBox(spikeBall, &ElectroMagnet->hitboxPlayer, self, &self->hitboxMagnetRange)) {
-                spikeBall->direction = FLIP_X;
-                spikeBall->active    = ACTIVE_NORMAL;
+            foreach_all(MagSpikeBall, spikeBall)
+            {
+                if (RSDK.CheckObjectCollisionTouchBox(spikeBall, &ElectroMagnet->hitboxPlayer, self, &self->hitboxMagnetRange)) {
+                    spikeBall->direction = FLIP_X;
+                    spikeBall->active    = ACTIVE_NORMAL;
+                }
             }
         }
 
-        foreach_all(MagPlatform, platform)
         {
-            if (RSDK.CheckObjectCollisionTouchBox(platform, &ElectroMagnet->hitboxPlayer, self, &self->hitboxMagnetRange)) {
-                platform->state  = MagPlatform_State_Rise;
-                platform->active = ACTIVE_NORMAL;
+            foreach_all(MagPlatform, platform)
+            {
+                if (RSDK.CheckObjectCollisionTouchBox(platform, &ElectroMagnet->hitboxPlayer, self, &self->hitboxMagnetRange)) {
+                    platform->state  = MagPlatform_State_Rise;
+                    platform->active = ACTIVE_NORMAL;
+                }
             }
         }
 

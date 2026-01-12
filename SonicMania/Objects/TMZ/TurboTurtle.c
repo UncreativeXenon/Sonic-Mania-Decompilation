@@ -174,37 +174,44 @@ void TurboTurtle_SetupState(void)
 
 void TurboTurtle_HandleFans(void)
 {
+    int32 strength;
+    int32 length;
     RSDK_THIS(TurboTurtle);
 
     int32 storeDir  = self->direction;
     self->direction = FLIP_NONE;
 
-    int32 strength = self->currentSide ? self->rightFanStrength : self->leftFanStrength;
+    strength = self->currentSide ? self->rightFanStrength : self->leftFanStrength;
 
-    int32 length = self->currentSide ? self->rightFanLength : self->leftFanLength;
+    length = self->currentSide ? self->rightFanLength : self->leftFanLength;
 
     if (self->fanActiveTop) {
         length += RSDK.Sin256(2 * Zone->timer) >> 5;
         self->hitboxFanT.top = self->hitboxFanT.bottom - length;
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &self->hitboxFanT)) {
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_CLING && anim != ANI_SHAFT_SWING) {
-                    if (!player->onGround) {
-                        player->velocity.y -= player->gravityStrength;
-                        if (player->velocity.y > 0)
-                            player->velocity.y -= (player->velocity.y >> 3);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &self->hitboxFanT)) {
+                    int32 anim = player->animator.animationID;
+                    if (anim != ANI_CLING && anim != ANI_SHAFT_SWING) {
+                        int32 thisY;
+                        int32 bottom;
+                        int32 top;
+                        if (!player->onGround) {
+                            player->velocity.y -= player->gravityStrength;
+                            if (player->velocity.y > 0)
+                                player->velocity.y -= (player->velocity.y >> 3);
+                        }
+
+                        thisY  = self->position.y;
+                        bottom = thisY + (self->hitboxFanT.bottom << 16);
+                        top    = (self->hitboxFanT.top << 16) + thisY;
+                        if (player->position.y > top)
+                            top = player->position.y;
+
+                        player->position.y -= ((strength * (((length << 16) - bottom + top != 0 ? (length << 16) - bottom + top : 0) / length)) >> 1);
                     }
-
-                    int32 thisY  = self->position.y;
-                    int32 bottom = thisY + (self->hitboxFanT.bottom << 16);
-                    int32 top    = (self->hitboxFanT.top << 16) + thisY;
-                    if (player->position.y > top)
-                        top = player->position.y;
-
-                    player->position.y -= ((strength * (((length << 16) - bottom + top != 0 ? (length << 16) - bottom + top : 0) / length)) >> 1);
                 }
             }
         }
@@ -215,17 +222,20 @@ void TurboTurtle_HandleFans(void)
     if (self->leftFanActive) {
         self->hitboxFanL.left = self->hitboxFanL.right - length;
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionTouch(player, self, &self->hitboxFanL)) {
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_CLING && anim != ANI_SHAFT_SWING) {
-                    int32 left = (self->hitboxFanL.left << 16) + self->position.x;
-                    if (player->position.x > left)
-                        left = player->position.x;
+{
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &self->hitboxFanL)) {
+                    int32 anim = player->animator.animationID;
+                    if (anim != ANI_CLING && anim != ANI_SHAFT_SWING) {
+                        int32 pos;
+                        int32 left = (self->hitboxFanL.left << 16) + self->position.x;
+                        if (player->position.x > left)
+                            left = player->position.x;
 
-                    int32 pos = (length << 16) - (self->position.x + (self->hitboxFanL.right << 16)) + left;
-                    player->position.x -= (strength * ((pos & -(pos != 0)) / length)) >> 1;
+                        pos = (length << 16) - (self->position.x + (self->hitboxFanL.right << 16)) + left;
+                        player->position.x -= (strength * ((pos & -(pos != 0)) / length)) >> 1;
+                    }
                 }
             }
         }
@@ -236,17 +246,20 @@ void TurboTurtle_HandleFans(void)
     if (self->rightFanActive) {
         self->hitboxFanR.right = length + self->hitboxFanR.left;
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &self->hitboxFanR)) {
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_CLING && anim != ANI_SHAFT_SWING) {
-                    int32 right = (self->hitboxFanR.right << 16) + self->position.x;
-                    if (player->position.x < right)
-                        right = player->position.x;
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &self->hitboxFanR)) {
+                    int32 anim = player->animator.animationID;
+                    if (anim != ANI_CLING && anim != ANI_SHAFT_SWING) {
+                        int32 pos;
+                        int32 right = (self->hitboxFanR.right << 16) + self->position.x;
+                        if (player->position.x < right)
+                            right = player->position.x;
 
-                    int32 pos = self->position.x + (self->hitboxFanR.left << 16);
-                    player->position.x += (strength * ((((length << 16) - right + pos != 0) ? (length << 16) - right + pos : 0) / length)) >> 1;
+                        pos = self->position.x + (self->hitboxFanR.left << 16);
+                        player->position.x += (strength * ((((length << 16) - right + pos != 0) ? (length << 16) - right + pos : 0) / length)) >> 1;
+                    }
                 }
             }
         }
@@ -262,7 +275,9 @@ void TurboTurtle_HandleFanParticles(uint8 type, int32 strength, int32 length)
     RSDK_THIS(TurboTurtle);
 
     if (!(Zone->timer % 3)) {
-        for (int32 i = 0; i < RSDK.Rand(1, 2); ++i) {
+        int32 i;
+        for (i = 0; i < RSDK.Rand(1, 2); ++i) {
+            EntityDebris *debris;
             int32 timer = 0;
             int32 anim  = (RSDK.Rand(0, 10) > 7) + 6;
             int32 frame = RSDK.Rand(0, 3);
@@ -302,7 +317,7 @@ void TurboTurtle_HandleFanParticles(uint8 type, int32 strength, int32 length)
 
             timer += RSDK.Rand(-5, 5);
 
-            EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Move, spawnX, spawnY);
+            debris = CREATE_ENTITY(Debris, Debris_State_Move, spawnX, spawnY);
             RSDK.SetSpriteAnimation(TurboTurtle->aniFrames, anim, &debris->animator, true, frame);
             debris->velocity.x = velX;
             debris->velocity.y = velY;

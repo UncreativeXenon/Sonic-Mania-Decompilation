@@ -97,8 +97,9 @@ void SpearBlock_CheckPlayerCollisions(void)
 
     foreach_active(Player, player)
     {
+        Vector2 storePos;
         Player_CheckCollisionBox(player, self, &SpearBlock->blockHitbox);
-        Vector2 storePos = self->position;
+        storePos = self->position;
         self->position.x = self->spearPos.x;
         self->position.y = self->spearPos.y;
 

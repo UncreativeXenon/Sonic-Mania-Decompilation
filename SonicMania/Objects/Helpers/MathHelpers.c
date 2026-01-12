@@ -122,10 +122,11 @@ Vector2 MathHelpers_GetBezierPoint(int32 percent, int32 x1, int32 y1, int32 x2, 
 
 int32 MathHelpers_SquareRoot(uint32 num)
 {
+    uint32 root;
     int32 rem = 1 << 30; // 1 << 31 would result in the value having to be unsigned, so this is the max
     while (rem > num) rem >>= 2;
 
-    uint32 root = 0;
+    root = 0;
     while (rem) {
         if (num >= rem + root) {
             num -= rem + root;
@@ -149,13 +150,14 @@ int32 MathHelpers_Distance(int32 x1, int32 y1, int32 x2, int32 y2)
 
 int32 MathHelpers_GetBezierCurveLength(int32 x1, int32 y1, int32 x2, int32 y2, int32 x3, int32 y3, int32 x4, int32 y4)
 {
+    int32 percent;
     int32 lastX = x1;
     int32 lastY = y1;
 
     int32 length = 0;
     // 0x10000 = 1.0
     // 0xCCC == 0.05
-    for (int32 percent = 0xCCC; percent <= 0x10000; percent += 0xCCC) {
+    for (percent = 0xCCC; percent <= 0x10000; percent += 0xCCC) {
         Vector2 point = MathHelpers_GetBezierPoint(percent, x1, y1, x2, y2, x3, y3, x4, y4);
 
         length += MathHelpers_Distance(lastX, lastY, point.x, point.y);
@@ -167,6 +169,10 @@ int32 MathHelpers_GetBezierCurveLength(int32 x1, int32 y1, int32 x2, int32 y2, i
 
 bool32 MathHelpers_PointInHitbox(int32 thisX, int32 thisY, int32 otherX, int32 otherY, int32 direction, Hitbox *hitbox)
 {
+    int32 hitboxX2;
+    int32 hitboxX1;
+    int32 hitboxY1;
+    int32 hitboxY2;
     int32 left, top, right, bottom;
 
     if ((direction & FLIP_X)) {
@@ -186,15 +192,15 @@ bool32 MathHelpers_PointInHitbox(int32 thisX, int32 thisY, int32 otherX, int32 o
         bottom = hitbox->bottom;
         top    = hitbox->top;
     }
-    int32 hitboxX2 = right;
+    hitboxX2 = right;
     if (left < right)
         hitboxX2 = left;
-    int32 hitboxX1 = left;
+    hitboxX1 = left;
     if (right > left)
         hitboxX1 = right;
 
-    int32 hitboxY1 = top;
-    int32 hitboxY2 = bottom;
+    hitboxY1 = top;
+    hitboxY2 = bottom;
     if (top < bottom)
         hitboxY2 = top;
     if (bottom > top)
@@ -256,6 +262,10 @@ bool32 MathHelpers_CheckValidIntersect(int32 otherX1, int32 otherY1, int32 other
 int32 MathHelpers_CheckPositionOverlap(int32 otherX1, int32 otherY1, int32 otherX2, int32 otherY2, int32 thisX1, int32 thisY1, int32 thisX2,
                                        int32 thisY2)
 {
+    int32 thisInteractDir1;
+    int32 thisInteractDir2;
+    int32 otherInteractDir1;
+    int32 otherInteractDir2;
     // Creates "hitboxes" from the positions and does a quick check to see if they overlap
     if (!MathHelpers_PositionBoxesIntersect(otherX1, otherY1, otherX2, otherY2, thisX1, thisY1, thisX2, thisY2))
         return false;
@@ -279,8 +289,8 @@ int32 MathHelpers_CheckPositionOverlap(int32 otherX1, int32 otherY1, int32 other
         return false;
     }
 
-    int32 thisInteractDir1 = MathHelpers_GetInteractionDir(otherX1, otherY1, otherX2, otherY2, thisX1, thisY1);
-    int32 thisInteractDir2 = MathHelpers_GetInteractionDir(otherX1, otherY1, otherX2, otherY2, thisX2, thisY2);
+    thisInteractDir1 = MathHelpers_GetInteractionDir(otherX1, otherY1, otherX2, otherY2, thisX1, thisY1);
+    thisInteractDir2 = MathHelpers_GetInteractionDir(otherX1, otherY1, otherX2, otherY2, thisX2, thisY2);
 
     if (thisInteractDir1) {
         if (thisInteractDir1 == thisInteractDir2)
@@ -297,11 +307,11 @@ int32 MathHelpers_CheckPositionOverlap(int32 otherX1, int32 otherY1, int32 other
         return false;
     }
 
-    int32 otherInteractDir1 = MathHelpers_GetInteractionDir(thisX1, thisY1, thisX2, thisY2, otherX1, otherY1);
+    otherInteractDir1 = MathHelpers_GetInteractionDir(thisX1, thisY1, thisX2, thisY2, otherX1, otherY1);
     if (!otherInteractDir1)
         return true;
 
-    int32 otherInteractDir2 = MathHelpers_GetInteractionDir(thisX1, thisY1, thisX2, thisY2, otherX2, otherY2);
+    otherInteractDir2 = MathHelpers_GetInteractionDir(thisX1, thisY1, thisX2, thisY2, otherX2, otherY2);
     if (otherInteractDir1 == otherInteractDir2)
         return false;
 
@@ -327,6 +337,9 @@ int32 MathHelpers_GetEdgeDistance(int32 distance, int32 radius)
 
 bool32 MathHelpers_ConstrainToBox(Vector2 *pos, int32 x, int32 y, Vector2 boxPos, Hitbox hitbox)
 {
+    double div;
+    int32 radius;
+    int32 posY;
     int32 left   = MIN(hitbox.left, hitbox.right);
     int32 right  = MAX(hitbox.right, hitbox.left);
     int32 top    = MIN(hitbox.top, hitbox.bottom);
@@ -364,12 +377,12 @@ bool32 MathHelpers_ConstrainToBox(Vector2 *pos, int32 x, int32 y, Vector2 boxPos
         return true;
     }
 
-    double div   = 1.0f / 65536.0f;
-    int32 radius = (((boxPos.y - y) * div) / ((boxPos.x - x) * div)) * 65536.0f;
+    div   = 1.0f / 65536.0f;
+    radius = (((boxPos.y - y) * div) / ((boxPos.x - x) * div)) * 65536.0f;
     if (!radius)
         return false;
 
-    int32 posY = 0;
+    posY = 0;
     if (x <= boxPos.x) {
         posY = y + MathHelpers_GetEdgeDistance(boxPosLeft - x, radius);
         if (boxPosTop <= posY && posY <= boxPosBottom) {

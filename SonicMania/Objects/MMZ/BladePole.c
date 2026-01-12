@@ -58,10 +58,11 @@ void BladePole_StageLoad(void) { BladePole->aniFrames = RSDK.LoadSpriteAnimation
 
 void BladePole_DrawSprites(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(BladePole);
 
     self->direction = FLIP_NONE;
-    Vector2 drawPos = self->position;
+    drawPos = self->position;
     RSDK.DrawSprite(&self->poleAnimator, &drawPos, false);
 
     drawPos.y -= 0xC0000;

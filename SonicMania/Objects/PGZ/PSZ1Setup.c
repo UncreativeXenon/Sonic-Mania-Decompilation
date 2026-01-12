@@ -103,6 +103,8 @@ void PSZ1Setup_StaticUpdate(void)
 
         if (player->position.y < 0xAA00000) {
             if (player->position.y <= 0x900000) {
+                TileLayer *background1;
+                TileLayer *background2;
                 EntityCamera *camera = player->camera;
 
                 camera->position.y += 0xA000000;
@@ -110,8 +112,8 @@ void PSZ1Setup_StaticUpdate(void)
                 ScreenInfo[camera->screenID].position.y += 0xA00;
                 player->position.y += 0xA000000;
 
-                TileLayer *background1 = RSDK.GetTileLayer(0);
-                TileLayer *background2 = RSDK.GetTileLayer(1);
+                background1 = RSDK.GetTileLayer(0);
+                background2 = RSDK.GetTileLayer(1);
                 background1->scrollPos -= 0xA00000;
                 background2->scrollPos -= 0x2800000;
 
@@ -126,6 +128,8 @@ void PSZ1Setup_StaticUpdate(void)
             }
         }
         else {
+            TileLayer *background1;
+            TileLayer *background2;
             EntityCamera *camera = player->camera;
 
             camera->position.y -= 0xA000000;
@@ -133,8 +137,8 @@ void PSZ1Setup_StaticUpdate(void)
             ScreenInfo[camera->screenID].position.y -= 0xA00;
             player->position.y -= 0xA000000;
 
-            TileLayer *background1 = RSDK.GetTileLayer(0);
-            TileLayer *background2 = RSDK.GetTileLayer(1);
+            background1 = RSDK.GetTileLayer(0);
+            background2 = RSDK.GetTileLayer(1);
             background1->scrollPos += 0xA00000;
             background2->scrollPos += 0x2800000;
 
@@ -243,7 +247,7 @@ void PSZ1Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE)
-        RSDK.LoadPalette(0, "EncorePSZ1.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncorePSZ1.act", 0xFF);
 
     // Fun Fact: Pre-Plus didn't have animal types set for PGZ! It'd always be flickies due to that being the default value!
     Animals->animalTypes[0] = ANIMAL_POCKY;
@@ -302,12 +306,13 @@ void PSZ1Setup_Trigger_AwardAchievement(void)
 
 void PSZ1Setup_StageFinish_EndAct1(void)
 {
+    int32 p;
     ++SceneInfo->listPos;
     globals->enableIntro       = true;
     globals->suppressTitlecard = true;
     globals->suppressAutoMusic = true;
 
-    for (int32 p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
+    for (p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
 
     SaveGame_SavePlayerState();
     Zone_StoreEntities(15876 << 16, 1316 << 16);
@@ -317,7 +322,8 @@ void PSZ1Setup_StageFinish_EndAct1(void)
 
 void PSZ1Setup_LevelWrap_Top(void)
 {
-    for (int32 i = 1; i < ENTITY_COUNT; ++i) {
+    int32 i;
+    for (i = 1; i < ENTITY_COUNT; ++i) {
         EntityPlatform *entity = RSDK_GET_ENTITY(i, Platform);
         if (entity->classID != BoundsMarker->classID) {
             if (entity->position.y >= 0x6800000) {
@@ -335,7 +341,8 @@ void PSZ1Setup_LevelWrap_Top(void)
 
 void PSZ1Setup_LevelWrap_Bottom(void)
 {
-    for (int32 i = 1; i < ENTITY_COUNT; ++i) {
+    int32 i;
+    for (i = 1; i < ENTITY_COUNT; ++i) {
         EntityPlatform *entity = RSDK_GET_ENTITY(i, Platform);
         if (entity->classID != BoundsMarker->classID) {
             if (entity->position.y <= 0x1800000) {

@@ -37,18 +37,22 @@ void MSZ2Cutscene_Create(void *data)
 
 void MSZ2Cutscene_StageLoad(void)
 {
-    foreach_all(ParallaxSprite, sprite)
     {
-        if (sprite->aniID == MSZ_PARALLAXSPRITE_OOZPEEK) {
-            MSZ2Cutscene->oozPeek = sprite;
-            foreach_break;
+        foreach_all(ParallaxSprite, sprite)
+        {
+            if (sprite->aniID == MSZ_PARALLAXSPRITE_OOZPEEK) {
+                MSZ2Cutscene->oozPeek = sprite;
+                foreach_break;
+            }
         }
     }
 
-    foreach_all(EggPrison, prison)
     {
-        MSZ2Cutscene->prison = prison;
-        foreach_break;
+        foreach_all(EggPrison, prison)
+        {
+            MSZ2Cutscene->prison = prison;
+            foreach_break;
+        }
     }
 }
 
@@ -81,13 +85,17 @@ void MSZ2Cutscene_GetPistolPtr(void)
 
 bool32 MSZ2Cutscene_Cutscene_GoToPistol(EntityCutsceneSeq *host)
 {
+    EntityGiantPistol *pistol;
+    EntityParallaxSprite *parallaxSprite;
+    EntityEggPrison *prison;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityParallaxSprite *parallaxSprite = MSZ2Cutscene->oozPeek;
-    EntityEggPrison *prison              = MSZ2Cutscene->prison;
+    parallaxSprite = MSZ2Cutscene->oozPeek;
+    prison              = MSZ2Cutscene->prison;
 
     if (!host->timer) {
+        Vector2 size;
         MSZ2Cutscene_GetPistolPtr();
         parallaxSprite->visible = true;
         parallaxSprite->drawFX  = FX_SCALE;
@@ -95,7 +103,6 @@ bool32 MSZ2Cutscene_Cutscene_GoToPistol(EntityCutsceneSeq *host)
         parallaxSprite->scale.y = 0x100;
         prison->notSolid        = true;
 
-        Vector2 size;
         RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
         Zone->cameraBoundsT[0] = 0;
         Zone->cameraBoundsT[1] = 0;
@@ -117,7 +124,7 @@ bool32 MSZ2Cutscene_Cutscene_GoToPistol(EntityCutsceneSeq *host)
         }
     }
 
-    EntityGiantPistol *pistol = MSZ2Cutscene->pistol;
+    pistol = MSZ2Cutscene->pistol;
 
     player1->right = player1->position.x < pistol->position.x - 0xD00000;
     if (player1->position.x < pistol->position.x - 0xD00000) {
@@ -141,8 +148,9 @@ bool32 MSZ2Cutscene_Cutscene_GoToPistol(EntityCutsceneSeq *host)
 
 bool32 MSZ2Cutscene_Cutscene_EnterPistol(EntityCutsceneSeq *host)
 {
+    EntityGiantPistol *pistol;
     MANIA_GET_PLAYER(player1, player2, camera);
-    EntityGiantPistol *pistol = MSZ2Cutscene->pistol;
+    pistol = MSZ2Cutscene->pistol;
 
     if (player2->classID == Player->classID) {
         if (player2->state == Player_State_Air && player2->animator.animationID == ANI_JUMP)
@@ -180,9 +188,10 @@ bool32 MSZ2Cutscene_Cutscene_EnterPistol(EntityCutsceneSeq *host)
 
 bool32 MSZ2Cutscene_Cutscene_PistolFired(EntityCutsceneSeq *host)
 {
+    Entity *curEntity;
     MANIA_GET_PLAYER(player1, player2, camera);
 
-    Entity *curEntity = host->activeEntity;
+    curEntity = host->activeEntity;
     if (!host->timer) {
         player1->jumpPress = false;
         player1->jumpHold  = false;

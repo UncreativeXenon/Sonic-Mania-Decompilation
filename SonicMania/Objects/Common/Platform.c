@@ -36,6 +36,8 @@ void Platform_Update(void)
     StateMachine_Run(self->state);
 
     if (self->classID) {
+        int32 s;
+        int32 i;
         self->stood = false;
         self->collisionOffset.x += self->drawPos.x & 0xFFFF0000;
         self->collisionOffset.y += self->drawPos.y & 0xFFFF0000;
@@ -45,7 +47,7 @@ void Platform_Update(void)
 
         self->position.x = self->centerPos.x;
         self->position.y = self->centerPos.y;
-        for (int32 s = SceneInfo->entitySlot + 1, i = 0; i < self->childCount; ++i) {
+        for (s = SceneInfo->entitySlot + 1, i = 0; i < self->childCount; ++i) {
             Entity *child = RSDK_GET_ENTITY_GEN(s++);
             if (child->classID == ItemBox->classID) {
                 if (!child->scale.y) {
@@ -98,7 +100,8 @@ void Platform_LateUpdate(void) {}
 
 void Platform_StaticUpdate(void)
 {
-    for (int32 i = 0; i < PLAYER_COUNT; ++i) {
+    int32 i;
+    for (i = 0; i < PLAYER_COUNT; ++i) {
         Platform->stoodPos[i].x = 0;
         Platform->stoodPos[i].y = 0;
     }
@@ -112,19 +115,24 @@ void Platform_Draw(void)
     if (self->frameID >= 0) {
         if ((self->state == Platform_State_Circular && self->hasTension)
             || (self->state == Platform_State_Swing || self->state == Platform_State_Clacker || self->type == PLATFORM_SWING_REACT)) {
+            int32 rot;
+            int32 i;
+            int32 cnt;
+            int32 angle;
+            int32 fxStore;
             int32 ang = self->angle;
             if (self->state == Platform_State_Circular && self->hasTension)
                 ang = self->speed * Zone->timer + 4 * self->angle;
 
-            int32 fxStore = self->drawFX;
+            fxStore = self->drawFX;
             self->drawFX |= FX_FLIP | FX_ROTATE;
-            int32 cnt              = (self->amplitude.y >> 10) - 1;
-            int32 angle            = 0x400;
+            cnt              = (self->amplitude.y >> 10) - 1;
+            angle            = 0x400;
             self->direction        = FLIP_NONE;
             self->animator.frameID = self->frameID + 1;
 
-            int32 rot = ang >> 1;
-            for (int32 i = 0; i < cnt; ++i) {
+            rot = ang >> 1;
+            for (i = 0; i < cnt; ++i) {
                 drawPos.x = angle * RSDK.Cos1024(ang) + self->centerPos.x;
                 drawPos.y = angle * RSDK.Sin1024(ang) + self->centerPos.y;
                 RSDK.DrawSprite(&self->animator, &drawPos, false);
@@ -336,6 +344,7 @@ void Platform_Create(void *data)
     }
 
     if (!SceneInfo->inEditor) {
+        int32 i;
         if (self->collision != PLATFORM_C_NONE) {
             Hitbox *hitbox = RSDK.GetHitbox(&self->animator, self->collision != PLATFORM_C_PLATFORM);
             if (Platform->aniFrames != (uint16)-1 && hitbox) {
@@ -379,7 +388,7 @@ void Platform_Create(void *data)
             case PLATFORM_C_SOLID_NOCRUSH: self->stateCollide = Platform_Collision_Solid_NoCrush; break;
         }
 
-        for (int32 i = 0; i < self->childCount; ++i) {
+        for (i = 0; i < self->childCount; ++i) {
             EntityPlatform *child = RSDK_GET_ENTITY((i + RSDK.GetEntitySlot(self) + 1), Platform);
             child->tileCollisions = TILECOLLISION_NONE;
             if (HangPoint && child->classID == HangPoint->classID) {
@@ -581,10 +590,12 @@ void Platform_State_Falling(void)
     if (--self->timer <= 0) {
         self->timer = 0;
         self->state = Platform_State_Falling2;
-        foreach_active(Player, player)
         {
-            if ((1 << RSDK.GetEntitySlot(player)) & self->stoodPlayers)
-                player->velocity.y = self->velocity.y - TO_FIXED(1);
+            foreach_active(Player, player)
+            {
+                if ((1 << RSDK.GetEntitySlot(player)) & self->stoodPlayers)
+                    player->velocity.y = self->velocity.y - TO_FIXED(1);
+            }
         }
     }
 
@@ -652,6 +663,7 @@ void Platform_State_DoorSlide(void)
 
 void Platform_State_ReactMove(void)
 {
+    int32 speed16;
     RSDK_THIS(Platform);
 
     int32 drawX = -self->drawPos.x;
@@ -661,7 +673,7 @@ void Platform_State_ReactMove(void)
     self->drawPos.x = (self->amplitude.y >> 8) * RSDK.Cos256(self->angle) + self->centerPos.x;
     self->drawPos.y = (self->amplitude.y >> 8) * RSDK.Sin256(self->angle) + self->centerPos.y;
 
-    int32 speed16 = self->speed << 16;
+    speed16 = self->speed << 16;
     if (self->groundVel == speed16) {
         if (self->amplitude.y >= self->amplitude.x) {
             self->amplitude.y = self->amplitude.x;
@@ -685,18 +697,22 @@ void Platform_State_ReactMove(void)
 
 void Platform_State_Push(void)
 {
+    int32 y;
+    bool32 collided;
     RSDK_THIS(Platform);
 
     self->velocity.x = 0;
     self->velocity.y = 0;
 
-    foreach_active(Player, playerLoop)
     {
-        uint8 id = 1 << RSDK.GetEntitySlot(playerLoop);
-        if (id & self->pushPlayersL)
-            self->velocity.x += self->speed;
-        if (id & self->pushPlayersR)
-            self->velocity.x -= self->speed;
+        foreach_active(Player, playerLoop)
+        {
+            uint8 id = 1 << RSDK.GetEntitySlot(playerLoop);
+            if (id & self->pushPlayersL)
+                self->velocity.x += self->speed;
+            if (id & self->pushPlayersR)
+                self->velocity.x -= self->speed;
+        }
     }
 
     if (self->velocity.x > 0 || self->velocity.x < 0) {
@@ -725,19 +741,21 @@ void Platform_State_Push(void)
     self->drawPos.x += self->velocity.x;
     self->position.x = self->drawPos.x;
     self->position.y = self->drawPos.y;
-    foreach_active(Player, player)
     {
-        Hitbox *playerHitbox = Player_GetHitbox(player);
-        int32 bitID          = 1 << RSDK.GetEntitySlot(player);
-        if (bitID & self->pushPlayersL)
-            player->position.x = self->drawPos.x + ((self->hitbox.left - playerHitbox->right) << 16);
-        if (bitID & self->pushPlayersR)
-            player->position.x = self->drawPos.x + ((self->hitbox.right - playerHitbox->left - 1) << 16);
+        foreach_active(Player, player)
+        {
+            Hitbox *playerHitbox = Player_GetHitbox(player);
+            int32 bitID          = 1 << RSDK.GetEntitySlot(player);
+            if (bitID & self->pushPlayersL)
+                player->position.x = self->drawPos.x + ((self->hitbox.left - playerHitbox->right) << 16);
+            if (bitID & self->pushPlayersR)
+                player->position.x = self->drawPos.x + ((self->hitbox.right - playerHitbox->left - 1) << 16);
+        }
     }
 
-    bool32 collided =
+    collided =
         RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, TO_FIXED(self->hitbox.left + 16), TO_FIXED(self->hitbox.bottom), 4);
-    int32 y = self->position.y;
+    y = self->position.y;
 
     collided |= RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, TO_FIXED(0), TO_FIXED(self->hitbox.bottom), 4);
     if (self->position.y < y)
@@ -980,12 +998,14 @@ void Platform_State_DipRock(void)
 
 void Platform_State_Push_SlideOffL(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(Platform);
 
     self->drawPos.x += self->velocity.x;
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
     self->position.x = self->drawPos.x;
     self->position.y = self->drawPos.y;
@@ -998,12 +1018,14 @@ void Platform_State_Push_SlideOffL(void)
 
 void Platform_State_Push_SlideOffR(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(Platform);
 
     self->drawPos.x += self->velocity.x;
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
     self->position.x = self->drawPos.x;
     self->position.y = self->drawPos.y;
@@ -1017,10 +1039,14 @@ void Platform_State_Push_SlideOffR(void)
 
 void Platform_State_Push_Fall(void)
 {
+    int32 storeX;
+    int32 storeY;
+    bool32 collided;
+    int32 y;
     RSDK_THIS(Platform);
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
     self->drawPos.y += self->velocity.y;
     self->velocity.y += 0x3800;
@@ -1028,9 +1054,9 @@ void Platform_State_Push_Fall(void)
     self->position.x = self->drawPos.x;
     self->position.y = self->drawPos.y;
 
-    bool32 collided =
+    collided =
         RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, TO_FIXED(self->hitbox.left + 16), TO_FIXED(self->hitbox.bottom), 4);
-    int32 y = self->position.y;
+    y = self->position.y;
 
     collided |= RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, TO_FIXED(0), TO_FIXED(self->hitbox.bottom), 4);
     if (self->position.y < y)
@@ -1057,11 +1083,12 @@ void Platform_State_Push_Fall(void)
 
 void Platform_State_Path(void)
 {
+    EntityPlatformNode *node;
     RSDK_THIS(Platform);
 
     self->drawPos.x += self->velocity.x;
     self->drawPos.y += self->velocity.y;
-    EntityPlatformNode *node = RSDK_GET_ENTITY(self->speed, PlatformNode);
+    node = RSDK_GET_ENTITY(self->speed, PlatformNode);
 
     if (self->velocity.y <= 0) {
         if (self->drawPos.y < node->position.y)
@@ -1084,10 +1111,12 @@ void Platform_State_Path(void)
 
 void Platform_State_ReactSlow(void)
 {
+    int32 drawX;
+    int32 drawY;
     RSDK_THIS(Platform);
 
-    int32 drawX = -self->drawPos.x;
-    int32 drawY = -self->drawPos.y;
+    drawX = -self->drawPos.x;
+    drawY = -self->drawPos.y;
 
     self->amplitude.y += self->groundVel;
     self->drawPos.x = (self->amplitude.y >> 8) * RSDK.Cos256(self->angle) + self->centerPos.x;
@@ -1359,53 +1388,55 @@ void Platform_Collision_Solid(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionPlatform(player, self, platformHitbox);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionPlatform(player, self, platformHitbox);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            case C_TOP:
-                Platform_HandleStood(self, player, playerID, stoodPlayers);
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                case C_TOP:
+                    Platform_HandleStood(self, player, playerID, stoodPlayers);
 
-                if (self->velocity.y <= 0)
-                    player->collisionFlagV |= 1;
-                break;
+                    if (self->velocity.y <= 0)
+                        player->collisionFlagV |= 1;
+                    break;
 
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (self->velocity.x <= 0) {
-                    if (player->left) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x -= player->acceleration;
+                    if (self->velocity.x <= 0) {
+                        if (player->left) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x -= player->acceleration;
+                        }
+                        player->collisionFlagH |= 1;
                     }
-                    player->collisionFlagH |= 1;
-                }
-                break;
+                    break;
 
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
 
-                if (self->velocity.x >= 0) {
-                    if (player->right) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
+                    if (self->velocity.x >= 0) {
+                        if (player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
+                        player->collisionFlagH |= 2;
                     }
-                    player->collisionFlagH |= 2;
-                }
-                break;
+                    break;
 
-            case C_BOTTOM:
-                if (self->velocity.y >= 0)
-                    player->collisionFlagV |= 2;
-                break;
+                case C_BOTTOM:
+                    if (self->velocity.y >= 0)
+                        player->collisionFlagV |= 2;
+                    break;
 
-            default: break;
+                default: break;
+            }
         }
     }
 }
@@ -1416,13 +1447,15 @@ void Platform_Collision_Hurt(void)
     if (self->timer)
         self->timer--;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x400, self->type == PLATFORM_CIRCULAR, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x400, self->type == PLATFORM_CIRCULAR, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 }
@@ -1437,58 +1470,60 @@ void Platform_Collision_Solid_Hurt_Bottom(void)
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionPlatform(player, self, platformHitbox);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionPlatform(player, self, platformHitbox);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            case C_TOP:
-                Platform_HandleStood(self, player, playerID, 0xFF);
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                case C_TOP:
+                    Platform_HandleStood(self, player, playerID, 0xFF);
 
-                if (self->velocity.y <= 0)
-                    player->collisionFlagV |= 1;
-                break;
+                    if (self->velocity.y <= 0)
+                        player->collisionFlagV |= 1;
+                    break;
 
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (self->velocity.x <= 0) {
-                    if (player->left) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x -= player->acceleration;
+                    if (self->velocity.x <= 0) {
+                        if (player->left) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x -= player->acceleration;
+                        }
+                        player->collisionFlagH |= 1;
                     }
-                    player->collisionFlagH |= 1;
-                }
-                break;
+                    break;
 
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
 
-                if (self->velocity.x >= 0) {
-                    if (player->right) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
+                    if (self->velocity.x >= 0) {
+                        if (player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
+                        player->collisionFlagH |= 2;
                     }
-                    player->collisionFlagH |= 2;
-                }
-                break;
+                    break;
 
-            case C_BOTTOM:
-                if (self->velocity.y >= 0)
-                    player->collisionFlagV |= 2;
+                case C_BOTTOM:
+                    if (self->velocity.y >= 0)
+                        player->collisionFlagV |= 2;
 
 #if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(player, 0x400, 0, &player->uncurlTimer))
+                    if (!Player_CheckMightyUnspin(player, 0x400, 0, &player->uncurlTimer))
 #endif
-                    Player_Hurt(player, self);
-                break;
+                        Player_Hurt(player, self);
+                    break;
 
-            default: break;
+                default: break;
+            }
         }
     }
 }
@@ -1501,72 +1536,74 @@ void Platform_Collision_Solid_Hurt_Sides(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            uint16 playerID = RSDK.GetEntitySlot(player);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            case C_TOP:
-                Platform_HandleStood(self, player, playerID, 0xFF);
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                case C_TOP:
+                    Platform_HandleStood(self, player, playerID, 0xFF);
 
-                if (self->velocity.y <= 0)
-                    player->collisionFlagV |= 1;
-                break;
+                    if (self->velocity.y <= 0)
+                        player->collisionFlagV |= 1;
+                    break;
 
-            case C_LEFT:
-                if (
+                case C_LEFT:
+                    if (
 #if MANIA_USE_PLUS
-                    Player_CheckMightyUnspin(player, 1024, 0, &player->uncurlTimer) ||
+                        Player_CheckMightyUnspin(player, 1024, 0, &player->uncurlTimer) ||
 #endif
-                    Player_Hurt(player, self)) {
-                    player->velocity.x += self->velocity.x;
-                }
-
-                if (!player->blinkTimer || player->velocity.x >= self->velocity.x) {
-                    if (player->onGround && player->right)
-                        self->pushPlayersL |= 1 << playerID;
-
-                    if (self->velocity.x < 0 && player->velocity.x >= self->velocity.x && player->left) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x -= player->acceleration;
+                        Player_Hurt(player, self)) {
+                        player->velocity.x += self->velocity.x;
                     }
-                }
 
-                if (self->velocity.x <= 0)
-                    player->collisionFlagH |= 1;
-                break;
+                    if (!player->blinkTimer || player->velocity.x >= self->velocity.x) {
+                        if (player->onGround && player->right)
+                            self->pushPlayersL |= 1 << playerID;
 
-            case C_RIGHT:
-                if (
+                        if (self->velocity.x < 0 && player->velocity.x >= self->velocity.x && player->left) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x -= player->acceleration;
+                        }
+                    }
+
+                    if (self->velocity.x <= 0)
+                        player->collisionFlagH |= 1;
+                    break;
+
+                case C_RIGHT:
+                    if (
 #if MANIA_USE_PLUS
-                    Player_CheckMightyUnspin(player, 0x400, 0, &player->uncurlTimer) ||
+                        Player_CheckMightyUnspin(player, 0x400, 0, &player->uncurlTimer) ||
 #endif
-                    Player_Hurt(player, self)) {
-                    player->velocity.x += self->velocity.x;
-                }
-
-                if (!player->blinkTimer || player->velocity.x <= self->velocity.x) {
-                    if (player->onGround && player->left)
-                        self->pushPlayersR |= 1 << playerID;
-
-                    if (self->velocity.x > 0 && player->velocity.x <= self->velocity.x && player->right) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
+                        Player_Hurt(player, self)) {
+                        player->velocity.x += self->velocity.x;
                     }
-                }
 
-                if (self->velocity.x >= 0)
-                    player->collisionFlagH |= 2;
-                break;
+                    if (!player->blinkTimer || player->velocity.x <= self->velocity.x) {
+                        if (player->onGround && player->left)
+                            self->pushPlayersR |= 1 << playerID;
 
-            case C_BOTTOM:
-                if (self->velocity.y >= 0)
-                    player->collisionFlagV |= 2;
-                break;
+                        if (self->velocity.x > 0 && player->velocity.x <= self->velocity.x && player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
+                    }
 
-            default: break;
+                    if (self->velocity.x >= 0)
+                        player->collisionFlagH |= 2;
+                    break;
+
+                case C_BOTTOM:
+                    if (self->velocity.y >= 0)
+                        player->collisionFlagV |= 2;
+                    break;
+
+                default: break;
+            }
         }
     }
 }
@@ -1577,78 +1614,81 @@ void Platform_Collision_Tiles(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        Hitbox hitbox;
-        hitbox.left   = self->hitbox.left - 16;
-        hitbox.top    = self->hitbox.top - 16;
-        hitbox.right  = self->hitbox.right + 16;
-        hitbox.bottom = self->hitbox.bottom + 16;
+            Hitbox hitbox;
+            hitbox.left   = self->hitbox.left - 16;
+            hitbox.top    = self->hitbox.top - 16;
+            hitbox.right  = self->hitbox.right + 16;
+            hitbox.bottom = self->hitbox.bottom + 16;
 
-        if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-            player->collisionLayers |= Zone->moveLayerMask;
-            player->moveLayerPosition.x = self->tileOrigin.x - self->drawPos.x;
-            player->moveLayerPosition.y = self->tileOrigin.y - self->drawPos.y;
-            if (player->animator.animationID == ANI_PUSH && player->onGround) {
-                if (player->right)
-                    self->pushPlayersL |= 1 << playerID;
+            if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                bool32 isClimbing;
+                player->collisionLayers |= Zone->moveLayerMask;
+                player->moveLayerPosition.x = self->tileOrigin.x - self->drawPos.x;
+                player->moveLayerPosition.y = self->tileOrigin.y - self->drawPos.y;
+                if (player->animator.animationID == ANI_PUSH && player->onGround) {
+                    if (player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
-            }
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
+                }
 
-            bool32 isClimbing = false;
-            if (player->state == Player_State_KnuxWallClimb || player->state == Player_State_KnuxLedgePullUp) {
-                isClimbing = true;
+                isClimbing = false;
+                if (player->state == Player_State_KnuxWallClimb || player->state == Player_State_KnuxLedgePullUp) {
+                    isClimbing = true;
 
-                if (player->state == Player_State_KnuxLedgePullUp)
-                    hitbox.top -= 16;
+                    if (player->state == Player_State_KnuxLedgePullUp)
+                        hitbox.top -= 16;
 
-                if (player->position.x >= self->position.x) {
-                    hitbox.top += 16;
-                    hitbox.left += 16;
+                    if (player->position.x >= self->position.x) {
+                        hitbox.top += 16;
+                        hitbox.left += 16;
+                    }
+                    else {
+                        hitbox.top += 16;
+                        hitbox.right -= 16;
+                    }
+
+                    hitbox.bottom -= 16;
                 }
                 else {
-                    hitbox.top += 16;
-                    hitbox.right -= 16;
+                    switch (player->collisionMode) {
+                        case CMODE_FLOOR:
+                            hitbox.right -= 16;
+                            hitbox.left += 16;
+                            hitbox.bottom -= 16;
+                            break;
+
+                        case CMODE_LWALL:
+                            hitbox.top += 16;
+                            hitbox.right -= 16;
+                            hitbox.bottom -= 16;
+                            break;
+
+                        case CMODE_ROOF:
+                            hitbox.top += 16;
+                            hitbox.left += 16;
+                            hitbox.right -= 16;
+                            break;
+
+                        case CMODE_RWALL:
+                            hitbox.top += 16;
+                            hitbox.left += 16;
+                            hitbox.bottom -= 16;
+                            break;
+
+                        default: break;
+                    }
                 }
 
-                hitbox.bottom -= 16;
-            }
-            else {
-                switch (player->collisionMode) {
-                    case CMODE_FLOOR:
-                        hitbox.right -= 16;
-                        hitbox.left += 16;
-                        hitbox.bottom -= 16;
-                        break;
-
-                    case CMODE_LWALL:
-                        hitbox.top += 16;
-                        hitbox.right -= 16;
-                        hitbox.bottom -= 16;
-                        break;
-
-                    case CMODE_ROOF:
-                        hitbox.top += 16;
-                        hitbox.left += 16;
-                        hitbox.right -= 16;
-                        break;
-
-                    case CMODE_RWALL:
-                        hitbox.top += 16;
-                        hitbox.left += 16;
-                        hitbox.bottom -= 16;
-                        break;
-
-                    default: break;
+                if (Player_CheckCollisionTouch(player, self, &hitbox) && (player->onGround || isClimbing)) {
+                    Platform_HandleStood_Tiles(self, player, playerID);
                 }
-            }
-
-            if (Player_CheckCollisionTouch(player, self, &hitbox) && (player->onGround || isClimbing)) {
-                Platform_HandleStood_Tiles(self, player, playerID);
             }
         }
     }
@@ -1662,14 +1702,17 @@ void Platform_Collision_Sticky(void)
 
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionPlatform(player, self, platformHitbox);
+        foreach_active(Player, player)
+        {
+            int32 side; 
+            uint16 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionPlatform(player, self, platformHitbox);
 
-        int32 side = Player_CheckCollisionBox(player, self, solidHitbox);
+            side = Player_CheckCollisionBox(player, self, solidHitbox);
 
-        Platform_HandleStood_Sticky(self, player, playerID, side);
+            Platform_HandleStood_Sticky(self, player, playerID, side);
+        }
     }
 }
 void Platform_Collision_Solid_Hurt_Top(void)
@@ -1681,56 +1724,58 @@ void Platform_Collision_Solid_Hurt_Top(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            uint16 playerID = RSDK.GetEntitySlot(player);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            case C_TOP: Platform_HandleStood(self, player, playerID, 0xFF);
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                case C_TOP: Platform_HandleStood(self, player, playerID, 0xFF);
 
 #if MANIA_USE_PLUS
-                if (!Player_CheckMightyUnspin(player, 0x400, 0, &player->uncurlTimer))
+                    if (!Player_CheckMightyUnspin(player, 0x400, 0, &player->uncurlTimer))
 #endif
-                    Player_Hurt(player, self);
+                        Player_Hurt(player, self);
 
-                if (self->velocity.y <= 0)
-                    player->collisionFlagV |= 1;
-                break;
+                    if (self->velocity.y <= 0)
+                        player->collisionFlagV |= 1;
+                    break;
 
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (self->velocity.x <= 0) {
-                    if (player->left) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x -= player->acceleration;
+                    if (self->velocity.x <= 0) {
+                        if (player->left) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x -= player->acceleration;
+                        }
+                        player->collisionFlagH |= 1;
                     }
-                    player->collisionFlagH |= 1;
-                }
-                break;
+                    break;
 
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
 
-                if (self->velocity.x >= 0) {
-                    if (player->right) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
+                    if (self->velocity.x >= 0) {
+                        if (player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
+                        player->collisionFlagH |= 2;
                     }
-                    player->collisionFlagH |= 2;
-                }
-                break;
+                    break;
 
-            case C_BOTTOM:
-                if (self->velocity.y >= 0)
-                    player->collisionFlagV |= 2;
-                break;
+                case C_BOTTOM:
+                    if (self->velocity.y >= 0)
+                        player->collisionFlagV |= 2;
+                    break;
 
-            default: break;
+                default: break;
+            }
         }
     }
 }
@@ -1742,19 +1787,21 @@ void Platform_Collision_Platform(void)
     int32 stoodPlayers     = self->stoodPlayers;
 
     self->stoodPlayers = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
-        int32 yVel      = player->velocity.y;
+        foreach_active(Player, player)
+        {
+            uint16 playerID = RSDK.GetEntitySlot(player);
+            int32 yVel      = player->velocity.y;
 
-        if (self->collisionOffset.y < 0)
-            player->velocity.y -= self->collisionOffset.y;
+            if (self->collisionOffset.y < 0)
+                player->velocity.y -= self->collisionOffset.y;
 
-        if (Player_CheckCollisionPlatform(player, self, platformHitbox)) {
-            Platform_HandleStood(self, player, playerID, stoodPlayers);
-        }
-        else {
-            player->velocity.y = yVel;
+            if (Player_CheckCollisionPlatform(player, self, platformHitbox)) {
+                Platform_HandleStood(self, player, playerID, stoodPlayers);
+            }
+            else {
+                player->velocity.y = yVel;
+            }
         }
     }
 }
@@ -1769,62 +1816,64 @@ void Platform_Collision_Solid_Barrel(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionPlatform(player, self, platformHitbox);
+        foreach_active(Player, player)
+        {
+            uint16 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionPlatform(player, self, platformHitbox);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            case C_TOP: self->stood = true;
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                case C_TOP: self->stood = true;
 #if MANIA_USE_PLUS
-                if (player->characterID != ID_MIGHTY || player->state != Player_State_MightyHammerDrop) {
+                    if (player->characterID != ID_MIGHTY || player->state != Player_State_MightyHammerDrop) {
 #endif
 
-                    Platform_HandleStood_Barrel(self, player, playerID, stoodPlayers);
+                        Platform_HandleStood_Barrel(self, player, playerID, stoodPlayers);
 
-                    if (self->velocity.y <= 0)
-                        player->collisionFlagV |= 1;
+                        if (self->velocity.y <= 0)
+                            player->collisionFlagV |= 1;
 #if MANIA_USE_PLUS
-                }
+                    }
 #endif
-                break;
+                    break;
 
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (self->velocity.x <= 0) {
-                    if (player->left) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x -= player->acceleration;
+                    if (self->velocity.x <= 0) {
+                        if (player->left) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x -= player->acceleration;
+                        }
+
+                        player->collisionFlagH |= 1;
                     }
+                    break;
 
-                    player->collisionFlagH |= 1;
-                }
-                break;
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
 
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
+                    if (self->velocity.x >= 0) {
+                        if (player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
 
-                if (self->velocity.x >= 0) {
-                    if (player->right) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
+                        player->collisionFlagH |= 2;
                     }
+                    break;
 
-                    player->collisionFlagH |= 2;
-                }
-                break;
+                case C_BOTTOM:
+                    if (self->velocity.y >= 0)
+                        player->collisionFlagV |= 2;
+                    break;
 
-            case C_BOTTOM:
-                if (self->velocity.y >= 0)
-                    player->collisionFlagV |= 2;
-                break;
-
-            default: break;
+                default: break;
+            }
         }
     }
 }
@@ -1839,72 +1888,74 @@ void Platform_Collision_Solid_Hold(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionPlatform(player, self, platformHitbox);
+        foreach_active(Player, player)
+        {
+            uint16 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionPlatform(player, self, platformHitbox);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            case C_NONE:
-                if ((1 << playerID) & stoodPlayers) {
-                    if (player->state == Player_State_Static) {
-                        player->state = Player_State_Air;
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_AIR_WALK, &player->animator, false, 0);
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                case C_NONE:
+                    if ((1 << playerID) & stoodPlayers) {
+                        if (player->state == Player_State_Static) {
+                            player->state = Player_State_Air;
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_AIR_WALK, &player->animator, false, 0);
+                        }
                     }
-                }
-                break;
+                    break;
 
-            case C_TOP:
+                case C_TOP:
 #if MANIA_USE_PLUS
-                if (player->characterID != ID_MIGHTY || player->state != Player_State_MightyHammerDrop) {
+                    if (player->characterID != ID_MIGHTY || player->state != Player_State_MightyHammerDrop) {
 #endif
 
-                    Platform_HandleStood_Hold(self, player, playerID, stoodPlayers);
+                        Platform_HandleStood_Hold(self, player, playerID, stoodPlayers);
 
-                    if (self->velocity.y <= 0)
-                        player->collisionFlagV |= 1;
+                        if (self->velocity.y <= 0)
+                            player->collisionFlagV |= 1;
 #if MANIA_USE_PLUS
-                }
+                    }
 #endif
-                break;
+                    break;
 
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (self->velocity.x <= 0) {
-                    if (player->left) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x -= player->acceleration;
+                    if (self->velocity.x <= 0) {
+                        if (player->left) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x -= player->acceleration;
+                        }
+
+                        player->collisionFlagH |= 1;
+                    }
+                    break;
+
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
+
+                    if (self->velocity.x >= 0) {
+                        if (player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
+
+                        player->collisionFlagH |= 2;
                     }
 
-                    player->collisionFlagH |= 1;
-                }
-                break;
+                    break;
 
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
+                case C_BOTTOM:
+                    if (self->velocity.y >= 0)
+                        player->collisionFlagV |= 2;
+                    break;
 
-                if (self->velocity.x >= 0) {
-                    if (player->right) {
-                        player->groundVel  = self->velocity.x;
-                        player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
-                    }
-
-                    player->collisionFlagH |= 2;
-                }
-
-                break;
-
-            case C_BOTTOM:
-                if (self->velocity.y >= 0)
-                    player->collisionFlagV |= 2;
-                break;
-
-            default: break;
+                default: break;
+            }
         }
     }
 }
@@ -1923,52 +1974,55 @@ void Platform_Collision_Solid_NoCrush(void)
     self->stoodPlayers = 0;
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
-    foreach_active(Player, player)
     {
-        uint16 playerID = RSDK.GetEntitySlot(player);
-        Player_CheckCollisionPlatform(player, self, platformHitbox);
+        foreach_active(Player, player)
+        {
+            uint16 playerID = RSDK.GetEntitySlot(player);
+            Player_CheckCollisionPlatform(player, self, platformHitbox);
 
-        switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
-            default:
-            case C_NONE: break;
+            switch (Player_CheckCollisionBox(player, self, solidHitbox)) {
+                default:
+                case C_NONE: break;
 
-            case C_TOP: Platform_HandleStood(self, player, playerID, stoodPlayers); break;
+                case C_TOP: Platform_HandleStood(self, player, playerID, stoodPlayers); break;
 
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
 
-                if (self->velocity.x <= 0 && player->left) {
-                    player->groundVel  = self->velocity.x;
-                    player->velocity.x = player->groundVel;
-                    player->velocity.x -= player->acceleration;
-                }
-                break;
-
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
-
-                if (self->velocity.x >= 0) {
-                    if (player->right) {
+                    if (self->velocity.x <= 0 && player->left) {
                         player->groundVel  = self->velocity.x;
                         player->velocity.x = player->groundVel;
-                        player->velocity.x += player->acceleration;
+                        player->velocity.x -= player->acceleration;
                     }
-                }
-                break;
+                    break;
 
-            case C_BOTTOM: break;
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
+
+                    if (self->velocity.x >= 0) {
+                        if (player->right) {
+                            player->groundVel  = self->velocity.x;
+                            player->velocity.x = player->groundVel;
+                            player->velocity.x += player->acceleration;
+                        }
+                    }
+                    break;
+
+                case C_BOTTOM: break;
+            }
         }
     }
 }
 
 void Platform_HandleStood(EntityPlatform *self, EntityPlayer *player, int32 playerID, int32 stoodPlayers)
 {
+    bool32 isStood;
     self->stood = true;
 
     // if stoodPlayers is 0xFF thats the "ignore stoodPlayers" flag
-    bool32 isStood = ((1 << playerID) & stoodPlayers) != 0;
+    isStood = ((1 << playerID) & stoodPlayers) != 0;
     isStood &= stoodPlayers != 0xFF;
 
     if (!isStood && !player->sidekick && self->state == Platform_State_Fall && !self->timer) {
@@ -2017,6 +2071,7 @@ void Platform_HandleStood_Tiles(EntityPlatform *self, EntityPlayer *player, int3
 }
 void Platform_HandleStood_Hold(EntityPlatform *self, EntityPlayer *player, int32 playerID, int32 stoodPlayers)
 {
+    bool32 stoodStore;
     if (!((1 << playerID) & stoodPlayers)) {
         player->state           = Player_State_Static;
         player->nextGroundState = StateMachine_None;
@@ -2035,7 +2090,7 @@ void Platform_HandleStood_Hold(EntityPlatform *self, EntityPlayer *player, int32
         }
     }
 
-    bool32 stoodStore = self->stood;
+    stoodStore = self->stood;
     Platform_HandleStood(self, player, playerID, stoodPlayers);
     self->stood = stoodStore;
 

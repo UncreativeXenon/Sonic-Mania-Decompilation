@@ -130,12 +130,13 @@ void MSHologram_State_Explode(void)
     }
 
     if (++self->timer == 80) {
+        int32 i;
         self->timer     = 0;
         self->destroyed = true;
         self->visible   = false;
         self->state     = MSHologram_State_Destroyed;
 
-        for (int32 i = 0; i < 16; ++i) {
+        for (i = 0; i < 16; ++i) {
             int32 x               = self->position.x + RSDK.Rand(0x800000, 0xE00000);
             int32 y               = self->position.y - RSDK.Rand(0x200000, 0x800000);
             EntityAnimals *animal = CREATE_ENTITY(Animals, INT_TO_VOID(RSDK.Rand(1, 12)), x, y);

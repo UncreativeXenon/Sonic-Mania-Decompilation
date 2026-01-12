@@ -12,6 +12,7 @@ ObjectUIRankButton *UIRankButton;
 
 void UIRankButton_Update(void)
 {
+    EntityUIControl *control;
     RSDK_THIS(UIRankButton);
 
     self->touchPosSizeS.x   = self->size.x;
@@ -30,7 +31,7 @@ void UIRankButton_Update(void)
         }
     }
 
-    EntityUIControl *control = (EntityUIControl *)self->parent;
+    control = (EntityUIControl *)self->parent;
     if (control && self->state == UIRankButton_State_HandleButtonEnter && !control->popoverHasFocus
         && (control->state != UIControl_ProcessInputs || control->buttons[control->buttonID] != (EntityUIButton *)self)) {
         self->isSelected = false;
@@ -44,6 +45,10 @@ void UIRankButton_StaticUpdate(void) {}
 
 void UIRankButton_Draw(void)
 {
+    int32 clipX1;
+    int32 clipY1;
+    int32 clipX2;
+    int32 clipY2;
     RSDK_THIS(UIRankButton);
 
     EntityUIControl *control   = (EntityUIControl *)self->parent;
@@ -66,10 +71,10 @@ void UIRankButton_Draw(void)
     if (self->buttonBounceOffset || self->textBounceOffset)
         setClip = false;
 
-    int32 clipX1 = ScreenInfo->clipBound_X1;
-    int32 clipY1 = ScreenInfo->clipBound_Y1;
-    int32 clipX2 = ScreenInfo->clipBound_X2;
-    int32 clipY2 = ScreenInfo->clipBound_Y2;
+    clipX1 = ScreenInfo->clipBound_X1;
+    clipY1 = ScreenInfo->clipBound_Y1;
+    clipX2 = ScreenInfo->clipBound_X2;
+    clipY2 = ScreenInfo->clipBound_Y2;
 
     if (setClip)
         RSDK.SetClipBounds(SceneInfo->currentScreenID, (newClipX1 >> 16) - ScreenInfo->position.x - (newClipX2 >> 17),
@@ -196,25 +201,29 @@ void UIRankButton_SetupLeaderboardRank(EntityUIRankButton *button, LeaderboardEn
 
 void UIRankButton_DrawSprites(void)
 {
+    Vector2 drawPos;
+    int32 startX;
+    int32 width;
+    int32 drawX;
+    int32 drawY;
     RSDK_THIS(UIRankButton);
 
-    Vector2 drawPos;
     drawPos.x = self->position.x;
     drawPos.y = self->position.y;
 
-    int32 startX = 0xA40000;
+    startX = 0xA40000;
     if (!self->showsName)
         startX = 0x840000;
 
-    int32 width = 0xB20000;
+    width = 0xB20000;
     if (self->showsName)
         width = 0xF20000;
 
     drawPos.x = 0x110000 - ((width + 0x2A0000) >> 1) + self->position.x;
     UIRankButton_DrawBackgroundShape(drawPos.x, drawPos.y, 0x220000, 0x100000, 0x000000);
 
-    int32 drawX = startX + drawPos.x;
-    int32 drawY = drawPos.y;
+    drawX = startX + drawPos.x;
+    drawY = drawPos.y;
     UIRankButton_DrawBackgroundShape(drawX, drawPos.y, width, 0x100000, 0x000000);
 
     if (self->state != UIRankButton_State_Selected || !((self->timer >> 1) % 2)) {
@@ -232,9 +241,10 @@ void UIRankButton_DrawSprites(void)
         }
 
         if (self->showsName && !SceneInfo->inEditor) {
+            int32 len;
             drawPos.x = drawX - (width >> 1) + 0x20000 + self->buttonBounceOffset;
             drawPos.y = drawY + self->buttonBounceOffset + self->textBounceOffset;
-            int32 len = MIN(self->nameTimeText.length, 20);
+            len = MIN(self->nameTimeText.length, 20);
             RSDK.DrawText(&self->fontAnimator, &drawPos, &self->nameTimeText, 0, len, ALIGN_LEFT, 0, INT_TO_VOID(2), NULL, false);
         }
 

@@ -15,20 +15,23 @@ void SeltzerBottle_Update(void)
 
     RSDK.ProcessAnimation(&self->waterAnimator);
 
-    foreach_active(Player, player)
     {
-        Player_CheckCollisionBox(player, self, &SeltzerBottle->hitboxBottle);
+        foreach_active(Player, player)
+        {
+            Player_CheckCollisionBox(player, self, &SeltzerBottle->hitboxBottle);
 
-        if (Player_CheckCollisionPlatform(player, self, &SeltzerBottle->hitboxButton) && !self->buttonAnimator.frameID) {
-            self->buttonAnimator.frameID = 1;
-            self->active                 = ACTIVE_NORMAL;
-            self->state                  = SeltzerBottle_State_Spraying;
-            RSDK.SetSpriteAnimation(SeltzerBottle->aniFrames, 6, &self->sprayAnimator, false, 0);
-            player->groundVel = CLAMP(player->groundVel, -0xC0000, 0xC0000);
+            if (Player_CheckCollisionPlatform(player, self, &SeltzerBottle->hitboxButton) && !self->buttonAnimator.frameID) {
+                int32 p;
+                self->buttonAnimator.frameID = 1;
+                self->active                 = ACTIVE_NORMAL;
+                self->state                  = SeltzerBottle_State_Spraying;
+                RSDK.SetSpriteAnimation(SeltzerBottle->aniFrames, 6, &self->sprayAnimator, false, 0);
+                player->groundVel = CLAMP(player->groundVel, -0xC0000, 0xC0000);
 
-            for (int32 p = 0; p < Player->playerCount; ++p) RSDK_GET_ENTITY(p, Player)->collisionLayers |= SeltzerBottle->seltzerPathLayerMask;
+                for (p = 0; p < Player->playerCount; ++p) RSDK_GET_ENTITY(p, Player)->collisionLayers |= SeltzerBottle->seltzerPathLayerMask;
 
-            RSDK.PlaySfx(SeltzerBottle->sfxSpray, false, 0xFF);
+                RSDK.PlaySfx(SeltzerBottle->sfxSpray, false, 0xFF);
+            }
         }
     }
 
@@ -41,12 +44,13 @@ void SeltzerBottle_StaticUpdate(void) {}
 
 void SeltzerBottle_Draw(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(SeltzerBottle);
 
     RSDK.DrawRect(self->position.x - 0x2E0000, self->position.y - self->waterLevel + 0x2C0000, 0x5C0000, self->waterLevel, 0x00F0F0, 0x40, INK_SUB,
                   false);
 
-    Vector2 drawPos = self->position;
+    drawPos = self->position;
     drawPos.y += 0x2C0000 - self->waterLevel;
     self->inkEffect = INK_ADD;
     RSDK.DrawSprite(&self->waterAnimator, &drawPos, false);
@@ -122,34 +126,39 @@ void SeltzerBottle_StageLoad(void)
 
 void SeltzerBottle_State_Spraying(void)
 {
+    EntitySeltzerWater *spray;
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(SeltzerBottle);
 
     self->waterLevel = MAX(((self->timer << 14) / self->sprayTime) << 8, 0x40000);
 
-    EntitySeltzerWater *spray = CREATE_ENTITY(SeltzerWater, NULL, self->position.x, self->position.y - 0x4C0000);
+    spray = CREATE_ENTITY(SeltzerWater, NULL, self->position.x, self->position.y - 0x4C0000);
     spray->position.x += self->direction == FLIP_X ? 0x300000 : -0x300000;
     spray->oscillateRadius = RSDK.Rand(0xA00, 0xC00);
     spray->offsetAngle     = RSDK.Rand(0, 0x100);
     spray->drawGroup       = Zone->playerDrawGroup[0];
     spray->nodeSlot        = SceneInfo->entitySlot + 1;
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
-    foreach_active(Player, player)
     {
-        if (player->onGround) {
-            self->position.x = player->position.x + (RSDK.Sin256(player->angle) << 13);
-            self->position.y = player->position.y + (RSDK.Cos256(player->angle) << 13);
+        foreach_active(Player, player)
+        {
+            if (player->onGround) {
+                self->position.x = player->position.x + (RSDK.Sin256(player->angle) << 13);
+                self->position.y = player->position.y + (RSDK.Cos256(player->angle) << 13);
 
-            if (RSDK.ObjectTileCollision(self, SeltzerBottle->seltzerPathLayerMask, player->collisionMode, 0, 0, 0, false)) {
-                if (self->direction == FLIP_X) {
-                    if (player->groundVel < 0x50000)
-                        player->groundVel = 0x50000;
-                }
-                else {
-                    if (player->groundVel > -0x50000)
-                        player->groundVel = -0x50000;
+                if (RSDK.ObjectTileCollision(self, SeltzerBottle->seltzerPathLayerMask, player->collisionMode, 0, 0, 0, false)) {
+                    if (self->direction == FLIP_X) {
+                        if (player->groundVel < 0x50000)
+                            player->groundVel = 0x50000;
+                    }
+                    else {
+                        if (player->groundVel > -0x50000)
+                            player->groundVel = -0x50000;
+                    }
                 }
             }
         }
@@ -161,14 +170,17 @@ void SeltzerBottle_State_Spraying(void)
     RSDK.ProcessAnimation(&self->sprayAnimator);
 
     if (--self->timer <= 0) {
-        for (int32 p = 0; p < Player->playerCount; ++p) RSDK_GET_ENTITY(p, Player)->collisionLayers &= ~SeltzerBottle->seltzerPathLayerMask;
+        int32 p;
+        for (p = 0; p < Player->playerCount; ++p) RSDK_GET_ENTITY(p, Player)->collisionLayers &= ~SeltzerBottle->seltzerPathLayerMask;
 
         RSDK.SetSpriteAnimation(-1, 0, &self->sprayAnimator, false, 0);
         self->state = SeltzerBottle_State_TryReset;
-        foreach_active(SeltzerWater, water)
         {
-            water->gravityStrength = RSDK.Rand(0x3800, 0x4000);
-            water->state           = SeltzerWater_State_Falling;
+            foreach_active(SeltzerWater, water)
+            {
+                water->gravityStrength = RSDK.Rand(0x3800, 0x4000);
+                water->state           = SeltzerWater_State_Falling;
+            }
         }
     }
 }

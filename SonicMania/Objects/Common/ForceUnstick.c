@@ -61,6 +61,7 @@ void ForceUnstick_StageLoad(void)
 
 void ForceUnstick_DrawSprites(void)
 {
+    int32 y;
     RSDK_THIS(ForceUnstick);
 
     Vector2 drawPos;
@@ -68,8 +69,9 @@ void ForceUnstick_DrawSprites(void)
     drawPos.y = self->position.y - (self->height << 19);
 
     ForceUnstick->animator.frameID = self->breakClimb ? 9 : 6;
-    for (int32 y = 0; y < self->height + 1; ++y) {
-        for (int32 x = 0; x < self->width + 1; ++x) {
+    for (y = 0; y < self->height + 1; ++y) {
+        int32 x;
+        for (x = 0; x < self->width + 1; ++x) {
             RSDK.DrawSprite(&ForceUnstick->animator, &drawPos, false);
             drawPos.x += TO_FIXED(16);
         }

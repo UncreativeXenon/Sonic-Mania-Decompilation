@@ -70,14 +70,16 @@ void FrostThrower_StageLoad(void)
 
 void FrostThrower_DrawGustFX(void)
 {
+    int32 i;
     RSDK_THIS(FrostThrower);
 
     int32 pos = 0;
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
+        int32 p;
         int32 count = MIN(self->gustCount[i], 3);
 
         RSDK.SetSpriteAnimation(FrostThrower->aniFrames, 1, &self->gustAnimator, true, i);
-        for (int32 p = 0; p < count; ++p) {
+        for (p = 0; p < count; ++p) {
             Vector2 drawPos;
             drawPos.x = self->position.x + self->gustPos[pos + p].x;
             drawPos.y = self->position.y + self->gustPos[pos + p].y;
@@ -103,9 +105,10 @@ void FrostThrower_CheckPlayerCollisions(void)
 
 void FrostThrower_HandleGustCount(void)
 {
+    int32 i;
     RSDK_THIS(FrostThrower);
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         self->gustCount[i] = self->maxGustCount[i];
         if (self->maxGustCount[i] > 1) {
             if (RSDK.Rand(0, 10) <= 6)
@@ -116,6 +119,7 @@ void FrostThrower_HandleGustCount(void)
 
 void FrostThrower_HandleGustPos(void)
 {
+    int32 i;
     RSDK_THIS(FrostThrower);
     int32 pos = 0;
 
@@ -123,8 +127,9 @@ void FrostThrower_HandleGustPos(void)
     int32 yMax[] = { 22, 45, 62, 78 };
     int32 xMin[] = { -3, -5, -7, -9 };
     int32 xMax[] = { 3, 5, 7, 9 };
-    for (int32 i = 0; i < 4; ++i) {
-        for (int32 p = 0; p < self->gustCount[i]; ++p) {
+    for (i = 0; i < 4; ++i) {
+        int32 p;
+        for (p = 0; p < self->gustCount[i]; ++p) {
             self->gustPos[pos + p].x = RSDK.Rand(xMin[i], xMax[i]) << 16;
             self->gustPos[pos + p].y = RSDK.Rand(yMin[i], yMax[i]) << 16;
         }

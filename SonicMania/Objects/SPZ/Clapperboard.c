@@ -120,6 +120,8 @@ void Clapperboard_StageLoad(void)
 
 void Clapperboard_Collide_Left(void)
 {
+    int32 clapStartPos;
+    bool32 clapped;
     RSDK_THIS(Clapperboard);
 
     uint8 negAngle = -(-self->angle >> 2);
@@ -130,48 +132,51 @@ void Clapperboard_Collide_Left(void)
     self->hitbox.left  = ((self->amplitudeL.y >> 8) * RSDK.Sin256(negAngle) + (self->amplitudeL.x >> 8) * RSDK.Cos256(negAngle)) >> 16;
     self->hitbox.right = ((self->amplitudeR.y >> 8) * RSDK.Sin256(negAngle) + (self->amplitudeR.x >> 8) * RSDK.Cos256(negAngle)) >> 16;
 
-    int32 clapStartPos = self->hitbox.right - self->hitbox.left;
+    clapStartPos = self->hitbox.right - self->hitbox.left;
     self->direction ^= FLIP_X;
-    bool32 clapped = false;
+    clapped = false;
 
-    foreach_active(Player, player)
-    {
-        int32 standPos      = self->hitbox.right - CLAMP((player->position.x - self->position.x) >> 16, self->hitbox.left, self->hitbox.right);
-        int32 top           = (ampR >> 16) + ((ampR >> 16) - (ampL >> 16)) * standPos / clapStartPos - (self->clapSpeed & 0xFFFF);
-        self->hitbox.top    = top;
-        self->hitbox.bottom = top + 24;
-        if (Player_CheckCollisionPlatform(player, self, &self->hitbox)) {
+{
+        foreach_active(Player, player)
+        {
+            int32 standPos      = self->hitbox.right - CLAMP((player->position.x - self->position.x) >> 16, self->hitbox.left, self->hitbox.right);
+            int32 top           = (ampR >> 16) + ((ampR >> 16) - (ampL >> 16)) * standPos / clapStartPos - (self->clapSpeed & 0xFFFF);
+            self->hitbox.top    = top;
+            self->hitbox.bottom = top + 24;
+            if (Player_CheckCollisionPlatform(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (player->state == Player_State_MightyHammerDrop)
-                player->state = Player_State_Air;
+                if (player->state == Player_State_MightyHammerDrop)
+                    player->state = Player_State_Air;
 #endif
 
-            player->position.y += (self->clapSpeed + 2) << 16;
-            if (standPos > (clapStartPos >> 2)) {
-                self->stoodPlayers |= RSDK.GetEntitySlot(player) + 1;
-                if (self->state == Clapperboard_State_ClapReboundL
-                    || (abs(player->groundVel) > 0x80000 && standPos > clapStartPos - (clapStartPos >> 2))) {
-                    player->onGround   = false;
-                    player->state      = Player_State_Air;
-                    player->velocity.y = -0x40000 - 0x60000 * standPos / clapStartPos;
+                player->position.y += (self->clapSpeed + 2) << 16;
+                if (standPos > (clapStartPos >> 2)) {
+                    self->stoodPlayers |= RSDK.GetEntitySlot(player) + 1;
+                    if (self->state == Clapperboard_State_ClapReboundL
+                        || (abs(player->groundVel) > 0x80000 && standPos > clapStartPos - (clapStartPos >> 2))) {
+                        int32 anim;
+                        player->onGround   = false;
+                        player->state      = Player_State_Air;
+                        player->velocity.y = -0x40000 - 0x60000 * standPos / clapStartPos;
 
-                    int32 anim = player->animator.animationID;
-                    if (anim == ANI_WALK || (anim > ANI_AIR_WALK && anim <= ANI_DASH))
-                        player->animationReserve = player->animator.animationID;
-                    else
-                        player->animationReserve = ANI_WALK;
+                        anim = player->animator.animationID;
+                        if (anim == ANI_WALK || (anim > ANI_AIR_WALK && anim <= ANI_DASH))
+                            player->animationReserve = player->animator.animationID;
+                        else
+                            player->animationReserve = ANI_WALK;
 
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, true, 0);
-                    RSDK.PlaySfx(Clapperboard->sfxWhack, false, 255);
-                    clapped = true;
-                }
-                else {
-                    int32 clapSpeed = 16;
-                    if (abs(player->groundVel) < 0xA0000)
-                        clapSpeed = 16 * standPos / clapStartPos;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, true, 0);
+                        RSDK.PlaySfx(Clapperboard->sfxWhack, false, 255);
+                        clapped = true;
+                    }
+                    else {
+                        int32 clapSpeed = 16;
+                        if (abs(player->groundVel) < 0xA0000)
+                            clapSpeed = 16 * standPos / clapStartPos;
 
-                    if (clapSpeed > self->clapSpeed)
-                        self->clapSpeed = clapSpeed;
+                        if (clapSpeed > self->clapSpeed)
+                            self->clapSpeed = clapSpeed;
+                    }
                 }
             }
         }
@@ -184,6 +189,8 @@ void Clapperboard_Collide_Left(void)
 
 void Clapperboard_Collide_Right(void)
 {
+    int32 clapStartPos;
+    bool32 clapped;
     RSDK_THIS(Clapperboard);
 
     int32 negAngle = -(-self->angle >> 2);
@@ -193,48 +200,51 @@ void Clapperboard_Collide_Right(void)
 
     self->hitbox.left  = (((self->amplitudeL.y >> 8) * RSDK.Sin256(negAngle)) + (self->amplitudeL.x >> 8) * RSDK.Cos256(negAngle)) >> 16;
     self->hitbox.right = (((self->amplitudeR.y >> 8) * RSDK.Sin256(negAngle)) + (self->amplitudeR.x >> 8) * RSDK.Cos256(negAngle)) >> 16;
-    int32 clapStartPos = self->hitbox.right - self->hitbox.left;
-    bool32 clapped     = false;
+    clapStartPos = self->hitbox.right - self->hitbox.left;
+    clapped     = false;
 
-    foreach_active(Player, player)
-    {
-        int32 standPos      = CLAMP((player->position.x - self->position.x) >> 16, self->hitbox.left, self->hitbox.right) - self->hitbox.left;
-        int32 top           = (ampL >> 16) + ((ampL >> 16) - (ampR >> 16)) * standPos / clapStartPos - (self->clapSpeed & 0xFFFF);
-        self->hitbox.top    = top;
-        self->hitbox.bottom = top + 24;
+{
+        foreach_active(Player, player)
+        {
+            int32 standPos      = CLAMP((player->position.x - self->position.x) >> 16, self->hitbox.left, self->hitbox.right) - self->hitbox.left;
+            int32 top           = (ampL >> 16) + ((ampL >> 16) - (ampR >> 16)) * standPos / clapStartPos - (self->clapSpeed & 0xFFFF);
+            self->hitbox.top    = top;
+            self->hitbox.bottom = top + 24;
 
-        if (Player_CheckCollisionPlatform(player, self, &self->hitbox)) {
+            if (Player_CheckCollisionPlatform(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (player->state == Player_State_MightyHammerDrop)
-                player->state = Player_State_Air;
+                if (player->state == Player_State_MightyHammerDrop)
+                    player->state = Player_State_Air;
 #endif
 
-            player->position.y += (self->clapSpeed + 2) << 16;
-            if (standPos > clapStartPos >> 2) {
-                self->stoodPlayers |= RSDK.GetEntitySlot(player) + 1;
-                if (self->state == Clapperboard_State_ClapReboundR
-                    || (abs(player->groundVel) > 0x80000 && standPos > clapStartPos - (clapStartPos >> 2))) {
-                    player->onGround   = false;
-                    player->state      = Player_State_Air;
-                    player->velocity.y = -0x40000 - 0x60000 * standPos / clapStartPos;
+                player->position.y += (self->clapSpeed + 2) << 16;
+                if (standPos > clapStartPos >> 2) {
+                    self->stoodPlayers |= RSDK.GetEntitySlot(player) + 1;
+                    if (self->state == Clapperboard_State_ClapReboundR
+                        || (abs(player->groundVel) > 0x80000 && standPos > clapStartPos - (clapStartPos >> 2))) {
+                        int32 anim;
+                        player->onGround   = false;
+                        player->state      = Player_State_Air;
+                        player->velocity.y = -0x40000 - 0x60000 * standPos / clapStartPos;
 
-                    int32 anim = player->animator.animationID;
-                    if (anim == ANI_WALK || (anim > ANI_AIR_WALK && anim <= ANI_DASH))
-                        player->animationReserve = player->animator.animationID;
-                    else
-                        player->animationReserve = ANI_WALK;
+                        anim = player->animator.animationID;
+                        if (anim == ANI_WALK || (anim > ANI_AIR_WALK && anim <= ANI_DASH))
+                            player->animationReserve = player->animator.animationID;
+                        else
+                            player->animationReserve = ANI_WALK;
 
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, true, 0);
-                    RSDK.PlaySfx(Clapperboard->sfxWhack, false, 0xFF);
-                    clapped = true;
-                }
-                else {
-                    int32 clapSpeed = 16;
-                    if (abs(player->groundVel) < 0xA0000)
-                        clapSpeed = 16 * standPos / clapStartPos;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, true, 0);
+                        RSDK.PlaySfx(Clapperboard->sfxWhack, false, 0xFF);
+                        clapped = true;
+                    }
+                    else {
+                        int32 clapSpeed = 16;
+                        if (abs(player->groundVel) < 0xA0000)
+                            clapSpeed = 16 * standPos / clapStartPos;
 
-                    if (clapSpeed > self->clapSpeed)
-                        self->clapSpeed = clapSpeed;
+                        if (clapSpeed > self->clapSpeed)
+                            self->clapSpeed = clapSpeed;
+                    }
                 }
             }
         }

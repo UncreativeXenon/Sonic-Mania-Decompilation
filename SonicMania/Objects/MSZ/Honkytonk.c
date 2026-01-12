@@ -16,45 +16,48 @@ void Honkytonk_Update(void)
     if (self->depression > 0)
         self->depression = MAX(self->depression - 0x20000, 0);
 
-    foreach_active(Player, player)
     {
-        int32 startX    = player->position.x;
-        int32 startY    = player->position.y;
-        int32 startXVel = player->velocity.x;
-        int32 startYVel = player->velocity.y;
+        foreach_active(Player, player)
+        {
+            Vector2 pivotCenter = { 0, 0 };
+            int32 startX    = player->position.x;
+            int32 startY    = player->position.y;
+            int32 startXVel = player->velocity.x;
+            int32 startYVel = player->velocity.y;
 
-        Zone_RotateOnPivot(&player->position, &self->position, self->negAngle);
+            Zone_RotateOnPivot(&player->position, &self->position, self->negAngle);
 
-        Vector2 pivotCenter = { 0, 0 };
-        Zone_RotateOnPivot(&player->velocity, &pivotCenter, self->negAngle);
+            Zone_RotateOnPivot(&player->velocity, &pivotCenter, self->negAngle);
 
-        if (Player_CheckCollisionTouch(player, self, &Honkytonk->hitboxTrigger)) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
-            self->depression     = MAX(self->depression, player->position.y + ((playerHitbox->bottom + 12) << 16) - self->position.y);
-        }
+            if (Player_CheckCollisionTouch(player, self, &Honkytonk->hitboxTrigger)) {
+                Hitbox *playerHitbox = Player_GetHitbox(player);
+                self->depression     = MAX(self->depression, player->position.y + ((playerHitbox->bottom + 12) << 16) - self->position.y);
+            }
 
-        if (Player_CheckCollisionTouch(player, self, &Honkytonk->hitboxRebound) && player->tileCollisions != TILECOLLISION_NONE) {
-            player->state        = Player_State_Air;
-            player->onGround     = false;
-            player->applyJumpCap = false;
-            player->velocity.y   = -0x80000;
-            if (player->animator.animationID != ANI_JUMP)
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, true, 0);
+            if (Player_CheckCollisionTouch(player, self, &Honkytonk->hitboxRebound) && player->tileCollisions != TILECOLLISION_NONE) {
+                int32 channel;
+                float speeds[]       = { 1.0, 1.25, 1.5, 0.75 };
+                player->state        = Player_State_Air;
+                player->onGround     = false;
+                player->applyJumpCap = false;
+                player->velocity.y   = -0x80000;
+                if (player->animator.animationID != ANI_JUMP)
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, true, 0);
 
-            player->velocity.y = CLAMP(player->velocity.y, -0x80000, -0x20000);
+                player->velocity.y = CLAMP(player->velocity.y, -0x80000, -0x20000);
 
-            Zone_RotateOnPivot(&player->position, &self->position, self->angle);
-            Zone_RotateOnPivot(&player->velocity, &pivotCenter, self->angle);
+                Zone_RotateOnPivot(&player->position, &self->position, self->angle);
+                Zone_RotateOnPivot(&player->velocity, &pivotCenter, self->angle);
 
-            float speeds[] = { 1.0, 1.25, 1.5, 0.75 };
-            int32 channel  = RSDK.PlaySfx(Honkytonk->sfxPiano, false, 0xFF);
-            RSDK.SetChannelAttributes(channel, 1.0, 0.0, speeds[Zone->timer & 3]);
-        }
-        else {
-            player->position.x = startX;
-            player->position.y = startY;
-            player->velocity.x = startXVel;
-            player->velocity.y = startYVel;
+                channel  = RSDK.PlaySfx(Honkytonk->sfxPiano, false, 0xFF);
+                RSDK.SetChannelAttributes(channel, 1.0, 0.0, speeds[Zone->timer & 3]);
+            }
+            else {
+                player->position.x = startX;
+                player->position.y = startY;
+                player->velocity.x = startXVel;
+                player->velocity.y = startYVel;
+            }
         }
     }
 
@@ -68,6 +71,7 @@ void Honkytonk_StaticUpdate(void) {}
 
 void Honkytonk_Draw(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(Honkytonk);
 
     self->animator.frameID = 4;
@@ -76,7 +80,6 @@ void Honkytonk_Draw(void)
 
     self->animator.frameID = 1;
 
-    Vector2 drawPos;
     drawPos.x     = self->position.x + (-0xC00 * RSDK.Sin256(self->angle));
     drawPos.y     = self->position.y + (-0xC00 * RSDK.Cos256(self->angle));
     self->scale.y = ((self->depression + 0x20000) >> 7) / 24;

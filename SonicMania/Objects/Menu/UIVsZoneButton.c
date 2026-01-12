@@ -11,6 +11,7 @@ ObjectUIVsZoneButton *UIVsZoneButton;
 
 void UIVsZoneButton_Update(void)
 {
+    EntityUIControl *parent;
     RSDK_THIS(UIVsZoneButton);
 
     self->touchPosSizeS.x   = 0x500000;
@@ -55,15 +56,16 @@ void UIVsZoneButton_Update(void)
     if (self->zoneID == UIVSZONEBUTTON_FUZZ || self->xOut)
         RSDK.ProcessAnimation(&self->zoneAnimator);
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
     if (self->state == UIVsZoneButton_State_HandleButtonEnter) {
         if (parent->state != UIControl_ProcessInputs) {
             self->isSelected = false;
             self->state      = UIVsZoneButton_State_HandleButtonLeave;
         }
         else {
+            int32 i;
             int32 id = -1;
-            for (int32 i = 0; i < parent->buttonCount; ++i) {
+            for (i = 0; i < parent->buttonCount; ++i) {
                 if (self == (EntityUIVsZoneButton *)parent->buttons[i]) {
                     id = i;
                     break;

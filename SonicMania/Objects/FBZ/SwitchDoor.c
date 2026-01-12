@@ -76,13 +76,16 @@ void SwitchDoor_StageLoad(void)
 
 void SwitchDoor_DrawSprites(void)
 {
+    int32 id;
+    int32 yOffset;
+    int32 i; 
     RSDK_THIS(SwitchDoor);
 
     self->animator.frameID = self->go ? SWITCHDOOR_GO_INSIDE2_ALT : SWITCHDOOR_GO_INSIDE1;
 
-    int32 id      = 0;
-    int32 yOffset = 0;
-    for (int32 i = 0; i < 8; ++i) {
+    id      = 0;
+    yOffset = 0;
+    for (i = 0; i < 8; ++i) {
         Vector2 drawPos;
         drawPos.x = self->position.x + (id << 20);
         drawPos.y = self->position.y + yOffset;

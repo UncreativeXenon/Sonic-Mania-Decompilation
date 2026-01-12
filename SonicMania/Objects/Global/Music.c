@@ -91,9 +91,10 @@ void Music_StageLoad(void)
 
 void Music_SetMusicTrack(const char *path, uint8 track, uint32 loopPoint)
 {
+    int32 charID;
     track &= 0xF;
 
-    int32 charID = 0;
+    charID = 0;
     for (; charID < 0x20; ++charID) {
         if (!path[charID])
             break;
@@ -135,20 +136,22 @@ void Music_State_PlayOnLoad(void)
 
 void Music_PlayJingle(uint8 trackID)
 {
+    int32 slot;
+    EntityMusic *entity;
     trackID &= 0xF;
 
 #if MANIA_USE_PLUS
     // remove any existing vers of this on the stack
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && music->trackID == trackID) {
             destroyEntity(music);
         }
     }
 
-    EntityMusic *entity = NULL;
+    entity = NULL;
     // get the first empty stack slot
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         entity = RSDK_GET_ENTITY(slot, Music);
         if (entity->classID != Music->classID) {
             RSDK.ResetEntity(entity, Music->classID, NULL);
@@ -190,7 +193,7 @@ void Music_PlayJingle(uint8 trackID)
 
     Music_GetNextTrackStartPos(entity);
 
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && music != entity) {
             if (music->trackPriority > entity->trackPriority) {
@@ -333,20 +336,22 @@ void Music_PlayTrackPtr(EntityMusic *entity)
 #if MANIA_USE_PLUS
 void Music_PlayAutoMusicQueuedTrack(uint8 trackID)
 {
+    int32 slot;
+    EntityMusic *entity;
     trackID &= 0xF;
     Music->nextTrack = TRACK_STAGE;
 
     // remove any existing vers of this on the stack
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && music->trackID == trackID) {
             destroyEntity(music);
         }
     }
 
-    EntityMusic *entity = NULL;
+    entity = NULL;
     // get the first empty stack slot
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         entity = RSDK_GET_ENTITY(slot, Music);
         if (entity->classID != Music->classID) {
             destroyEntity(entity);
@@ -390,7 +395,8 @@ void Music_PlayAutoMusicQueuedTrack(uint8 trackID)
 
 void Music_HandleMusicStack_Powerups(EntityMusic *entity)
 {
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    int32 slot; 
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && music->trackPriority == TRACK_PRIORITY_POWERUP && music->trackID != entity->trackID
             && music != entity)
@@ -400,9 +406,10 @@ void Music_HandleMusicStack_Powerups(EntityMusic *entity)
 
 bool32 Music_CheckMusicStack_Active(void)
 {
+    int32 slot; 
     bool32 active = false;
 
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && music->trackPriority > TRACK_PRIORITY_NONE)
             active = true;
@@ -413,9 +420,10 @@ bool32 Music_CheckMusicStack_Active(void)
 
 void Music_GetNextTrackStartPos(EntityMusic *entity)
 {
+    int32 slot;
     int32 stackCount = 0;
 
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && entity != music) {
             if (music->trackID == Music->activeTrack) {
@@ -439,10 +447,11 @@ void Music_GetNextTrackStartPos(EntityMusic *entity)
 
 void Music_JingleFadeOut(uint8 trackID, bool32 transitionFade)
 {
+    int32 slot;
     trackID &= 0xF;
 
 #if MANIA_USE_PLUS
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
         EntityMusic *music = RSDK_GET_ENTITY(slot, Music);
         if (music->classID == Music->classID && music->trackID == trackID) {
             if (transitionFade) {
@@ -508,10 +517,15 @@ void Music_FinishJingle(EntityMusic *entity)
             destroyEntity(entity);
         }
         else {
+            int32 slot;
+            bool32 shouldRestartTrack;
+            int32 priority;
+            EntityMusic *trackPtr;
+            EntityMusic *stack;
             destroyEntity(music);
 
             // remove all of these buggers that have higher priority and thus wont be played
-            for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+            for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
                 EntityMusic *stack = RSDK_GET_ENTITY(slot, Music);
                 if (stack->classID == Music->classID && stack != entity && entity->trackPriority <= stack->trackPriority) {
                     destroyEntity(entity);
@@ -519,14 +533,14 @@ void Music_FinishJingle(EntityMusic *entity)
                 }
             }
 
-            bool32 shouldRestartTrack = entity->restartTrack;
+            shouldRestartTrack = entity->restartTrack;
             destroyEntity(entity);
-            int32 priority = TRACK_PRIORITY_NONE;
+            priority = TRACK_PRIORITY_NONE;
 
-            EntityMusic *trackPtr = NULL;
+            trackPtr = NULL;
             // the next track to be played will be the track with the highest priority on the stack (may be none)
-            for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
-                EntityMusic *stack = RSDK_GET_ENTITY(slot, Music);
+            for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) {
+                stack = RSDK_GET_ENTITY(slot, Music);
                 if (stack->classID == Music->classID && stack->trackPriority > priority) {
                     trackPtr = stack;
                     priority = stack->trackPriority;
@@ -583,15 +597,17 @@ void Music_FinishJingle(EntityMusic *entity)
 
 void Music_ClearMusicStack(void)
 {
-    for (int32 slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) destroyEntity(RSDK_GET_ENTITY(slot, Music));
+    int32 slot;
+    for (slot = SLOT_MUSICSTACK_START; slot < SLOT_MUSICSTACK_END; ++slot) destroyEntity(RSDK_GET_ENTITY(slot, Music));
 }
 #endif
 
 void Music_TransitionTrack(uint8 trackID, float fadeSpeed)
 {
+    EntityMusic *music;
     trackID &= 0xF;
 
-    EntityMusic *music = NULL;
+    music = NULL;
 #if MANIA_USE_PLUS
     switch (trackID) {
         case TRACK_ACTCLEAR:

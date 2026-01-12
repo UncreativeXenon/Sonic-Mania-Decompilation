@@ -72,6 +72,9 @@ void PetalPile_StageLoad(void)
 
 int32 PetalPile_GetLeafPattern(Vector2 *patternPtr)
 {
+    int32 sizeX;
+    int32 sizeY;
+    int32 i;
     RSDK_THIS(PetalPile);
 
     int32 count    = PetalPile->patternSize[self->leafPattern];
@@ -85,9 +88,9 @@ int32 PetalPile_GetLeafPattern(Vector2 *patternPtr)
         default: return 0;
     }
 
-    int32 sizeX = MAX(self->pileSize.x, 0x20000);
-    int32 sizeY = MAX(self->pileSize.y, 0x20000);
-    for (int32 i = 0; i < count; ++i) {
+    sizeX = MAX(self->pileSize.x, 0x20000);
+    sizeY = MAX(self->pileSize.y, 0x20000);
+    for (i = 0; i < count; ++i) {
         patternPtr[i].x = pattern[(i * 2) + 0] * (sizeX >> 17);
         patternPtr[i].y = pattern[(i * 2) + 1] * (sizeY >> 17);
     }
@@ -158,17 +161,19 @@ void PetalPile_State_HandleInteractions(void)
         hitbox.right  = 8;
         hitbox.bottom = 8;
 
-        foreach_active(Explosion, explosion)
-        {
-            if (RSDK.CheckObjectCollisionTouchBox(self, &self->hitbox, explosion, &hitbox)) {
-                self->petalDir    = 0;
-                self->petalRadius = 0xF5555;
-                self->distance.x  = explosion->position.x - self->position.x;
-                self->distance.y  = 0;
-                RSDK.PlaySfx(PetalPile->sfxPetals, false, 255);
-                self->state = PetalPile_State_SetupEmitter;
+{
+            foreach_active(Explosion, explosion)
+            {
+                if (RSDK.CheckObjectCollisionTouchBox(self, &self->hitbox, explosion, &hitbox)) {
+                    self->petalDir    = 0;
+                    self->petalRadius = 0xF5555;
+                    self->distance.x  = explosion->position.x - self->position.x;
+                    self->distance.y  = 0;
+                    RSDK.PlaySfx(PetalPile->sfxPetals, false, 255);
+                    self->state = PetalPile_State_SetupEmitter;
 
-                foreach_break;
+                    foreach_break;
+                }
             }
         }
     }
@@ -176,13 +181,17 @@ void PetalPile_State_HandleInteractions(void)
 
 void PetalPile_State_SetupEmitter(void)
 {
+    int32 count;
+    int32 offsetX, offsetY;
+    int32 pos;
+    int32 i;
     RSDK_THIS(PetalPile);
 
     Vector2 pattern[0x100];
     memset(pattern, 0, sizeof(pattern));
-    int32 count = PetalPile_GetLeafPattern(pattern);
+    count = PetalPile_GetLeafPattern(pattern);
 
-    int32 offsetX = 0, offsetY = 0;
+    offsetX = 0, offsetY = 0;
     switch (self->petalDir) {
         case -1:
             offsetX = self->position.x + ((self->hitbox.right + 16) << 16);
@@ -200,10 +209,11 @@ void PetalPile_State_SetupEmitter(void)
             break;
     }
 
-    int32 pos = 0;
-    for (int32 i = 0; i < count; ++i) pos = MAX(pos, abs((self->position.x - offsetX) + pattern[i].x));
+    pos = 0;
+    for (i = 0; i < count; ++i) pos = MAX(pos, abs((self->position.x - offsetX) + pattern[i].x));
 
-    for (int32 i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
+        int32 radius;
         int32 spawnX = pattern[i].x + self->position.x;
         int32 spawnY = pattern[i].y + self->position.y;
 
@@ -212,7 +222,7 @@ void PetalPile_State_SetupEmitter(void)
         petal->state           = PetalPile_StateLeaf_Setup;
         petal->stateDraw       = PetalPile_Draw_Leaf;
 
-        int32 radius = self->petalRadius >> 1;
+        radius = self->petalRadius >> 1;
         if (self->petalDir) {
             petal->direction = self->petalDir <= 0;
             petal->petalVel  = self->petalVel;
@@ -233,6 +243,7 @@ void PetalPile_State_SetupEmitter(void)
     }
     else {
         if (!self->noRemoveTiles) {
+            int32 x;
             int32 left   = (self->position.x >> 16) + self->hitbox.left;
             int32 right  = (self->position.x >> 16) + self->hitbox.right;
             int32 top    = (self->position.y >> 16) + self->hitbox.top;
@@ -240,8 +251,9 @@ void PetalPile_State_SetupEmitter(void)
 
             int32 sizeX = (right >> 4) - (left >> 4);
             int32 sizeY = (bottom >> 4) - (top >> 4);
-            for (int32 x = 0; x <= sizeX; ++x) {
-                for (int32 y = 0; y <= sizeY; ++y) {
+            for (x = 0; x <= sizeX; ++x) {
+                int32 y;
+                for (y = 0; y <= sizeY; ++y) {
                     RSDK.SetTile(self->layerID, x + (left >> 4), y + (top >> 4), -1);
                 }
             }

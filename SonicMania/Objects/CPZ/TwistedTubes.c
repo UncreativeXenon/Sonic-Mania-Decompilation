@@ -22,6 +22,7 @@ void TwistedTubes_StaticUpdate(void) {}
 
 void TwistedTubes_Draw(void)
 {
+    int32 h;
     RSDK_THIS(TwistedTubes);
 
     Vector2 drawPos;
@@ -38,7 +39,7 @@ void TwistedTubes_Draw(void)
     RSDK.DrawSprite(&self->topGlassAnimator, &drawPos, false);
 
     drawPos.y += 0x200000;
-    for (int32 h = 0; h < self->height; ++h) {
+    for (h = 0; h < self->height; ++h) {
         self->direction = FLIP_NONE;
         RSDK.DrawSprite(&self->tubeAnimator, &drawPos, false);
 
@@ -121,10 +122,12 @@ void TwistedTubes_State_HandleInteractions(void)
     foreach_active(Player, player)
     {
         if (player->state != Player_State_TransportTube) {
+            bool32 entered;
+            int32 playerID;
             Player_CheckCollisionBox(player, self, &TwistedTubes->hitboxSolid);
-            int32 playerID = RSDK.GetEntitySlot(player);
+            playerID = RSDK.GetEntitySlot(player);
 
-            bool32 entered = false;
+            entered = false;
             if (Player_CheckCollisionTouch(player, self, &TwistedTubes->hitboxEntryL)) {
                 EntityTwistedTubes *tube = CREATE_ENTITY(TwistedTubes, player, self->position.x, self->position.y + 0x300000);
                 tube->isPermanent        = true;

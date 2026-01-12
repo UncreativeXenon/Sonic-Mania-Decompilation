@@ -22,6 +22,7 @@ void LaunchSpring_StaticUpdate(void) {}
 
 void LaunchSpring_Draw(void)
 {
+    SpriteFrame *frame;
     RSDK_THIS(LaunchSpring);
 
     RSDK.GetFrame(LaunchSpring->aniFrames, 2, 0)->pivotY = -8 - self->springPivot;
@@ -30,7 +31,7 @@ void LaunchSpring_Draw(void)
     self->mainAnimator.frameID = 0;
     RSDK.DrawSprite(&self->jointAnimator, NULL, false);
 
-    SpriteFrame *frame = RSDK.GetFrame(LaunchSpring->aniFrames, 0, 0);
+    frame = RSDK.GetFrame(LaunchSpring->aniFrames, 0, 0);
     RSDK.DrawSprite(&self->mainAnimator, NULL, false);
 
     frame->pivotY   = self->timer - 55;
@@ -135,17 +136,21 @@ void LaunchSpring_StageLoad(void)
 
 bool32 LaunchSpring_CheckFireworkActive(EntityPlayer *player)
 {
+    int32 playerID;
+    bool32 fireworkActive;
     if (!Firework)
         return false;
 
-    int32 playerID        = RSDK.GetEntitySlot(player);
-    bool32 fireworkActive = false;
+    playerID        = RSDK.GetEntitySlot(player);
+    fireworkActive = false;
 
-    foreach_active(Firework, firework)
     {
-        if ((1 << playerID) & firework->activePlayers) {
-            fireworkActive = true;
-            foreach_break;
+        foreach_active(Firework, firework)
+        {
+            if ((1 << playerID) & firework->activePlayers) {
+                fireworkActive = true;
+                foreach_break;
+            }
         }
     }
 

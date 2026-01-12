@@ -41,7 +41,9 @@ void PSZ1Intro_Create(void *data)
         if (!isMainGameMode() || !globals->enableIntro || CutsceneRules_CheckStageReload()) {
             destroyEntity(self);
 
-            foreach_all(HangGlider, glider) { destroyEntity(glider); }
+{
+                foreach_all(HangGlider, glider) { destroyEntity(glider); }
+            }
         }
     }
 }
@@ -66,48 +68,52 @@ void PSZ1Intro_HandleGliderJump(EntityHangGlider *glider)
 
 bool32 PSZ1Intro_Cutscene_SetupGliders(EntityCutsceneSeq *host)
 {
+    int32 id;
     RSDK_THIS(PSZ1Intro);
 
     CutsceneSeq_LockAllPlayerControl();
 
-    int32 id = 0;
-    foreach_all(HangGlider, glider)
+    id = 0;
     {
-        if (id < Player->playerCount) {
-            EntityPlayer *player   = RSDK_GET_ENTITY(id, Player);
-            player->position.x     = glider->position.x;
-            player->position.y     = glider->position.y;
-            player->active         = ACTIVE_NEVER;
-            glider->active         = ACTIVE_NORMAL;
-            glider->attachedPlayer = player;
-            glider->velocity.x     = 0x40000;
-            glider->velocity.y     = -0x20000;
+        foreach_all(HangGlider, glider)
+        {
+            if (id < Player->playerCount) {
+                EntityCamera *camera;
+                EntityPlayer *player   = RSDK_GET_ENTITY(id, Player);
+                player->position.x     = glider->position.x;
+                player->position.y     = glider->position.y;
+                player->active         = ACTIVE_NEVER;
+                glider->active         = ACTIVE_NORMAL;
+                glider->attachedPlayer = player;
+                glider->velocity.x     = 0x40000;
+                glider->velocity.y     = -0x20000;
 
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &glider->playerAnimator, true, 0);
-            glider->playerAnimator.rotationStyle = ROTSTYLE_FULL;
-            glider->rotation                     = 0x80;
-            glider->drawFX                       = FX_ROTATE;
-            glider->state                        = HangGlider_State_Glide;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &glider->playerAnimator, true, 0);
+                glider->playerAnimator.rotationStyle = ROTSTYLE_FULL;
+                glider->rotation                     = 0x80;
+                glider->drawFX                       = FX_ROTATE;
+                glider->state                        = HangGlider_State_Glide;
 
-            EntityCamera *camera = player->camera;
-            if (camera) {
-                camera->position.x     = glider->position.x;
-                camera->position.y     = glider->position.y;
-                camera->disableYOffset = true;
-                camera->offset.y       = 0x200000;
+                camera = player->camera;
+                if (camera) {
+                    camera->position.x     = glider->position.x;
+                    camera->position.y     = glider->position.y;
+                    camera->disableYOffset = true;
+                    camera->offset.y       = 0x200000;
+                }
+                else {
+                    glider->velocity.x      = 0x38000;
+                    glider->gravityStrength = 0xE00;
+                }
+
+                self->gliders[id] = glider;
             }
             else {
-                glider->velocity.x      = 0x38000;
-                glider->gravityStrength = 0xE00;
+                destroyEntity(glider);
             }
 
-            self->gliders[id] = glider;
+            ++id;
         }
-        else {
-            destroyEntity(glider);
-        }
-
-        ++id;
     }
 
     BGSwitch->screenID = 0;
@@ -148,26 +154,29 @@ bool32 PSZ1Intro_Cutscene_HandleLanding(EntityCutsceneSeq *host)
             destroyEntity(glider);
     }
 
-    foreach_active(Player, player)
-    {
-        if (player->onGround) {
-            if (player->sidekick) {
-                if (player->stateInput == StateMachine_None) {
-                    player->stateInput = Player_Input_P2_AI;
+{
+        foreach_active(Player, player)
+        {
+            if (player->onGround) {
+                if (player->sidekick) {
+                    if (player->stateInput == StateMachine_None) {
+                        int32 i;
+                        player->stateInput = Player_Input_P2_AI;
 
-                    for (int32 i = 0; i < 16; ++i) Player->leaderPositionBuffer[i] = player->position;
+                        for (i = 0; i < 16; ++i) Player->leaderPositionBuffer[i] = player->position;
+                    }
                 }
-            }
-            else {
-                player->stateInput = Player_Input_P1;
-            }
+                else {
+                    player->stateInput = Player_Input_P1;
+                }
 
-            player->collisionPlane = 0;
-            player->groundVel      = 0;
-            player->direction      = FLIP_NONE;
-        }
-        else if (player->stateInput == StateMachine_None) {
-            return false;
+                player->collisionPlane = 0;
+                player->groundVel      = 0;
+                player->direction      = FLIP_NONE;
+            }
+            else if (player->stateInput == StateMachine_None) {
+                return false;
+            }
         }
     }
 

@@ -24,6 +24,8 @@ void ContinueSetup_StaticUpdate(void) {}
 
 void ContinueSetup_Draw(void)
 {
+    Vector2 drawPos;
+    int32 i;
     RSDK_THIS(ContinueSetup);
 
     RSDK.Prepare3DScene(ContinueSetup->sceneIndex);
@@ -50,7 +52,6 @@ void ContinueSetup_Draw(void)
 
     RSDK.Draw3DScene(ContinueSetup->sceneIndex);
 
-    Vector2 drawPos;
     drawPos.y = 0x600000;
     drawPos.x = ((ScreenInfo->center.x + 4) << 16) - (globals->continues << 19);
     if (self->showContinues && globals->continues > 0) {
@@ -58,7 +59,7 @@ void ContinueSetup_Draw(void)
     }
 
     drawPos.x += 0x140000;
-    for (int32 i = 0; i < globals->continues; ++i) {
+    for (i = 0; i < globals->continues; ++i) {
         RSDK.DrawSprite(&ContinueSetup->animator, &drawPos, true);
         drawPos.x += 0x140000;
     }
@@ -97,12 +98,13 @@ void ContinueSetup_Create(void *data)
 
 void ContinueSetup_StageLoad(void)
 {
+    int32 i;
     const char *paths[10] = {
         "Continue/Count0.bin", "Continue/Count1.bin", "Continue/Count2.bin", "Continue/Count3.bin", "Continue/Count4.bin",
         "Continue/Count5.bin", "Continue/Count6.bin", "Continue/Count7.bin", "Continue/Count8.bin", "Continue/Count9.bin",
     };
 
-    for (int32 i = 0; i < 10; ++i) ContinueSetup->countIndex[i] = RSDK.LoadMesh(paths[i], SCOPE_STAGE);
+    for (i = 0; i < 10; ++i) ContinueSetup->countIndex[i] = RSDK.LoadMesh(paths[i], SCOPE_STAGE);
 
     ContinueSetup->sceneIndex = RSDK.Create3DScene("View:Continue", 4096, SCOPE_STAGE);
 
@@ -154,10 +156,11 @@ void ContinueSetup_State_HandleCountdown(void)
     }
 
     if (!self->countTimer && ++self->timer == 60) {
+        EntityFXFade *fade;
         self->timer = 0;
         self->state = ContinueSetup_State_ReturnToMenu;
 
-        EntityFXFade *fade = CREATE_ENTITY(FXFade, NULL, self->position.x, self->position.y);
+        fade = CREATE_ENTITY(FXFade, NULL, self->position.x, self->position.y);
         fade->speedIn      = 12;
         fade->wait         = 240;
     }

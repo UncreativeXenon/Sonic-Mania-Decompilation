@@ -11,54 +11,59 @@ ObjectLRZConvSwitch *LRZConvSwitch;
 
 void LRZConvSwitch_Update(void)
 {
+    int32 extendX2;
+    int32 extendY2;
     RSDK_THIS(LRZConvSwitch);
 
     if ((LRZ2Setup->conveyorDir != self->conveyorDir) != self->calibration)
         LRZConvSwitch_Calibrate();
 
-    int32 extendX2 = self->position.x;
-    int32 extendY2 = self->position.y - 0x180000;
+    extendX2 = self->position.x;
+    extendY2 = self->position.y - 0x180000;
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (self->playerPositions[playerID].x || self->playerPositions[playerID].y) {
-            int32 dir = 0;
-            if (player->position.x <= self->playerPositions[playerID].x) {
-                if (player->position.x < self->playerPositions[playerID].x)
-                    dir = -1;
-            }
-            else {
-                dir = 1;
-            }
+            if (self->playerPositions[playerID].x || self->playerPositions[playerID].y) {
+                bool32 collided;
+                int32 dir = 0;
+                if (player->position.x <= self->playerPositions[playerID].x) {
+                    if (player->position.x < self->playerPositions[playerID].x)
+                        dir = -1;
+                }
+                else {
+                    dir = 1;
+                }
 
-            bool32 collided =
-                MathHelpers_CheckPositionOverlap(player->position.x, player->position.y, self->playerPositions[playerID].x,
-                                                 self->playerPositions[playerID].y, self->position.x, self->position.y, extendX2, extendY2);
+                collided =
+                    MathHelpers_CheckPositionOverlap(player->position.x, player->position.y, self->playerPositions[playerID].x,
+                                                     self->playerPositions[playerID].y, self->position.x, self->position.y, extendX2, extendY2);
 
-            if (!self->dir && !player->sidekick) {
-                if (dir < 0) {
-                    if (collided && !self->conveyorDir) {
+                if (!self->dir && !player->sidekick) {
+                    if (dir < 0) {
+                        if (collided && !self->conveyorDir) {
+                            RSDK.PlaySfx(LRZConvSwitch->sfxClack, false, 255);
+                            RSDK.SetSpriteAnimation(LRZConvSwitch->aniFrames, 1, &self->animator, true, 0);
+                            self->conveyorDir      = 1;
+                            LRZ2Setup->conveyorDir = self->calibration ^ 1;
+                            self->dir              = 1;
+                        }
+                    }
+                    if (dir > 0 && collided && self->conveyorDir == 1) {
                         RSDK.PlaySfx(LRZConvSwitch->sfxClack, false, 255);
-                        RSDK.SetSpriteAnimation(LRZConvSwitch->aniFrames, 1, &self->animator, true, 0);
-                        self->conveyorDir      = 1;
-                        LRZ2Setup->conveyorDir = self->calibration ^ 1;
+                        RSDK.SetSpriteAnimation(LRZConvSwitch->aniFrames, 3, &self->animator, true, 0);
+                        self->conveyorDir      = 0;
+                        LRZ2Setup->conveyorDir = self->calibration;
                         self->dir              = 1;
                     }
                 }
-                if (dir > 0 && collided && self->conveyorDir == 1) {
-                    RSDK.PlaySfx(LRZConvSwitch->sfxClack, false, 255);
-                    RSDK.SetSpriteAnimation(LRZConvSwitch->aniFrames, 3, &self->animator, true, 0);
-                    self->conveyorDir      = 0;
-                    LRZ2Setup->conveyorDir = self->calibration;
-                    self->dir              = 1;
-                }
             }
-        }
 
-        self->playerPositions[playerID].x = player->position.x;
-        self->playerPositions[playerID].y = player->position.y;
+            self->playerPositions[playerID].x = player->position.x;
+            self->playerPositions[playerID].y = player->position.y;
+        }
     }
 
     RSDK.ProcessAnimation(&self->animator);

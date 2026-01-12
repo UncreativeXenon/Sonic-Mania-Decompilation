@@ -181,10 +181,11 @@ void Canista_CheckOffScreen(void)
 
 void Canista_State_Init(void)
 {
+    int32 offset;
     RSDK_THIS(Canista);
 
     self->active = ACTIVE_NORMAL;
-    int32 offset = !(self->direction & FLIP_X) ? 0x100000 : -0x110000;
+    offset = !(self->direction & FLIP_X) ? 0x100000 : -0x110000;
 
     RSDK.ObjectTileGrip(self, Zone->collisionLayers, (2 * ((self->direction & FLIP_X) != 0) + 1), 0, offset, -0x180000, 8);
     self->moveDir       = 0;
@@ -197,12 +198,16 @@ void Canista_State_Init(void)
 
 void Canista_State_Moving(void)
 {
+    EntityPlayer *player;
+    int32 tapeRotation;
+    int32 offsetX;
+    int32 offsetY;
     RSDK_THIS(Canista);
 
     if (self->detectDelay)
         self->detectDelay--;
 
-    EntityPlayer *player = self->detectedPlayer;
+    player = self->detectedPlayer;
     if (player) {
         int32 storeX = self->position.x;
         int32 storeY = self->position.y;
@@ -261,14 +266,14 @@ void Canista_State_Moving(void)
     }
 
     self->position.y += self->velocity.y;
-    int32 tapeRotation = self->velocity.y >> 12;
+    tapeRotation = self->velocity.y >> 12;
     if (self->direction)
         self->rotation += tapeRotation;
     else
         self->rotation -= tapeRotation;
 
-    int32 offsetX = !(self->direction & FLIP_X) ? 0x100000 : -0x110000;
-    int32 offsetY = ((self->velocity.y >> 31) & 0xFFD40000) + 0x140000;
+    offsetX = !(self->direction & FLIP_X) ? 0x100000 : -0x110000;
+    offsetY = ((self->velocity.y >> 31) & 0xFFD40000) + 0x140000;
     if (!RSDK.ObjectTileGrip(self, Zone->collisionLayers, (2 * ((self->direction & FLIP_X) != 0) + CMODE_LWALL), 0, offsetX, offsetY, 0)) {
         self->state     = Canista_State_Idle;
         self->stopTimer = 30;

@@ -217,6 +217,11 @@ void SpinBooster_HandleRollDir(EntityPlayer *player)
     RSDK_THIS(SpinBooster);
 
     if (self->autoGrip) {
+        int32 offsetX;
+        int32 offsetY;
+        int32 plrAngle;
+        int32 angle;
+        Hitbox *playerHitbox;
         int8 cMode = self->autoGrip - 1;
         if (self->autoGrip >= 5)
             cMode = SpinBooster_GetRollDir(player);
@@ -226,10 +231,10 @@ void SpinBooster_HandleRollDir(EntityPlayer *player)
             return;
         }
 
-        int32 offsetX  = 0;
-        int32 offsetY  = 0;
-        int32 plrAngle = 0;
-        int32 angle    = 0;
+        offsetX  = 0;
+        offsetY  = 0;
+        plrAngle = 0;
+        angle    = 0;
 
         switch (cMode) {
             case CMODE_FLOOR:
@@ -258,7 +263,7 @@ void SpinBooster_HandleRollDir(EntityPlayer *player)
                 break;
         }
 
-        Hitbox *playerHitbox = Player_GetHitbox(player);
+        playerHitbox = Player_GetHitbox(player);
         switch (cMode) {
             case CMODE_FLOOR: offsetY = playerHitbox->bottom << 16; break;
             case CMODE_LWALL: offsetX = playerHitbox->right << 16; break;
@@ -349,6 +354,7 @@ void SpinBooster_DrawArrow(int32 x1, int32 y1, int32 x2, int32 y2, uint32 color)
 }
 void SpinBooster_DrawSprites(void)
 {
+    int32 i;
     RSDK_THIS(SpinBooster);
 
     Vector2 drawPos;
@@ -356,13 +362,15 @@ void SpinBooster_DrawSprites(void)
     drawPos.y = self->position.y - (self->size << 19);
     Zone_RotateOnPivot(&drawPos, &self->position, self->angle);
 
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += RSDK.Sin256(self->angle) << 12;
         drawPos.y += RSDK.Cos256(self->angle) << 12;
     }
 
     if (SceneInfo->inEditor) {
+        int32 x2;
+        int32 y2; 
         uint8 negAngle = -self->angle & 0xFF;
         int32 power    = self->boostPower;
         int32 x        = self->position.x;
@@ -371,8 +379,8 @@ void SpinBooster_DrawSprites(void)
         if (!power)
             power = 1;
 
-        int32 x2 = power * (RSDK.Cos256(negAngle) << 11) + self->position.x;
-        int32 y2 = power * (RSDK.Sin256(negAngle) << 11) + self->position.y;
+        x2 = power * (RSDK.Cos256(negAngle) << 11) + self->position.x;
+        y2 = power * (RSDK.Sin256(negAngle) << 11) + self->position.y;
         SpinBooster_DrawArrow(x, y, x2, y2, clr);
 
         switch (self->autoGrip) {

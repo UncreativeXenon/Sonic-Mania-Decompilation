@@ -154,6 +154,7 @@ void HiLoSign_State_FinishSpinAdjust(void)
 
 void HiLoSign_Draw_Horizontal(void)
 {
+    int32 scaleY;
     RSDK_THIS(HiLoSign);
 
     Vector2 drawPos;
@@ -161,7 +162,7 @@ void HiLoSign_Draw_Horizontal(void)
 
     self->drawFX  = FX_SCALE;
     self->scale.y = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scaleY  = abs(RSDK.Sin512(self->rotation)) + 1;
+    scaleY  = abs(RSDK.Sin512(self->rotation)) + 1;
 
     switch (self->rotation >> 7) {
         case 0:
@@ -187,6 +188,7 @@ void HiLoSign_Draw_Horizontal(void)
 
 void HiLoSign_Draw_Vertical(void)
 {
+    int32 scaleX;
     RSDK_THIS(HiLoSign);
 
     Vector2 drawPos;
@@ -194,7 +196,7 @@ void HiLoSign_Draw_Vertical(void)
 
     self->drawFX  = FX_SCALE;
     self->scale.x = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scaleX  = abs(RSDK.Sin512(self->rotation)) + 1;
+    scaleX  = abs(RSDK.Sin512(self->rotation)) + 1;
 
     switch (self->rotation >> 7) {
         case 0:

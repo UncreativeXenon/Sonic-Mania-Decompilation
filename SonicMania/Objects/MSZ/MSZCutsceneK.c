@@ -44,16 +44,20 @@ void MSZCutsceneK_StageLoad(void)
     MSZCutsceneK->mystic  = NULL;
     MSZCutsceneK->tornado = NULL;
 
-    foreach_all(HeavyMystic, mystic)
     {
-        MSZCutsceneK->mystic = mystic;
-        foreach_break;
+        foreach_all(HeavyMystic, mystic)
+        {
+            MSZCutsceneK->mystic = mystic;
+            foreach_break;
+        }
     }
 
-    foreach_all(Tornado, tornado)
     {
-        MSZCutsceneK->tornado = tornado;
-        foreach_break;
+        foreach_all(Tornado, tornado)
+        {
+            MSZCutsceneK->tornado = tornado;
+            foreach_break;
+        }
     }
 }
 
@@ -78,12 +82,13 @@ void MSZCutsceneK_StartCutscene(void)
 
 void MSZCutsceneK_SetupP2(int32 x, int32 y)
 {
+    EntityPlayer *player2;
     Player->sonicFrames = RSDK.LoadSpriteAnimation("Players/Sonic.bin", SCOPE_STAGE);
     Player->superFrames = RSDK.LoadSpriteAnimation("Players/SuperSonic.bin", SCOPE_STAGE);
 
     RSDK.ResetEntitySlot(SLOT_PLAYER2, Player->classID, NULL);
 
-    EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+    player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
     ++Player->playerCount;
     player2->characterID  = ID_SONIC;
     player2->position.x   = x;
@@ -100,12 +105,14 @@ void MSZCutsceneK_SetupP2(int32 x, int32 y)
 
 bool32 MSZCutsceneK_Cutscene_RidingTornado(EntityCutsceneSeq *host)
 {
+    EntityHeavyMystic *mystic;
+    EntityTornado *tornado;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player2);
     UNUSED(camera);
 
-    EntityHeavyMystic *mystic = MSZCutsceneK->mystic;
-    EntityTornado *tornado    = MSZCutsceneK->tornado;
+    mystic = MSZCutsceneK->mystic;
+    tornado    = MSZCutsceneK->tornado;
     if (!host->timer) {
         SceneInfo->timeEnabled  = false;
         SceneInfo->milliseconds = 0;
@@ -131,11 +138,12 @@ bool32 MSZCutsceneK_Cutscene_RidingTornado(EntityCutsceneSeq *host)
 
 bool32 MSZCutsceneK_Cutscene_KnockedOffTornado(EntityCutsceneSeq *host)
 {
+    EntityTornado *tornado;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player2);
     UNUSED(camera);
 
-    EntityTornado *tornado = MSZCutsceneK->tornado;
+    tornado = MSZCutsceneK->tornado;
 
     if (!host->timer) {
         Music_Stop();

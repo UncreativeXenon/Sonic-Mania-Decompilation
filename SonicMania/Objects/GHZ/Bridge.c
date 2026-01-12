@@ -30,13 +30,15 @@ void Bridge_Update(void)
     self->stoodEntityCount = 0;
     self->bridgeDepth      = (self->depression * self->timer) >> 7;
 
-    foreach_active(Player, player)
     {
-        Hitbox *playerHitbox = Player_GetHitbox(player);
-        if (player->state == Player_State_KnuxLedgePullUp)
-            continue;
+        foreach_active(Player, player)
+        {
+            Hitbox *playerHitbox = Player_GetHitbox(player);
+            if (player->state == Player_State_KnuxLedgePullUp)
+                continue;
 
-        Bridge_HandleCollisions(player, self, playerHitbox, true, true);
+            Bridge_HandleCollisions(player, self, playerHitbox, true, true);
+        }
     }
 
     if (self->burnOffset != 0xFF)
@@ -49,6 +51,8 @@ void Bridge_StaticUpdate(void) {}
 
 void Bridge_Draw(void)
 {
+    int32 i;
+    int32 divisor;
     RSDK_THIS(Bridge);
     int32 id = 0;
     Vector2 drawPos;
@@ -56,7 +60,7 @@ void Bridge_Draw(void)
     int32 size = self->stoodPos >> 20;
     int32 ang  = 0x80000;
     drawPos.x  = self->startPos + 0x80000;
-    for (int32 i = 0; i < size; ++i) {
+    for (i = 0; i < size; ++i) {
         drawPos.y = (self->bridgeDepth * RSDK.Sin512((ang << 7) / self->stoodPos) >> 9) + self->position.y;
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += 0x100000;
@@ -70,7 +74,7 @@ void Bridge_Draw(void)
     ++id;
 
     ang           = 0x80000;
-    int32 divisor = self->endPos - self->startPos - self->stoodPos;
+    divisor = self->endPos - self->startPos - self->stoodPos;
     drawPos.x     = self->endPos - 0x80000;
     for (; id < self->length; ++id) {
         drawPos.y = (self->bridgeDepth * RSDK.Sin512((ang << 7) / divisor) >> 9) + self->position.y;
@@ -82,12 +86,13 @@ void Bridge_Draw(void)
 
 void Bridge_Create(void *data)
 {
+    int32 len;
     RSDK_THIS(Bridge);
     self->visible = true;
     ++self->length;
     self->drawGroup     = Zone->objectDrawGroup[0];
     self->active        = ACTIVE_BOUNDS;
-    int32 len           = self->length << 19;
+    len           = self->length << 19;
     self->startPos      = self->position.x - len;
     self->endPos        = len + self->position.x;
     self->updateRange.x = len;
@@ -109,24 +114,27 @@ void Bridge_StageLoad(void)
 
 void Bridge_Burn(int32 offset)
 {
+    int32 i;
+    int32 id;
+    int32 divisor;
     RSDK_THIS(Bridge);
 
     int32 size   = self->stoodPos >> 20;
     int32 spawnX = self->startPos + 0x80000;
     int32 off    = -offset;
     int32 ang    = 0x80000;
-    for (int32 i = 0; i < size; ++i) {
+    for (i = 0; i < size; ++i) {
         int32 sine = RSDK.Sin512((ang << 7) / self->stoodPos);
         CREATE_ENTITY(BurningLog, INT_TO_VOID(8 * abs(off++) + 16), spawnX, (self->bridgeDepth * sine >> 9) + self->position.y);
         ang += 0x100000;
         spawnX += 0x100000;
     }
 
-    int32 id = size;
+    id = size;
     CREATE_ENTITY(BurningLog, INT_TO_VOID(8 * abs(id++ - offset) + 16), spawnX, self->bridgeDepth + self->position.y);
 
     spawnX        = self->endPos - 0x80000;
-    int32 divisor = self->endPos - self->startPos - self->stoodPos;
+    divisor = self->endPos - self->startPos - self->stoodPos;
     ang           = 0x80000;
     if (id < self->length) {
         off = offset - id;
@@ -157,11 +165,15 @@ bool32 Bridge_HandleCollisions(void *e, EntityBridge *self, Hitbox *entityHitbox
 
             if (entity->velocity.y >= 0) {
                 Hitbox hitboxBridge;
+                int32 divisor;
+                int32 ang;
+                int32 hitY;
+                bool32 collided;
                 hitboxBridge.left  = -0x400;
                 hitboxBridge.right = 0x400;
 
-                int32 divisor = 0;
-                int32 ang     = 0;
+                divisor = 0;
+                ang     = 0;
                 if (entity->position.x - self->startPos <= self->stoodPos) {
                     divisor = self->stoodPos;
                     ang     = (entity->position.x - self->startPos) << 7;
@@ -171,7 +183,7 @@ bool32 Bridge_HandleCollisions(void *e, EntityBridge *self, Hitbox *entityHitbox
                     ang     = (self->endPos - entity->position.x) << 7;
                 }
 
-                int32 hitY = (self->bridgeDepth * RSDK.Sin512(ang / divisor) >> 9) - 0x80000;
+                hitY = (self->bridgeDepth * RSDK.Sin512(ang / divisor) >> 9) - 0x80000;
                 if (entity->velocity.y >= 0x8000) {
                     hitboxBridge.top    = (hitY >> 16);
                     hitboxBridge.bottom = hitboxBridge.top + 8;
@@ -181,7 +193,7 @@ bool32 Bridge_HandleCollisions(void *e, EntityBridge *self, Hitbox *entityHitbox
                     hitboxBridge.top    = hitboxBridge.bottom - 8;
                 }
 
-                bool32 collided = false;
+                collided = false;
                 if (isPlayer)
                     collided = Player_CheckCollisionTouch(entity, self, &hitboxBridge);
                 else
@@ -241,8 +253,9 @@ bool32 Bridge_HandleCollisions(void *e, EntityBridge *self, Hitbox *entityHitbox
             }
         }
         else if (updateVars) {
+            int32 distance;
             self->stoodPos   = entity->position.x - self->startPos;
-            int32 distance   = (self->endPos - self->startPos);
+            distance   = (self->endPos - self->startPos);
             self->depression = RSDK.Sin512((self->stoodPos >> 8) / (distance >> 16)) * (distance >> 13);
 
             if (entity->position.y > self->position.y - 0x300000) {

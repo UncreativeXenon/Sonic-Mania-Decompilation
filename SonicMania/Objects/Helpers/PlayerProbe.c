@@ -113,6 +113,9 @@ void PlayerProbe_Print(EntityPlayer *player)
 
 void PlayerProbe_DrawSprites(void)
 {
+    int32 i;
+    int32 x2;
+    int32 y2;
     RSDK_THIS(PlayerProbe);
 
     Vector2 drawPos;
@@ -121,7 +124,7 @@ void PlayerProbe_DrawSprites(void)
     drawPos.y = self->position.y - (self->size << 19);
     Zone_RotateOnPivot(&drawPos, &self->position, self->angle);
 
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += RSDK.Sin256(self->angle) << 12;
         drawPos.y += RSDK.Cos256(self->angle) << 12;
@@ -132,8 +135,8 @@ void PlayerProbe_DrawSprites(void)
         if (self->direction)
             angle = -0x80 - (uint8)(self->angle);
 
-        int32 x2 = self->position.x + 0x5000 * RSDK.Cos256(angle);
-        int32 y2 = self->position.y + 0x5000 * RSDK.Sin256(angle);
+        x2 = self->position.x + 0x5000 * RSDK.Cos256(angle);
+        y2 = self->position.y + 0x5000 * RSDK.Sin256(angle);
         PlayerProbe_DrawArrow(self->position.x, self->position.y, x2, y2, !self->direction ? 0x00FFFF : 0xFF00FF);
     }
 }

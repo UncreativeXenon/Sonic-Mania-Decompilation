@@ -19,7 +19,8 @@ void FXTrail_LateUpdate(void)
 
     if (parent && self->animatorPtr && parent->classID) {
         // Update recordings
-        for (int32 i = FXTRAIL_TRACK_COUNT - 1; i > 0; --i) {
+        int32 i;
+        for (i = FXTRAIL_TRACK_COUNT - 1; i > 0; --i) {
             self->statePos[i].x     = self->statePos[i - 1].x;
             self->statePos[i].y     = self->statePos[i - 1].y;
             self->stateRotation[i]  = self->stateRotation[i - 1];
@@ -52,12 +53,13 @@ void FXTrail_StaticUpdate(void) {}
 
 void FXTrail_Draw(void)
 {
+    int32 i;
     RSDK_THIS(FXTrail);
 
     int32 alpha = 0x60 * self->baseAlpha >> 8;
     int32 inc   = 0x40 / (IMAGETRAIL_TRACK_COUNT / 3);
 
-    for (int32 i = 2; i >= 0; --i) {
+    for (i = 2; i >= 0; --i) {
         int32 id = (i * 3) - (i - 1);
         if (self->stateVisible[id]) {
             self->alpha     = alpha;
@@ -75,6 +77,7 @@ void FXTrail_Create(void *data)
 {
     RSDK_THIS(FXTrail);
     if (!SceneInfo->inEditor) {
+        int32 i;
         Entity *parent = (Entity *)data;
 
         self->active    = ACTIVE_ALWAYS;
@@ -84,7 +87,7 @@ void FXTrail_Create(void *data)
         self->drawFX    = FX_FLIP | FX_ROTATE;
         self->inkEffect = INK_ALPHA;
 
-        for (int32 i = FXTRAIL_TRACK_COUNT - 1; i >= 0; --i) {
+        for (i = FXTRAIL_TRACK_COUNT - 1; i >= 0; --i) {
             self->statePos[i].x     = parent->position.x;
             self->statePos[i].y     = parent->position.y;
             self->stateRotation[i]  = parent->rotation;

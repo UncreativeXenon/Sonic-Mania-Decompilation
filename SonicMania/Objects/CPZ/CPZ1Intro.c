@@ -45,10 +45,12 @@ void CPZ1Intro_StageLoad(void)
     CPZ1Intro->playerFrames   = RSDK.LoadSpriteAnimation("Players/CutsceneCPZ.bin", SCOPE_STAGE);
     CPZ1Intro->particleFrames = RSDK.LoadSpriteAnimation("CPZ/Particles.bin", SCOPE_STAGE);
 
-    foreach_all(FXRuby, fxRuby)
     {
-        CPZ1Intro->fxRuby = fxRuby;
-        foreach_break;
+        foreach_all(FXRuby, fxRuby)
+        {
+            CPZ1Intro->fxRuby = fxRuby;
+            foreach_break;
+        }
     }
 
     CPZ1Intro->sfxChemDrop = RSDK.GetSfx("CPZ/ChemDrop.wav");
@@ -76,18 +78,22 @@ void CPZ1Intro_Particle_ChemDrop(EntityDebris *debris)
 
 void CPZ1Intro_HandleRubyHover(EntityCutsceneSeq *cutsceneSequence, EntityPlayer *player1, EntityPlayer *player2, int32 targetY)
 {
+    int32 id;
+    int32 angle;
+    int32 velX;
+    int32 velY;
     EntityPlayer *players[2];
     players[0] = player1;
     players[1] = player2;
 
-    int32 id = 0;
-    for (int32 angle = 0; angle < 0x80; angle += 0x40) {
+    id = 0;
+    for (angle = 0; angle < 0x80; angle += 0x40) {
         EntityPlayer *player = players[id++];
         if (!player)
             break;
 
-        int32 velX = (player->position.x - player->position.x) >> 3;
-        int32 velY = (targetY + 0xA00 * RSDK.Sin256(2 * (angle + cutsceneSequence->timer - cutsceneSequence->storedTimer)) - player->position.y) >> 3;
+        velX = (player->position.x - player->position.x) >> 3;
+        velY = (targetY + 0xA00 * RSDK.Sin256(2 * (angle + cutsceneSequence->timer - cutsceneSequence->storedTimer)) - player->position.y) >> 3;
         player->position.x += velX;
         player->position.y += velY;
         RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
@@ -159,9 +165,10 @@ bool32 CPZ1Intro_CheckRayAnimFinish(void)
 
 bool32 CPZ1Intro_Cutscene_RubyWarp(EntityCutsceneSeq *host)
 {
+    EntityFXRuby *fxRuby;
     MANIA_GET_PLAYER(player1, player2, camera);
 
-    EntityFXRuby *fxRuby = CPZ1Intro->fxRuby;
+    fxRuby = CPZ1Intro->fxRuby;
     if (!host->timer) {
         player1->camera = NULL;
         camera->position.y -= 0x40000;
@@ -253,12 +260,16 @@ bool32 CPZ1Intro_Cutscene_Waiting(EntityCutsceneSeq *host)
 
 bool32 CPZ1Intro_Cutscene_ChemicalDrop(EntityCutsceneSeq *host)
 {
+    EntityDebris *debris;
+    Hitbox *playerHitbox;
+    int32 playerY;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
     if (!host->timer) {
+        EntityDebris *debris;
         RSDK.PlaySfx(CPZ1Intro->sfxChemDrop, false, 255);
-        EntityDebris *debris    = CREATE_ENTITY(Debris, NULL, player1->position.x + 0x20000, (ScreenInfo->position.y - 8) << 16);
+        debris    = CREATE_ENTITY(Debris, NULL, player1->position.x + 0x20000, (ScreenInfo->position.y - 8) << 16);
         debris->updateRange.x   = 0x800000;
         debris->updateRange.y   = 0x800000;
         debris->active          = ACTIVE_NORMAL;
@@ -269,10 +280,10 @@ bool32 CPZ1Intro_Cutscene_ChemicalDrop(EntityCutsceneSeq *host)
         CPZ1Intro->debris = debris;
     }
 
-    EntityDebris *debris = CPZ1Intro->debris;
-    Hitbox *playerHitbox = Player_GetHitbox(player1);
+    debris = CPZ1Intro->debris;
+    playerHitbox = Player_GetHitbox(player1);
 
-    int32 playerY = player1->position.y + ((playerHitbox->top + 2) << 16);
+    playerY = player1->position.y + ((playerHitbox->top + 2) << 16);
     if (debris->position.y >= playerY) {
         RSDK.PlaySfx(CPZ1Intro->sfxDNABurst, false, 255);
         ParticleHelpers_SetupFallingParticles(debris->position.x, playerY, CPZ1Intro_Particle_ChemDrop);
@@ -390,13 +401,15 @@ bool32 CPZ1Intro_Cutscene_ReadyStage(EntityCutsceneSeq *host)
             player2->state          = Player_State_Ground;
         }
 
-        foreach_all(TitleCard, titlecard)
         {
-            titlecard->active    = ACTIVE_NORMAL;
-            titlecard->state     = TitleCard_State_SetupBGElements;
-            titlecard->stateDraw = TitleCard_Draw_SlideIn;
-            Music_PlayTrack(TRACK_STAGE);
-            foreach_break;
+            foreach_all(TitleCard, titlecard)
+            {
+                titlecard->active    = ACTIVE_NORMAL;
+                titlecard->state     = TitleCard_State_SetupBGElements;
+                titlecard->stateDraw = TitleCard_Draw_SlideIn;
+                Music_PlayTrack(TRACK_STAGE);
+                foreach_break;
+            }
         }
 
         return true;

@@ -106,11 +106,12 @@ void Blastoid_CheckPlayerCollisions(void)
 
 void Blastoid_State_Init(void)
 {
+    EntityCollapsingPlatform *platform;
     RSDK_THIS(Blastoid);
 
     self->active = ACTIVE_NORMAL;
 
-    EntityCollapsingPlatform *platform = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, CollapsingPlatform);
+    platform = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, CollapsingPlatform);
     if (platform->classID == CollapsingPlatform->classID)
         platform->active = ACTIVE_NEVER;
 

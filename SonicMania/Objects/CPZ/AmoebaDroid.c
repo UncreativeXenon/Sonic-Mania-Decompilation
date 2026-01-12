@@ -140,12 +140,13 @@ void AmoebaDroid_StageLoad(void)
 
 void AmoebaDroid_HandleSmallBlobMovement(void)
 {
+    int32 i; 
     RSDK_THIS(AmoebaDroid);
 
     int32 angle      = self->blobAngleX;
     self->blobRadius = (self->blobAmplitude * RSDK.Cos256(self->blobAngleY)) >> 8;
 
-    for (int32 i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
+    for (i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
         EntityAmoebaDroid *smallBlob = self->blobs[i];
 
         smallBlob->velocity   = smallBlob->position;
@@ -163,9 +164,10 @@ void AmoebaDroid_HandleSmallBlobMovement(void)
 
 void AmoebaDroid_HandleSmallBlobRelease(bool32 interact)
 {
+    int32 i;
     RSDK_THIS(AmoebaDroid);
 
-    for (int32 i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
+    for (i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
         EntityAmoebaDroid *smallBlob = self->blobs[i];
         if (smallBlob) {
             smallBlob->velocity.y -= 0x20000;
@@ -215,10 +217,12 @@ void AmoebaDroid_CheckHit(void)
     if (self->invincibleTimer > 0)
         self->invincibleTimer--;
 
-    foreach_active(Player, player)
     {
-        if (!self->invincibleTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self))
-            AmoebaDroid_Hit();
+        foreach_active(Player, player)
+        {
+            if (!self->invincibleTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self))
+                AmoebaDroid_Hit();
+        }
     }
 }
 
@@ -265,6 +269,7 @@ void AmoebaDroid_Draw_AmoebaDroid(void)
 
 void AmoebaDroid_Draw_BigBlob(void)
 {
+    int32 y;
     RSDK_THIS(AmoebaDroid);
     Vector2 drawPos = self->position;
 
@@ -276,7 +281,7 @@ void AmoebaDroid_Draw_BigBlob(void)
     frame->height = 1;
     drawPos.y -= RSDK.Sin256(self->angle) << 10;
 
-    for (int32 y = sprY << 8; y < maxY; angle += 2) {
+    for (y = sprY << 8; y < maxY; angle += 2) {
         self->scale.x = 0x200 + (RSDK.Sin256(frame->sprY + 2 * angle) >> 2);
         frame->sprY   = y >> 8;
 
@@ -334,10 +339,12 @@ void AmoebaDroid_State_SetupWaterLevel(void)
         Water->newWaterLevel    = 0x7FFFFFFF;
         Water->targetWaterLevel = 0x7FFFFFFF;
         Water->waterMoveSpeed   = 0;
-        foreach_active(Water, water)
         {
-            if (water->type == WATER_HEIGHT_TRIGGER)
-                destroyEntity(water);
+            foreach_active(Water, water)
+            {
+                if (water->type == WATER_HEIGHT_TRIGGER)
+                    destroyEntity(water);
+            }
         }
         RSDK.SetDrawGroupProperties(0, false, StateMachine_None);
         RSDK.SetDrawGroupProperties(Zone->hudDrawGroup, false, StateMachine_None);
@@ -393,6 +400,7 @@ void AmoebaDroid_State_SurfaceFromPool(void)
 
 void AmoebaDroid_State_ChooseAttack(void)
 {
+    EntityAmoebaDroid *part;
     RSDK_THIS(AmoebaDroid);
 
     self->position.y = BadnikHelpers_Oscillate(self->offsetPos.y, 2, 10);
@@ -404,7 +412,7 @@ void AmoebaDroid_State_ChooseAttack(void)
         else
             self->state = AmoebaDroid_State_SwimRight;
 
-        EntityAmoebaDroid *part = CREATE_ENTITY(AmoebaDroid, INT_TO_VOID(AMOEBADROID_BLOB_BIG), self->position.x, self->position.y);
+        part = CREATE_ENTITY(AmoebaDroid, INT_TO_VOID(AMOEBADROID_BLOB_BIG), self->position.x, self->position.y);
         part->parent            = self;
         self->blobs[0]          = part;
     }
@@ -500,6 +508,7 @@ void AmoebaDroid_State_ExitPool(void)
 
 void AmoebaDroid_State_BounceAttack(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(AmoebaDroid);
 
     RSDK.ProcessAnimation(&self->attractorTopAnimator);
@@ -508,7 +517,7 @@ void AmoebaDroid_State_BounceAttack(void)
     self->velocity.y += 0x2000;
     self->position.y += self->velocity.y;
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (self->position.x < player1->position.x)
         self->position.x = self->position.x + 0x10000;
     else if (self->position.x > player1->position.x)
@@ -516,6 +525,7 @@ void AmoebaDroid_State_BounceAttack(void)
 
     if (self->velocity.y > 0 && RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, self->collisionPlane, 0, 0x180000, true)) {
         if (--self->timer <= 0) {
+            int32 i;
             EntityAmoebaDroid *bigBlob = self->blobs[0];
             RSDK.SetSpriteAnimation(AmoebaDroid->aniFrames, 6, &bigBlob->animator, false, 0);
             bigBlob->drawFX    = FX_NONE;
@@ -523,7 +533,7 @@ void AmoebaDroid_State_BounceAttack(void)
             bigBlob->state     = AmoebaDroid_State_BigBlob_Disappear;
 
             self->state = StateMachine_None;
-            for (int32 i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
+            for (i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
                 self->blobs[i] = CREATE_ENTITY(AmoebaDroid, INT_TO_VOID(AMOEBADROID_BLOB_SMALL), self->position.x, self->position.y);
             }
 
@@ -534,8 +544,9 @@ void AmoebaDroid_State_BounceAttack(void)
             RSDK.PlaySfx(AmoebaDroid->sfxRelease, false, 255);
         }
         else {
+            int32 i;
             self->velocity.y = MIN(-self->velocity.y, -0x20000);
-            for (int32 i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
+            for (i = 0; i < AMOEBADROID_BLOB_COUNT; ++i) {
                 int32 x              = self->position.x + RSDK.Rand(-0x200000, 0x200000);
                 int32 y              = self->position.y + RSDK.Rand(0x100000, 0x180000);
                 EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, x, y);
@@ -666,7 +677,8 @@ void AmoebaDroid_State_SmallBlob(void)
         self->position.y += self->velocity.y;
 
         if (RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, self->collisionPlane, 0, 0x60000, true)) {
-            for (int32 i = 0; i < 4; ++i) {
+            int32 i;
+            for (i = 0; i < 4; ++i) {
                 int32 x              = self->position.x + RSDK.Rand(-0x40000, 0x40000);
                 int32 y              = self->position.y + RSDK.Rand(-0x40000, 0x40000);
                 EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, x, y);

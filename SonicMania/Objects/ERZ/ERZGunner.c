@@ -153,9 +153,10 @@ void ERZGunner_HandleMalfunctionDudExhaust(void)
 
 void ERZGunner_SpawnDust(void)
 {
+    int32 i;
     RSDK_THIS(ERZGunner);
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         int32 x          = self->position.x + RSDK.Rand(-0x100000, 0x100000);
         int32 y          = self->position.y + RSDK.Rand(-0x280000, -0x180000);
         EntityDust *dust = CREATE_ENTITY(Dust, NULL, x, y);
@@ -273,13 +274,13 @@ void ERZGunner_Draw_Gunner(void)
 
 void ERZGunner_Draw_RocketLaunch(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(ERZGunner);
 
     EntityERZGunner *parent = self->parent;
 
     RSDK.SetClipBounds(0, 0, 0, ScreenInfo->size.x, ((self->originPos.y + parent->position.y) >> 16) - ScreenInfo->position.y);
 
-    Vector2 drawPos;
     drawPos.x = parent->position.x + self->originPos.x;
     drawPos.y = self->position.y;
     RSDK.DrawSprite(&self->mainAnimator, &drawPos, false);
@@ -387,6 +388,7 @@ void ERZGunner_State_LaunchedRocket(void)
     self->position.y -= 0x80000;
 
     if (++self->timer == 60) {
+        bool32 canFire;
         EntityERZGunner *parent = self->parent;
 
         self->timer = 0;
@@ -401,17 +403,19 @@ void ERZGunner_State_LaunchedRocket(void)
         self->drawGroup  = Zone->objectDrawGroup[0];
         self->position.y = (ScreenInfo->position.y - 64) << 16;
 
-        bool32 canFire = false;
+        canFire = false;
         while (!canFire) {
             canFire          = true;
             self->position.x = parent->position.x + RSDK.Rand(-0x1000000, 0x1000000);
 
-            foreach_active(ERZGunner, gunner)
             {
-                if (gunner != self && gunner->type >= ERZGUNNER_MORTAR) {
-                    int32 dist = abs(gunner->position.x - self->position.x);
-                    if (dist < 0x180000 && gunner->position.y - self->position.y < 0x800000)
-                        canFire = false;
+                foreach_active(ERZGunner, gunner)
+                {
+                    if (gunner != self && gunner->type >= ERZGUNNER_MORTAR) {
+                        int32 dist = abs(gunner->position.x - self->position.x);
+                        if (dist < 0x180000 && gunner->position.y - self->position.y < 0x800000)
+                            canFire = false;
+                    }
                 }
             }
         }
@@ -518,11 +522,13 @@ void ERZGunner_State_Napalm(void)
 
 void ERZGunner_State_Dud_Active(void)
 {
+    int32 angle;
+    EntityERZGunner *parent;
     RSDK_THIS(ERZGunner);
 
     RSDK.ProcessAnimation(&self->tailAnimator);
 
-    EntityERZGunner *parent = self->parent;
+    parent = self->parent;
 
     ++self->timer;
 
@@ -541,7 +547,7 @@ void ERZGunner_State_Dud_Active(void)
 
     ERZGunner_HandleDudExhaust();
 
-    int32 angle = RSDK.ATan2(self->velocity.y, -self->velocity.x);
+    angle = RSDK.ATan2(self->velocity.y, -self->velocity.x);
     ERZGunner_HandleRotations(2 * angle);
 
     if (self->timer == 320) {
@@ -585,13 +591,15 @@ void ERZGunner_State_Dud_HitByPlayer(void)
 
 void ERZGunner_State_Dud_Malfunction(void)
 {
+    int32 angle;
+    EntityERZGunner *parent;
     RSDK_THIS(ERZGunner);
 
     RSDK.ProcessAnimation(&self->tailAnimator);
 
-    EntityERZGunner *parent = self->parent;
+    parent = self->parent;
 
-    int32 angle = RSDK.ATan2((parent->position.y - self->position.y) >> 16, -((parent->position.x - self->position.x) >> 16));
+    angle = RSDK.ATan2((parent->position.y - self->position.y) >> 16, -((parent->position.x - self->position.x) >> 16));
     ERZGunner_HandleRotations(2 * angle);
 
     self->rotation &= 0x1FF;

@@ -43,7 +43,7 @@ void HUD_LateUpdate(void)
     if (globals->gameMode < MODE_TIMEATTACK) {
         EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         if (SceneInfo->timeEnabled && player->rings >= 50 && player->superState < SUPERSTATE_SUPER
-            && SaveGame_GetSaveRAM()->collectedEmeralds >= 0b01111111) {
+            && SaveGame_GetSaveRAM()->collectedEmeralds >= 0x7F) {
             if (sku_platform == PLATFORM_PC || sku_platform == PLATFORM_SWITCH || sku_platform == PLATFORM_DEV)
                 HUD_GetActionButtonFrames();
 
@@ -80,6 +80,7 @@ void HUD_StaticUpdate(void) {}
 
 void HUD_Draw(void)
 {
+    int32 lives;
     RSDK_THIS(HUD);
     EntityPlayer *player = RSDK_GET_ENTITY(SceneInfo->currentScreenID, Player);
 
@@ -106,11 +107,13 @@ void HUD_Draw(void)
         lifePos.y  = self->vsLifePos[SceneInfo->currentScreenID].y;
 #endif
 
-        foreach_active(Player, plr)
         {
-            if (plr != player) {
-                self->playerIDAnimator.frameID = plr->playerID;
-                RSDK.DrawSprite(&self->playerIDAnimator, &plr->position, false);
+            foreach_active(Player, plr)
+            {
+                if (plr != player) {
+                    self->playerIDAnimator.frameID = plr->playerID;
+                    RSDK.DrawSprite(&self->playerIDAnimator, &plr->position, false);
+                }
             }
         }
     }
@@ -249,13 +252,14 @@ void HUD_Draw(void)
 #endif
 #if GAME_VERSION != VER_100
     else if (self->actionPromptPos > -TO_FIXED(32)) {
+        bool32 canSuper;
         // Draw Super Icon
         drawPos.x = TO_FIXED(ScreenInfo[SceneInfo->currentScreenID].size.x) - self->actionPromptPos;
         drawPos.y = TO_FIXED(20);
         RSDK.DrawSprite(&self->superIconAnimator, &drawPos, true);
 
         drawPos.x -= TO_FIXED(20);
-        bool32 canSuper = true;
+        canSuper = true;
 #if MANIA_USE_PLUS
         if (Player->canSuperCB)
             canSuper = Player->canSuperCB(true);
@@ -277,7 +281,7 @@ void HUD_Draw(void)
     drawPos.x = lifePos.x;
     drawPos.y = lifePos.y;
 #if MANIA_USE_PLUS
-    int32 lives                    = self->lives[player->playerID];
+    lives                    = self->lives[player->playerID];
     self->lifeIconAnimator.frameID = HUD_CharacterIndexFromID(player->characterID);
 
     if (self->lifeIconAnimator.frameID < 0) {
@@ -300,14 +304,17 @@ void HUD_Draw(void)
 
 #if MANIA_USE_PLUS
     if (globals->gameMode == MODE_ENCORE) {
-        for (int32 p = 0; p < PLAYER_COUNT; ++p) {
+        int32 p;
+        EntityPlayer *sidekick;
+        for (p = 0; p < PLAYER_COUNT; ++p) {
             if (HUD->stockFlashTimers[p] > 0)
                 HUD->stockFlashTimers[p]--;
         }
 
         drawPos.x += TO_FIXED(20);
-        EntityPlayer *sidekick = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+        sidekick = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
         if (sidekick->classID) {
+            int32 i;
             // Draw Buddy Icon
             self->lifeIconAnimator.frameID = HUD_CharacterIndexFromID(sidekick->characterID);
             if (self->lifeIconAnimator.frameID >= 0 && !(HUD->stockFlashTimers[0] & 4)) {
@@ -320,7 +327,7 @@ void HUD_Draw(void)
             // Draw Stock Icons
             drawPos.x += TO_FIXED(20);
             RSDK.SetSpriteAnimation(HUD->aniFrames, 12, &self->lifeIconAnimator, true, 0);
-            for (int32 i = 1; i < 4; ++i) {
+            for (i = 1; i < 4; ++i) {
                 self->lifeIconAnimator.frameID = HUD_CharacterIndexFromID(GET_STOCK_ID(i));
                 if (self->lifeIconAnimator.frameID >= 0 && !(HUD->stockFlashTimers[i] & 4))
                     RSDK.DrawSprite(&self->lifeIconAnimator, &drawPos, true);
@@ -422,6 +429,7 @@ void HUD_Create(void *data)
     RSDK_THIS(HUD);
 
     if (!SceneInfo->inEditor) {
+        int32 i;
 #if MANIA_USE_PLUS
         ActClear->disableTimeBonus = false;
 #endif
@@ -443,7 +451,7 @@ void HUD_Create(void *data)
 #endif
 
 #if MANIA_USE_PLUS
-        for (int32 i = 0; i < SCREEN_COUNT; ++i) {
+        for (i = 0; i < SCREEN_COUNT; ++i) {
             self->vsScorePos[i].x = self->scorePos.x;
             self->vsScorePos[i].y = self->scorePos.y;
             self->vsTimePos[i].x  = self->timePos.x;
@@ -480,6 +488,7 @@ void HUD_Create(void *data)
 
 void HUD_StageLoad(void)
 {
+    EntityCompetitionSession *session;
     HUD->aniFrames = RSDK.LoadSpriteAnimation("Global/HUD.bin", SCOPE_STAGE);
 #if GAME_VERSION != VER_100
     HUD->superButtonFrames = RSDK.LoadSpriteAnimation("Global/SuperButtons.bin", SCOPE_STAGE);
@@ -491,7 +500,7 @@ void HUD_StageLoad(void)
 
     HUD->showTAPrompt = false;
 
-    EntityCompetitionSession *session = CompetitionSession_GetSession();
+    session = CompetitionSession_GetSession();
     if (globals->gameMode == MODE_COMPETITION) {
         HUD->screenBorderType[0] = session->screenBorderType[0];
         HUD->screenBorderType[1] = session->screenBorderType[1];
@@ -503,6 +512,7 @@ void HUD_StageLoad(void)
 
 void HUD_DrawNumbersBase10(Vector2 *drawPos, int32 value, int32 digitCount)
 {
+    int32 digit;
     RSDK_THIS(HUD);
 
     if (!digitCount && value > 0) {
@@ -517,7 +527,7 @@ void HUD_DrawNumbersBase10(Vector2 *drawPos, int32 value, int32 digitCount)
             digitCount = 1;
     }
 
-    int32 digit = 1;
+    digit = 1;
     while (digitCount--) {
         self->numbersAnimator.frameID = value / digit % 10;
         RSDK.DrawSprite(&self->numbersAnimator, drawPos, true);
@@ -528,10 +538,11 @@ void HUD_DrawNumbersBase10(Vector2 *drawPos, int32 value, int32 digitCount)
 
 void HUD_DrawNumbersBase16(Vector2 *drawPos, int32 value)
 {
+    int32 i;
     RSDK_THIS(HUD);
 
     int32 mult = 1;
-    for (int32 i = 4; i; --i) {
+    for (i = 4; i; --i) {
         self->numbersAnimator.frameID = value / mult & 0xF;
         RSDK.DrawSprite(&self->numbersAnimator, drawPos, true);
         drawPos->x -= TO_FIXED(8);
@@ -584,6 +595,7 @@ void HUD_GetButtonFrame(Animator *animator, int32 buttonID)
         RSDK.SetSpriteAnimation(HUD->superButtonFrames, gamepadType, animator, true, buttonID);
     }
     else {
+        int32 frame;
         // Keyboard
         EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 #if MANIA_USE_PLUS
@@ -603,7 +615,7 @@ void HUD_GetButtonFrame(Animator *animator, int32 buttonID)
             case 4: map = ControllerInfo[contID].keyStart.keyMap; break;
         }
 
-        int32 frame = UIButtonPrompt_MappingsToFrame(map);
+        frame = UIButtonPrompt_MappingsToFrame(map);
         RSDK.SetSpriteAnimation(HUD->superButtonFrames, 1, animator, true, frame);
     }
 }
@@ -711,10 +723,12 @@ void HUD_State_MoveOut(void)
 
     if (lifePos->x < -TO_FIXED(80)) {
         if (globals->gameMode == MODE_COMPETITION) {
+            EntityGameOver *gameOver;
+            EntityCompetition *manager;
             *state = StateMachine_None;
             CompSession_DeriveWinner(self->screenID, FINISHTYPE_GAMEOVER);
-            EntityGameOver *gameOver   = RSDK_GET_ENTITY(self->screenID + Player->playerCount, GameOver);
-            EntityCompetition *manager = Competition->sessionManager;
+            gameOver   = RSDK_GET_ENTITY(self->screenID + Player->playerCount, GameOver);
+            manager = Competition->sessionManager;
 
             if (!manager || manager->timer) {
                 RSDK.ResetEntity(gameOver, GameOver->classID, INT_TO_VOID(false));
@@ -775,8 +789,9 @@ void HUD_EnableRingFlash(void)
 
 int32 HUD_CharacterIndexFromID(int32 characterID)
 {
+    int32 i;
     int32 id = -1;
-    for (int32 i = characterID; i > 0; ++id, i >>= 1)
+    for (i = characterID; i > 0; ++id, i >>= 1)
         ;
     return id;
 }

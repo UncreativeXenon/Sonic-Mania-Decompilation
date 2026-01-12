@@ -146,21 +146,26 @@ void ERZKing_Explode(void)
 
 void ERZKing_HandleFrames(void)
 {
+    int32 x;
+    int32 y;
+    int32 angle;
+    int32 i;
+    int32 negAng;
     RSDK_THIS(ERZKing);
 
     RSDK.ProcessAnimation(&self->bodyAnimator);
 
     self->rotation = RSDK.Sin512(2 * Zone->timer) >> 6;
-    int32 negAng   = -self->rotation;
+    negAng   = -self->rotation;
 
     self->bodyAngle = (self->bodyAngle + 12) & 0x3FF;
 
-    int32 x = 0x1C00 * RSDK.Sin512(negAng) + self->position.x;
-    int32 y = 0x1C00 * RSDK.Cos512(negAng) + self->position.y;
+    x = 0x1C00 * RSDK.Sin512(negAng) + self->position.x;
+    y = 0x1C00 * RSDK.Cos512(negAng) + self->position.y;
 
-    int32 angle = self->bodyAngle;
+    angle = self->bodyAngle;
 
-    for (int32 i = 0; i < 10; i += 2) {
+    for (i = 0; i < 10; i += 2) {
         self->armPositions[i].x = x + 2 * RSDK.Cos512(self->rotation) * RSDK.Cos1024(angle);
         self->armPositions[i].y = y + 2 * RSDK.Sin512(self->rotation) * RSDK.Cos1024(angle);
         self->armAngles[i]         = angle & 0x3FF;
@@ -190,6 +195,7 @@ void ERZKing_HandleFrames(void)
 
 void ERZKing_Draw_Body(void)
 {
+    int32 i;
     RSDK_THIS(ERZKing);
 
     if (self->typeChangeTimer <= 0) {
@@ -204,7 +210,7 @@ void ERZKing_Draw_Body(void)
     RSDK.DrawSprite(&self->headAnimator, NULL, false);
     RSDK.DrawSprite(&self->bodyAnimator, NULL, false);
 
-    for (int32 i = 0; i < 10; ++i) {
+    for (i = 0; i < 10; ++i) {
         if (self->armAngles[i] < 0x200) {
             self->particleAnimator.frameID = self->armAngles[i] / 42 % 6;
             RSDK.DrawSprite(&self->particleAnimator, &self->armPositions[i], false);
@@ -215,7 +221,7 @@ void ERZKing_Draw_Body(void)
     RSDK.DrawSprite(&self->beltAnimator, NULL, false);
 
     self->drawFX = self->storeDrawFX | FX_ROTATE | FX_FLIP;
-    for (int32 i = 0; i < 10; ++i) {
+    for (i = 0; i < 10; ++i) {
         if (self->armAngles[i] >= 0x200) {
             self->particleAnimator.frameID = self->armAngles[i] / 42 % 6;
             RSDK.DrawSprite(&self->particleAnimator, &self->armPositions[i], false);
@@ -236,6 +242,7 @@ void ERZKing_Draw_Body(void)
 
 void ERZKing_Draw_Arm(void)
 {
+    int32 i;
     RSDK_THIS(ERZKing);
 
     EntityERZKing *parent = self->parent;
@@ -245,7 +252,7 @@ void ERZKing_Draw_Arm(void)
         RSDK.SetLimitedFade(0, 1, 4, parent->typeChangeTimer, 128, 256);
     }
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         RSDK.DrawSprite(&self->armAnimator, &self->armPositions[i], false);
     }
 
@@ -291,13 +298,14 @@ void ERZKing_State_SetupBody(void)
         self->direction = RSDK_GET_ENTITY(SLOT_PLAYER1, Player)->position.x < self->position.x;
 
         if (++self->timer == 30) {
+            EntityERZKing *rightArm;
             EntityERZKing *leftArm = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, ERZKing);
             RSDK.ResetEntity(leftArm, ERZKing->classID, INT_TO_VOID(ERZKING_ARM_L));
             leftArm->position.x = self->position.x;
             leftArm->position.y = self->position.y;
             leftArm->parent     = self;
 
-            EntityERZKing *rightArm = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, ERZKing);
+            rightArm = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, ERZKing);
             RSDK.ResetEntity(rightArm, ERZKing->classID, INT_TO_VOID(ERZKING_ARM_R));
             rightArm->position.x = self->position.x;
             rightArm->position.y = self->position.y;
@@ -387,7 +395,9 @@ void ERZKing_State_ChangeHBH(void)
     if (self->typeChangeTimer == 0x400) {
         self->typeChangeTimer = 0;
 
-        foreach_all(ERZKing, king) { king->active = ACTIVE_NEVER; }
+        {
+            foreach_all(ERZKing, king) { king->active = ACTIVE_NEVER; }
+        }
 
         switch (self->nextType) {
             case ERZKING_HEAVY_GUNNER:
@@ -414,6 +424,13 @@ void ERZKing_State_ChangeHBH(void)
 
 void ERZKing_State_Arm(void)
 {
+    int32 negAngle;
+    int32 x;
+    int32 y;
+    int32 x2;
+    int32 y2;
+    int32 percent;
+    int32 i;
     RSDK_THIS(ERZKing);
 
     EntityERZKing *parent = self->parent;
@@ -422,10 +439,12 @@ void ERZKing_State_Arm(void)
     int32 moveY = ((RSDK.Sin256(2 * (Zone->timer + (self->type << 6)) - 128) + 512) << 12) + parent->position.y;
 
     self->direction = parent->direction;
-    int32 negAngle  = -parent->rotation;
+    negAngle  = -parent->rotation;
 
-    int32 x = 0, y = 0;
-    int32 x2 = 0, y2 = 0;
+    x  = 0;
+    y  = 0;
+    x2 = 0;
+    y2 = 0;
     if (parent->direction) {
         moveX = parent->position.x - 0x300000;
         x     = parent->position.x + 0xD00 * RSDK.Cos512(negAngle) + 0x300 * RSDK.Sin512(negAngle);
@@ -460,8 +479,8 @@ void ERZKing_State_Arm(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    int32 percent = 0x1800;
-    for (int32 i = 0; i < 7; ++i) {
+    percent = 0x1800;
+    for (i = 0; i < 7; ++i) {
         self->armPositions[i] = MathHelpers_GetBezierPoint(percent, x, y, x2, y2, x2, y2, self->position.x, self->position.y);
         percent += 0x2000;
     }

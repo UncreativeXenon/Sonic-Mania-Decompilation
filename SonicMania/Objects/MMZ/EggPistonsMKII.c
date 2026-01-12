@@ -295,12 +295,14 @@ EntityEggPistonsMKII *EggPistonsMKII_GetNextPiston(void)
 
 void EggPistonsMKII_SpawnElecBall(void)
 {
+    int32 i;
+    int32 offset;
     EntityEggPistonsMKII *spawner = RSDK_GET_ENTITY(SceneInfo->entitySlot + 6, EggPistonsMKII);
     spawner->state                = EggPistonsMKII_StateOrbGenerator_Warning;
     spawner->timer                = 330;
-    int32 offset                  = 0;
+    offset                  = 0;
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         EntityEggPistonsMKII *child = CREATE_ENTITY(EggPistonsMKII, INT_TO_VOID(EGGPISTON_PLASMABALL), spawner->position.x, spawner->position.y);
         child->pistonID             = offset + spawner->position.x + ((RSDK.Rand(0, 48) - 48) << 16);
         child->inkEffect            = INK_ADD;
@@ -337,9 +339,10 @@ bool32 EggPistonsMKII_CheckPlayerAttacking(EntityPlayer *player)
 
 void EggPistonsMKII_State_SetupArena(void)
 {
+    int32 i;
     RSDK_THIS(EggPistonsMKII);
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         EntityCollapsingPlatform *platform = RSDK_GET_ENTITY(SceneInfo->entitySlot + 8 + i, CollapsingPlatform);
         if (platform->classID == CollapsingPlatform->classID)
             platform->active = ACTIVE_NEVER;
@@ -361,6 +364,7 @@ void EggPistonsMKII_State_SetupArena(void)
 
 void EggPistonsMKII_State_EnterBoss(void)
 {
+    int32 pos;
     RSDK_THIS(EggPistonsMKII);
 
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
@@ -368,7 +372,7 @@ void EggPistonsMKII_State_EnterBoss(void)
     Zone->playerBoundActiveL[0] = true;
     Zone->cameraBoundsL[0]      = ScreenInfo->position.x;
 
-    int32 pos = MANIA_USE_PLUS ? (self->position.x - 0xC00000) : self->position.x;
+    pos = MANIA_USE_PLUS ? (self->position.x - 0xC00000) : self->position.x;
     if (player1->position.x > pos) {
 #if MANIA_USE_PLUS
         if (player1->onGround)
@@ -385,6 +389,7 @@ void EggPistonsMKII_State_EnterBoss(void)
             player1->groundVel = 0x30000;
 
         if (player1->position.x > (self->position.x - 0x80000)) {
+            int32 i;
 #endif
             Zone->playerBoundActiveL[0] = true;
             Zone->cameraBoundsL[0]      = (self->position.x >> 16) - ScreenInfo->center.x;
@@ -392,7 +397,7 @@ void EggPistonsMKII_State_EnterBoss(void)
             EggPistonsMKII->health = 8;
 
             self->timer = 142;
-            for (int32 i = 0; i < 2; ++i) {
+            for (i = 0; i < 2; ++i) {
                 EntityEggPistonsMKII *barrier = RSDK_GET_ENTITY(SceneInfo->entitySlot + 14 + i, EggPistonsMKII);
                 barrier->velocity.y           = -0x20000;
                 barrier->timer                = 64;
@@ -422,9 +427,10 @@ void EggPistonsMKII_State_PistonReveal(void)
     }
 
     if (--self->timer <= 0) {
+        int32 i;
         player1->stateInput = Player_Input_P1;
 
-        for (int32 i = 0; i < 6; ++i) {
+        for (i = 0; i < 6; ++i) {
             EntityCollapsingPlatform *platform = RSDK_GET_ENTITY(SceneInfo->entitySlot + 8 + i, CollapsingPlatform);
             if (platform->classID == CollapsingPlatform->classID) {
                 platform->active        = ACTIVE_NORMAL;
@@ -433,7 +439,7 @@ void EggPistonsMKII_State_PistonReveal(void)
             }
         }
 
-        for (int32 i = 0; i < 2; ++i) {
+        for (i = 0; i < 2; ++i) {
             EntityEggPistonsMKII *piston = RSDK_GET_ENTITY(SceneInfo->entitySlot + 14 + i, EggPistonsMKII);
             piston->velocity.y           = 0x80000;
             piston->timer                = 8;
@@ -492,9 +498,10 @@ void EggPistonsMKII_State_StartPinchMode(void)
     RSDK_THIS(EggPistonsMKII);
 
     if (--self->timer <= 0) {
+        EntityEggPistonsMKII *orbSpawner;
         CREATE_ENTITY(EggPistonsMKII, INT_TO_VOID(EGGPISTON_ALARM), self->position.x, self->position.y);
 
-        EntityEggPistonsMKII *orbSpawner = RSDK_GET_ENTITY(SceneInfo->entitySlot + 6, EggPistonsMKII);
+        orbSpawner = RSDK_GET_ENTITY(SceneInfo->entitySlot + 6, EggPistonsMKII);
         RSDK.PlaySfx(EggPistonsMKII->sfxExplosion, false, 255);
         CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), orbSpawner->position.x, orbSpawner->position.y)->drawGroup = Zone->objectDrawGroup[1];
 
@@ -542,10 +549,11 @@ void EggPistonsMKII_State_PinchMode(void)
 
 void EggPistonsMKII_State_Destroyed(void)
 {
+    int32 i;
     RSDK_THIS(EggPistonsMKII);
 
     int32 id = 0;
-    for (int32 i = 0; i < 5; ++i) {
+    for (i = 0; i < 5; ++i) {
         EntityEggPistonsMKII *piston = EggPistonsMKII->pistons[i];
 
         if (piston->state == EggPistonsMKII_StatePiston_Idle)
@@ -751,11 +759,13 @@ void EggPistonsMKII_StateAlarm_Destroyed(void)
     RSDK_THIS(EggPistonsMKII);
 
     if (!--EggPistonsMKII->alarmTimer) {
-        for (int32 i = 0; i < 2; ++i) {
+        int32 i;
+        for (i = 0; i < 2; ++i) {
+            int32 d;
             int32 slot                    = RSDK.GetEntitySlot(EggPistonsMKII->controller);
             EntityEggPistonsMKII *barrier = RSDK_GET_ENTITY(slot + 14 + i, EggPistonsMKII);
 
-            for (int32 d = 0; d < 4; ++d) {
+            for (d = 0; d < 4; ++d) {
                 EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, barrier->position.x, barrier->position.y);
                 RSDK.SetSpriteAnimation(EggPistonsMKII->aniFrames, 5, &debris->animator, true, i + 1);
                 debris->gravityStrength = 0x3800;

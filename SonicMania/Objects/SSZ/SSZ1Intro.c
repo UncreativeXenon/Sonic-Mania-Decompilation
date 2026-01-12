@@ -57,11 +57,13 @@ void SSZ1Intro_SetupCutscene(void)
 
 void SSZ1Intro_HandleRubyHover(EntityCutsceneSeq *host, EntityPlayer *player1, EntityPlayer *player2, int32 offset)
 {
+    int32 i;
+    int32 angle;
     EntityPlayer *players[2];
     players[0] = player1;
     players[1] = player2;
 
-    for (int32 i = 0, angle = 0; angle < 0x80; angle += 0x40, ++i) {
+    for (i = 0, angle = 0; angle < 0x80; angle += 0x40, ++i) {
         EntityPlayer *playerPtr = players[i];
         if (!playerPtr)
             break;
@@ -75,10 +77,12 @@ void SSZ1Intro_HandleRubyHover(EntityCutsceneSeq *host, EntityPlayer *player1, E
 
 bool32 SSZ1Intro_Cutscene_FinishRubyWarp(EntityCutsceneSeq *host)
 {
+    Entity *cutEntity;
+    EntityFXRuby *fxRuby;
     MANIA_GET_PLAYER(player1, player2, camera);
 
-    Entity *cutEntity    = host->activeEntity;
-    EntityFXRuby *fxRuby = SSZ1Intro->fxRuby;
+    cutEntity    = host->activeEntity;
+    fxRuby = SSZ1Intro->fxRuby;
     if (!host->timer) {
         CutsceneSeq_LockAllPlayerControl();
         player1->camera = 0;
@@ -167,11 +171,13 @@ bool32 SSZ1Intro_Cutscene_BeginAct1(EntityCutsceneSeq *host)
             player2->state          = Player_State_Ground;
         }
 
-        foreach_all(TitleCard, titleCard)
-        {
-            titleCard->active    = ACTIVE_NORMAL;
-            titleCard->state     = TitleCard_State_SetupBGElements;
-            titleCard->stateDraw = TitleCard_Draw_SlideIn;
+{
+            foreach_all(TitleCard, titleCard)
+            {
+                titleCard->active    = ACTIVE_NORMAL;
+                titleCard->state     = TitleCard_State_SetupBGElements;
+                titleCard->stateDraw = TitleCard_Draw_SlideIn;
+            }
         }
 
         Music_PlayTrack(TRACK_STAGE);

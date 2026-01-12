@@ -24,11 +24,12 @@ void WeatherTV_LateUpdate(void) {}
 
 void WeatherTV_StaticUpdate(void)
 {
+    int32 count;
     if (WeatherTV->useHighLayer) {
         foreach_active(WeatherTV, weatherTV) { RSDK.AddDrawListRef(Zone->objectDrawGroup[1], RSDK.GetEntitySlot(weatherTV)); }
     }
 
-    int32 count = 0;
+    count = 0;
     if (RSDK_GET_ENTITY(SLOT_PAUSEMENU, PauseMenu)->classID != PauseMenu->classID) {
         foreach_active(WeatherTV, weatherTV)
         {
@@ -409,6 +410,7 @@ void WeatherTV_Draw_SuperHot(void)
 
 void WeatherTV_Draw_WindAttack(void)
 {
+    int32 y;
     RSDK_THIS(WeatherTV);
     Vector2 drawPos;
 
@@ -421,8 +423,9 @@ void WeatherTV_Draw_WindAttack(void)
     self->inkEffect = INK_ADD;
     self->alpha     = self->rectAlpha;
 
-    for (int32 y = -0x800000; y < 0x800000; y += 0x200000) {
-        for (int32 x = -0xA00000; x < 0xA00000; x += 0x200000) {
+    for (y = -0x800000; y < 0x800000; y += 0x200000) {
+        int32 x;
+        for (x = -0xA00000; x < 0xA00000; x += 0x200000) {
             drawPos.x = x + self->position.x;
             drawPos.y = y + self->position.y + ((Zone->timer & 7) << 18);
             RSDK.DrawSprite(&self->rainAnimator, &drawPos, false);
@@ -441,6 +444,7 @@ void WeatherTV_Draw_WindAttack(void)
 
 void WeatherTV_Draw_RainAttack(void)
 {
+    int32 y;
     RSDK_THIS(WeatherTV);
     Vector2 drawPos;
 
@@ -454,8 +458,9 @@ void WeatherTV_Draw_RainAttack(void)
     self->inkEffect            = INK_ALPHA;
     self->alpha                = self->rectAlpha;
 
-    for (int32 y = -0x800000; y < 0x800000; y += 0x200000) {
-        for (int32 x = -0xA00000; x < 0xA00000; x += 0x200000) {
+    for (y = -0x800000; y < 0x800000; y += 0x200000) {
+        int32 x;
+        for (x = -0xA00000; x < 0xA00000; x += 0x200000) {
             drawPos.x = x + self->position.x;
             drawPos.y = self->position.y + y + ((Zone->timer & 7) << 18);
             RSDK.DrawSprite(&self->rainAnimator, &drawPos, false);

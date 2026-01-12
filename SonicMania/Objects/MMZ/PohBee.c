@@ -100,6 +100,7 @@ void PohBee_CheckPlayerCollisions(void)
     foreach_active(Player, player)
     {
         if (self->planeFilter <= 0 || player->collisionPlane == ((uint8)(self->planeFilter - 1) & 1)) {
+            int32 i; 
             if (Player_CheckBadnikTouch(player, self, &PohBee->hitbox)) {
                 if (self->drawGroup == 1) {
                     if (Player_CheckBadnikBreak(player, self, false)) {
@@ -112,7 +113,7 @@ void PohBee_CheckPlayerCollisions(void)
                 }
             }
 
-            for (int32 i = 0; i < self->spikeCount + 1; ++i) {
+            for (i = 0; i < self->spikeCount + 1; ++i) {
                 if (Player_CheckCollisionTouch(player, self, &self->hitboxes[i])) {
 #if MANIA_USE_PLUS
                     int32 storeX   = self->position.x;
@@ -134,12 +135,18 @@ void PohBee_CheckPlayerCollisions(void)
 
 void PohBee_DrawSprites(void)
 {
+    int32 offsetY;
+    int32 shift;
+    Vector2 chainDrawPos;
+    int32 id;
+    int32 i;
+    Vector2 drawPos;
     RSDK_THIS(PohBee);
 
     self->drawFX = FX_FLIP;
 
-    int32 offsetY = 16;
-    int32 shift   = 7;
+    offsetY = 16;
+    shift   = 7;
     if (self->drawGroup == 1) {
         offsetY = 15;
         shift   = 6;
@@ -151,13 +158,12 @@ void PohBee_DrawSprites(void)
 
     RSDK.DrawSprite(&self->bodyAnimator, NULL, false);
 
-    Vector2 chainDrawPos;
     chainDrawPos.x = self->position.x;
     chainDrawPos.y = self->position.y + (16 << offsetY);
     self->drawFX |= FX_ROTATE;
 
-    int32 id = 4;
-    for (int32 i = 0; i < 10; ++i) {
+    id = 4;
+    for (i = 0; i < 10; ++i) {
         Vector2 drawPos = chainDrawPos;
         drawPos.x += (id * RSDK.Cos512(self->chainAngle[0])) << shift;
         drawPos.y += (id * RSDK.Sin512(self->chainAngle[0])) << shift;
@@ -165,12 +171,13 @@ void PohBee_DrawSprites(void)
         id += 8;
     }
 
-    Vector2 drawPos = PohBee_GetSpikePos(0, shift);
+    drawPos = PohBee_GetSpikePos(0, shift);
     RSDK.DrawSprite(&self->spikeAnimator, &drawPos, false);
 
     if (self->spikeCount == 1) {
+        int32 i;
         id = 4;
-        for (int32 i = 0; i < 4; ++i) {
+        for (i = 0; i < 4; ++i) {
             drawPos = chainDrawPos;
             drawPos.x += (id * RSDK.Cos512(self->chainAngle[1])) << shift;
             drawPos.y += (id * RSDK.Sin512(self->chainAngle[1])) << shift;
@@ -209,14 +216,15 @@ Vector2 PohBee_GetSpikePos(uint8 spikeID, uint8 shift)
 
 void PohBee_SetupHitboxes(void)
 {
+    int32 i;
     RSDK_THIS(PohBee);
 
-    for (int32 i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
+        Hitbox hitbox;
         Vector2 pos = PohBee_GetSpikePos(i, 7);
         int32 x     = (pos.x - self->position.x) >> 16;
         int32 y     = (pos.y - self->position.y) >> 16;
 
-        Hitbox hitbox;
         hitbox.left   = x - 12;
         hitbox.top    = y - 12;
         hitbox.right  = x + 12;

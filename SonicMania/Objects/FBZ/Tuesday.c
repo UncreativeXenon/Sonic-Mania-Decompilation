@@ -64,6 +64,12 @@ void Tuesday_Create(void *data)
         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 0, &self->gondolaAnimator, true, 0);
 
         if (!SceneInfo->inEditor) {
+            int32 minX;
+            int32 minY;
+            int32 maxX;
+            int32 maxY;
+            int32 slotID;
+            EntityTuesday *child;
             self->health = 1; // why does this have health??? this is the ONLY non-boss object to have health...
             self->state  = self->type == TUESDAY_GONDOLA ? Tuesday_State_Controller : Tuesday_State_Node;
 
@@ -79,20 +85,22 @@ void Tuesday_Create(void *data)
                 self->parent = self;
 
             self->linkMask = 0xFF;
-            int32 minX     = 0x7FFFFFFF;
-            int32 minY     = 0x7FFFFFFF;
-            int32 maxX     = 0;
-            int32 maxY     = 0;
+            minX     = 0x7FFFFFFF;
+            minY     = 0x7FFFFFFF;
+            maxX     = 0;
+            maxY     = 0;
             self->drawPos  = self->position;
             if (self->type != TUESDAY_GONDOLA && self->parent) {
                 self->position    = self->parent->position;
                 self->updateRange = self->parent->updateRange;
             }
 
-            int32 slotID         = RSDK.GetEntitySlot(self->parent);
-            EntityTuesday *child = RSDK_GET_ENTITY(slotID, Tuesday);
+            slotID         = RSDK.GetEntitySlot(self->parent);
+            child = RSDK_GET_ENTITY(slotID, Tuesday);
             while (child->classID == Tuesday->classID || child->classID == Platform->classID) {
                 if (child != self && child->classID == Tuesday->classID) {
+                    int32 distX;
+                    int32 distY;
                     ++self->linkCount;
 
                     if (self->type == TUESDAY_GONDOLA) {
@@ -115,8 +123,8 @@ void Tuesday_Create(void *data)
                         child->drawPos.x = child->position.x;
                         child->drawPos.y = child->position.y;
                     }
-                    int32 distX = (child->drawPos.x - self->drawPos.x) >> 16;
-                    int32 distY = (child->drawPos.y - self->drawPos.y) >> 16;
+                    distX = (child->drawPos.x - self->drawPos.x) >> 16;
+                    distY = (child->drawPos.y - self->drawPos.y) >> 16;
 
                     if (abs(distX) <= 256 && abs(distY) <= 256) {
                         int32 dirMask = 0;
@@ -305,9 +313,15 @@ void Tuesday_Explode(void)
         RSDK.PlaySfx(Tuesday->sfxExplosion, false, 255);
 
         if (Zone->timer & 4) {
+            int32 xOffset;
+            int32 yOffset;
+            int32 x;
+            int32 y;
+            EntityExplosion *explosion;
             int32 data = ((RSDK.Rand(0, 256) > 192) + 2);
 
-            int32 xOffset = 0, yOffset = 0;
+            xOffset = 0;
+            yOffset = 0;
             if (self->type != TUESDAY_GONDOLA) {
                 xOffset = RSDK.Rand(-12, 12);
                 yOffset = RSDK.Rand(-12, 12);
@@ -317,9 +331,9 @@ void Tuesday_Explode(void)
                 yOffset = RSDK.Rand(-8, 73);
             }
 
-            int32 x                    = self->drawPos.x + (xOffset << 16);
-            int32 y                    = self->drawPos.y + (yOffset << 16);
-            EntityExplosion *explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(data), x, y);
+            x                    = self->drawPos.x + (xOffset << 16);
+            y                    = self->drawPos.y + (yOffset << 16);
+            explosion            = CREATE_ENTITY(Explosion, INT_TO_VOID(data), x, y);
             explosion->drawGroup       = Zone->objectDrawGroup[1];
         }
     }
@@ -331,6 +345,8 @@ void Tuesday_DrawElectricity(void)
     Vector2 drawPos;
 
     if (self->timer) {
+        Animator animator;
+        int32 i;
         int32 frameID = 0;
         if (self->timer <= 60)
             frameID = (Zone->timer >> 1) & 3;
@@ -338,18 +354,19 @@ void Tuesday_DrawElectricity(void)
             frameID = 3 * ((Zone->timer >> 1) & 1);
         self->drawFX |= FX_FLIP;
 
-        Animator animator;
-        for (int32 i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             if (((1 << i) & self->shockFlags) && self->linkNodes[i]) {
+                EntityTuesday *link;
+                int32 p;
                 drawPos.x = self->drawPos.x;
                 drawPos.y = self->drawPos.y;
 
-                EntityTuesday *link = self->linkNodes[i];
+                link = self->linkNodes[i];
                 switch (i) {
                     case 0:
                         drawPos.x -= 0x200000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 5, &animator, true, frameID);
-                        for (int32 p = (self->drawPos.x - link->drawPos.x - 0x400000) >> 21; p >= 0; --p) {
+                        for (p = (self->drawPos.x - link->drawPos.x - 0x400000) >> 21; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.x -= 0x100000;
                         }
@@ -359,7 +376,7 @@ void Tuesday_DrawElectricity(void)
                         drawPos.y += 0x100000;
                         drawPos.x -= 0x100000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 6, &animator, true, frameID);
-                        for (int32 p = ((self->drawPos.x - link->drawPos.x - 0x180000) >> 16) / 19; p >= 0; --p) {
+                        for (p = ((self->drawPos.x - link->drawPos.x - 0x180000) >> 16) / 19; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.x -= 0xC0000;
                             drawPos.y += 0xC0000;
@@ -369,7 +386,7 @@ void Tuesday_DrawElectricity(void)
                     case 2:
                         drawPos.y += 0x200000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 4, &animator, true, frameID);
-                        for (int32 p = (link->drawPos.y - self->drawPos.y - 0x400000) >> 21; p >= 0; --p) {
+                        for (p = (link->drawPos.y - self->drawPos.y - 0x400000) >> 21; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.y += 0x100000;
                         }
@@ -380,7 +397,7 @@ void Tuesday_DrawElectricity(void)
                         drawPos.x += 0x100000;
                         drawPos.y += 0x100000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 6, &animator, true, frameID);
-                        for (int32 p = ((link->drawPos.x - self->drawPos.x - 1572864) >> 16) / 19; p >= 0; --p) {
+                        for (p = ((link->drawPos.x - self->drawPos.x - 1572864) >> 16) / 19; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.x += 0xC0000;
                             drawPos.y += 0xC0000;
@@ -391,7 +408,7 @@ void Tuesday_DrawElectricity(void)
                     case 4:
                         drawPos.x += 0x200000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 5, &animator, true, frameID);
-                        for (int32 p = (link->drawPos.x - self->drawPos.x - 0x400000) >> 21; p >= 0; --p) {
+                        for (p = (link->drawPos.x - self->drawPos.x - 0x400000) >> 21; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.x += 0x100000;
                         }
@@ -401,7 +418,7 @@ void Tuesday_DrawElectricity(void)
                         drawPos.y -= 0x100000;
                         drawPos.x += 0x100000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 6, &animator, true, frameID);
-                        for (int32 p = ((link->drawPos.x - self->drawPos.x - 1572864) >> 16) / 19; p >= 0; --p) {
+                        for (p = ((link->drawPos.x - self->drawPos.x - 1572864) >> 16) / 19; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.x += 0xC0000;
                             drawPos.y -= 0xC0000;
@@ -411,7 +428,7 @@ void Tuesday_DrawElectricity(void)
                     case 6:
                         drawPos.y -= 0x200000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 4, &animator, true, frameID);
-                        for (int32 p = (self->drawPos.y - link->drawPos.y - 0x400000) >> 21; p >= 0; --p) {
+                        for (p = (self->drawPos.y - link->drawPos.y - 0x400000) >> 21; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.y -= 0x100000;
                         }
@@ -422,7 +439,7 @@ void Tuesday_DrawElectricity(void)
                         drawPos.x -= 0x100000;
                         drawPos.y -= 0x100000;
                         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 6, &animator, true, frameID);
-                        for (int32 p = ((self->drawPos.x - link->drawPos.x - 0x180000) >> 16) / 19; p >= 0; --p) {
+                        for (p = ((self->drawPos.x - link->drawPos.x - 0x180000) >> 16) / 19; p >= 0; --p) {
                             RSDK.DrawSprite(&animator, &drawPos, false);
                             drawPos.x -= 0xC0000;
                             drawPos.y -= 0xC0000;
@@ -444,13 +461,17 @@ void Tuesday_State_Controller(void)
     RSDK_THIS(Tuesday);
 
     if (++self->shockTimer == 240) {
+        int32 slotID;
+        EntityTuesday *tuesday;
+        int32 count;
+        int32 i;
         RSDK.PlaySfx(Tuesday->sfxElecCharge, false, 255);
         self->timer = 120;
 
-        int32 slotID           = SceneInfo->entitySlot + 1;
-        EntityTuesday *tuesday = RSDK_GET_ENTITY(slotID, Tuesday);
-        int32 count            = self->linkCount;
-        for (int32 i = 0; i < count;) {
+        slotID           = SceneInfo->entitySlot + 1;
+        tuesday = RSDK_GET_ENTITY(slotID, Tuesday);
+        count            = self->linkCount;
+        for (i = 0; i < count;) {
             if (tuesday->classID == Tuesday->classID) {
                 ++i;
                 tuesday->nextShockFlags = 0;
@@ -460,20 +481,20 @@ void Tuesday_State_Controller(void)
 
         switch (self->shockType) {
             case 0:
-                self->nextShockFlags = 0b10101010;
-                self->shockFlags     = 0b10101010;
+                self->nextShockFlags = 0xAA;
+                self->shockFlags     = 0xAA;
                 self->shockType      = 1;
                 break;
 
             case 1:
-                self->nextShockFlags = 0b00010001;
-                self->shockFlags     = 0b00010001;
+                self->nextShockFlags = 0x11;
+                self->shockFlags     = 0x11;
                 self->shockType      = 2;
                 break;
 
             case 2:
-                self->nextShockFlags = 0b01000100;
-                self->shockFlags     = 0b01000100;
+                self->nextShockFlags = 0x44;
+                self->shockFlags     = 0x44;
                 self->shockType      = 0;
                 break;
         }
@@ -489,6 +510,9 @@ void Tuesday_State_Controller(void)
 
 void Tuesday_State_Node(void)
 {
+    int32 storeX;
+    int32 storeY;
+    Hitbox hitbox;
     RSDK_THIS(Tuesday);
 
     EntityPlatform *platform = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, Platform);
@@ -511,78 +535,63 @@ void Tuesday_State_Node(void)
         RSDK.SetSpriteAnimation(Tuesday->aniFrames, 1, &self->nodeAnimator, true, 0);
     }
 
-    int32 storeX   = self->position.x;
-    int32 storeY   = self->position.y;
+    storeX   = self->position.x;
+    storeY   = self->position.y;
     self->position = self->drawPos;
-    Hitbox hitbox;
 
-    foreach_active(Player, player)
     {
-        if (!self->invincibleTimer) {
-            bool32 hit = false;
-            if (self->type != TUESDAY_GONDOLA)
-                hit = Player_CheckBadnikTouch(player, self, &Tuesday->hitboxNode);
-            else
-                hit = Player_CheckBadnikTouch(player, self, &Tuesday->hitboxGondola);
+        foreach_active(Player, player)
+        {
+            if (!self->invincibleTimer) {
+                bool32 hit = false;
+                if (self->type != TUESDAY_GONDOLA)
+                    hit = Player_CheckBadnikTouch(player, self, &Tuesday->hitboxNode);
+                else
+                    hit = Player_CheckBadnikTouch(player, self, &Tuesday->hitboxGondola);
 
-            if (hit) {
-                if (!player->invincibleTimer && player->shield != SHIELD_LIGHTNING && player->blinkTimer <= 0 && self->timer && self->timer <= 60
-                    && (self->type != TUESDAY_GONDOLA || Player_CheckCollisionTouch(player, self, &Tuesday->hitboxNode))) {
-                    Player_Hurt(player, self);
-                }
-                else if (Player_CheckBossHit(player, self)) {
-                    Tuesday_Hit();
-                }
-            }
-            else {
-                if (self->timer < 60) {
-                    if (self->shockFlags == 17) {
-                        EntityTuesday *child = self->linkNodes[0];
-                        if (child) {
-                            hitbox.top    = -2;
-                            hitbox.bottom = 2;
-                            hitbox.left   = (child->drawPos.x - self->position.x) >> 16;
-                            hitbox.right  = 0;
-                            if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-                                Player_ElementHurt(player, self, SHIELD_LIGHTNING);
-                            }
-                        }
-
-                        child = self->linkNodes[4];
-                        if (child) {
-                            hitbox.left   = -0;
-                            hitbox.top    = -2;
-                            hitbox.bottom = 2;
-                            hitbox.right  = (child->drawPos.x - self->position.x) >> 16;
-                            if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-                                Player_ElementHurt(player, self, SHIELD_LIGHTNING);
-                            }
-                        }
+                if (hit) {
+                    if (!player->invincibleTimer && player->shield != SHIELD_LIGHTNING && player->blinkTimer <= 0 && self->timer && self->timer <= 60
+                        && (self->type != TUESDAY_GONDOLA || Player_CheckCollisionTouch(player, self, &Tuesday->hitboxNode))) {
+                        Player_Hurt(player, self);
                     }
-                    else {
-                        if (self->shockFlags != 68) {
-                            if (self->shockFlags == 170) {
-                                EntityTuesday *child = self->linkNodes[1];
-                                if (child) {
-                                    hitbox.top    = 0;
-                                    hitbox.bottom = (child->drawPos.y - self->position.y) >> 16;
-                                    hitbox.left   = (child->drawPos.x - self->position.x) >> 16;
-                                    hitbox.right  = 0;
-                                    if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-                                        int32 distX = abs((player->position.x - self->position.x) >> 16);
-                                        int32 distY = abs((player->position.y - self->position.y) >> 16);
-                                        if (abs(distX - distY) < 13) {
-                                            Player_ElementHurt(player, self, SHIELD_LIGHTNING);
-                                        }
-                                    }
+                    else if (Player_CheckBossHit(player, self)) {
+                        Tuesday_Hit();
+                    }
+                }
+                else {
+                    if (self->timer < 60) {
+                        if (self->shockFlags == 17) {
+                            EntityTuesday *child = self->linkNodes[0];
+                            if (child) {
+                                hitbox.top    = -2;
+                                hitbox.bottom = 2;
+                                hitbox.left   = (child->drawPos.x - self->position.x) >> 16;
+                                hitbox.right  = 0;
+                                if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                                    Player_ElementHurt(player, self, SHIELD_LIGHTNING);
                                 }
-                                else {
-                                    child = self->linkNodes[3];
+                            }
+
+                            child = self->linkNodes[4];
+                            if (child) {
+                                hitbox.left   = -0;
+                                hitbox.top    = -2;
+                                hitbox.bottom = 2;
+                                hitbox.right  = (child->drawPos.x - self->position.x) >> 16;
+                                if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                                    Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+                                }
+                            }
+                        }
+                        else {
+                            if (self->shockFlags != 68) {
+                                if (self->shockFlags == 170) {
+                                    EntityTuesday *child = self->linkNodes[1];
                                     if (child) {
-                                        hitbox.bottom = (child->drawPos.y - self->position.y) >> 16;
-                                        hitbox.left   = 0;
                                         hitbox.top    = 0;
-                                        hitbox.right  = (child->drawPos.x - self->position.x) >> 16;
+                                        hitbox.bottom = (child->drawPos.y - self->position.y) >> 16;
+                                        hitbox.left   = (child->drawPos.x - self->position.x) >> 16;
+                                        hitbox.right  = 0;
                                         if (Player_CheckCollisionTouch(player, self, &hitbox)) {
                                             int32 distX = abs((player->position.x - self->position.x) >> 16);
                                             int32 distY = abs((player->position.y - self->position.y) >> 16);
@@ -592,11 +601,11 @@ void Tuesday_State_Node(void)
                                         }
                                     }
                                     else {
-                                        child = self->linkNodes[5];
+                                        child = self->linkNodes[3];
                                         if (child) {
-                                            hitbox.top    = (child->drawPos.y - self->position.y) >> 16;
-                                            hitbox.bottom = 0;
+                                            hitbox.bottom = (child->drawPos.y - self->position.y) >> 16;
                                             hitbox.left   = 0;
+                                            hitbox.top    = 0;
                                             hitbox.right  = (child->drawPos.x - self->position.x) >> 16;
                                             if (Player_CheckCollisionTouch(player, self, &hitbox)) {
                                                 int32 distX = abs((player->position.x - self->position.x) >> 16);
@@ -607,12 +616,12 @@ void Tuesday_State_Node(void)
                                             }
                                         }
                                         else {
-                                            child = self->linkNodes[7];
+                                            child = self->linkNodes[5];
                                             if (child) {
                                                 hitbox.top    = (child->drawPos.y - self->position.y) >> 16;
                                                 hitbox.bottom = 0;
-                                                hitbox.left   = (child->drawPos.x - self->position.x) >> 16;
-                                                hitbox.right  = 0;
+                                                hitbox.left   = 0;
+                                                hitbox.right  = (child->drawPos.x - self->position.x) >> 16;
                                                 if (Player_CheckCollisionTouch(player, self, &hitbox)) {
                                                     int32 distX = abs((player->position.x - self->position.x) >> 16);
                                                     int32 distY = abs((player->position.y - self->position.y) >> 16);
@@ -621,31 +630,47 @@ void Tuesday_State_Node(void)
                                                     }
                                                 }
                                             }
+                                            else {
+                                                child = self->linkNodes[7];
+                                                if (child) {
+                                                    hitbox.top    = (child->drawPos.y - self->position.y) >> 16;
+                                                    hitbox.bottom = 0;
+                                                    hitbox.left   = (child->drawPos.x - self->position.x) >> 16;
+                                                    hitbox.right  = 0;
+                                                    if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                                                        int32 distX = abs((player->position.x - self->position.x) >> 16);
+                                                        int32 distY = abs((player->position.y - self->position.y) >> 16);
+                                                        if (abs(distX - distY) < 13) {
+                                                            Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        else {
-                            EntityTuesday *child = self->linkNodes[2];
-                            if (child) {
-                                hitbox.left   = 2;
-                                hitbox.top    = -2;
-                                hitbox.right  = 2;
-                                hitbox.bottom = (child->drawPos.y - self->position.y) >> 16;
-                                if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-                                    Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+                            else {
+                                EntityTuesday *child = self->linkNodes[2];
+                                if (child) {
+                                    hitbox.left   = 2;
+                                    hitbox.top    = -2;
+                                    hitbox.right  = 2;
+                                    hitbox.bottom = (child->drawPos.y - self->position.y) >> 16;
+                                    if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                                        Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+                                    }
                                 }
-                            }
 
-                            child = self->linkNodes[6];
-                            if (child) {
-                                hitbox.left   = -2;
-                                hitbox.right  = 2;
-                                hitbox.top    = (child->drawPos.y - self->position.y) >> 16;
-                                hitbox.bottom = 0;
-                                if (Player_CheckCollisionTouch(player, self, &hitbox)) {
-                                    Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+                                child = self->linkNodes[6];
+                                if (child) {
+                                    hitbox.left   = -2;
+                                    hitbox.right  = 2;
+                                    hitbox.top    = (child->drawPos.y - self->position.y) >> 16;
+                                    hitbox.bottom = 0;
+                                    if (Player_CheckCollisionTouch(player, self, &hitbox)) {
+                                        Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+                                    }
                                 }
                             }
                         }
@@ -657,43 +682,44 @@ void Tuesday_State_Node(void)
 
     self->position.x = storeX;
     self->position.y = storeY;
-    if (self->nextShockFlags != 0b11111111 && self->nextShockFlags) {
-        for (int32 i = 0; i < 8; ++i) {
+    if (self->nextShockFlags != 0xFF && self->nextShockFlags) {
+        int32 i;
+        for (i = 0; i < 8; ++i) {
             EntityTuesday *child = self->linkNodes[i];
             if (child) {
                 if (!child->nextShockFlags)
                     child->nextShockFlags = self->nextShockFlags;
 
-                if (self->nextShockFlags == 0b00010001) {
+                if (self->nextShockFlags == 0x11) {
                     if (!i || i == 4) {
                         child->timer      = 120;
                         self->timer       = 120;
-                        child->shockFlags = 0b00010001;
-                        self->shockFlags  = 0b00010001;
+                        child->shockFlags = 0x11;
+                        self->shockFlags  = 0x11;
                     }
                 }
-                else if (self->nextShockFlags == 0b01000100) {
+                else if (self->nextShockFlags == 0x44) {
                     if (i == 2 || i == 6) {
                         child->timer      = 120;
                         self->timer       = 120;
-                        child->shockFlags = 0b01000100;
-                        self->shockFlags  = 0b01000100;
+                        child->shockFlags = 0x44;
+                        self->shockFlags  = 0x44;
                     }
                 }
-                else if (self->nextShockFlags == 0b10101010 && (i == 1 || i == 3 || i == 5 || i == 7)) {
+                else if (self->nextShockFlags == 0xAA && (i == 1 || i == 3 || i == 5 || i == 7)) {
                     child->timer      = 120;
                     self->timer       = 120;
-                    child->shockFlags = 0b10101010;
-                    self->shockFlags  = 0b10101010;
+                    child->shockFlags = 0xAA;
+                    self->shockFlags  = 0xAA;
                 }
             }
         }
-        self->nextShockFlags = 0b11111111;
+        self->nextShockFlags = 0xFF;
     }
 
     if (self->timer) {
         if (!--self->timer)
-            self->shockFlags = 0b00000000;
+            self->shockFlags = 0x00;
     }
 }
 
@@ -704,9 +730,10 @@ void Tuesday_State_Destroyed(void)
     Tuesday_Explode();
 
     if (!--self->invincibleTimer) {
+        EntityTuesday *child;
         --self->parent->linkCount;
 
-        EntityTuesday *child = self->linkNodes[0];
+        child = self->linkNodes[0];
         if (child) {
             child->linkNodes[4] = NULL;
             child->linkMask &= ~0x10;

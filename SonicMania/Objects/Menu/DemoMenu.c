@@ -18,11 +18,12 @@ void DemoMenu_Update(void)
     self->angle = (self->angle + 1) & 0x1FF;
 
     if (!(self->angle & 1)) {
+        SpriteFrame *frameB;
         SpriteFrame *frameA = self->ghzFrame;
         if (++frameA->sprX > 193)
             frameA->sprX -= 192;
 
-        SpriteFrame *frameB = self->spzFrame;
+        frameB = self->spzFrame;
         if (--frameB->sprX <= 0)
             frameB->sprX += 192;
     }
@@ -175,10 +176,12 @@ void DemoMenu_State_Load(void)
         else
             RSDK.SetScene("Media Demo", "Studiopolis Zone 1");
 
-        foreach_all(TitleSetup, titleSetup)
         {
-            titleSetup->state     = TitleSetup_State_FadeToMenu;
-            titleSetup->stateDraw = TitleSetup_Draw_FadeBlack;
+            foreach_all(TitleSetup, titleSetup)
+            {
+                titleSetup->state     = TitleSetup_State_FadeToMenu;
+                titleSetup->stateDraw = TitleSetup_Draw_FadeBlack;
+            }
         }
 
         self->state = DemoMenu_State_Disappear;

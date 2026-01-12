@@ -52,6 +52,7 @@ void UIChoice_StaticUpdate(void) {}
 
 void UIChoice_Draw(void)
 {
+    EntityUIButton *parent;
     RSDK_THIS(UIChoice);
 
     Vector2 drawPos;
@@ -74,7 +75,7 @@ void UIChoice_Draw(void)
     drawPos.y += self->buttonBounceOffset;
     UIWidgets_DrawParallelogram(drawPos.x, drawPos.y, size, self->size.y >> 16, self->bgEdgeSize, 0x00, 0x00, 0x00);
 
-    EntityUIButton *parent = (EntityUIButton *)self->parent;
+    parent = (EntityUIButton *)self->parent;
     if (self->arrowWidth > 0 && self->isSelected && !(self->disabled || parent->disabled)) {
         drawPos.x = self->position.x;
         drawPos.y = self->position.y;
@@ -173,6 +174,7 @@ void UIChoice_SetChoiceInactive(EntityUIChoice *choice)
 
 void UIChoice_TouchedCB_Left(void)
 {
+    EntityUIButton *choice;
     RSDK_THIS(UIChoice);
 
     EntityUIButton *parent = (EntityUIButton *)self->parent;
@@ -181,7 +183,7 @@ void UIChoice_TouchedCB_Left(void)
     if (--selection < 0) {
         while (selection < 0) selection += parent->choiceCount;
     }
-    EntityUIButton *choice = UIButton_GetChoicePtr(parent, selection);
+    choice = UIButton_GetChoicePtr(parent, selection);
 
     while ((choice && choice->disabled) && selection != parent->selection) {
         if (--selection < 0) {
@@ -219,6 +221,8 @@ void UIChoice_TouchedCB_Right(void)
 
 bool32 UIChoice_CheckTouch(void)
 {
+    bool32 pressed;
+    int32 i;
     RSDK_THIS(UIChoice);
 
     void (*callbacks[2])(void);
@@ -238,13 +242,14 @@ bool32 UIChoice_CheckTouch(void)
     touchEnd[1].x = -self->touchPosOffsetS.x;
     touchEnd[1].y = self->touchPosOffsetS.y;
 
-    bool32 pressed = false;
-    for (int32 i = 0; i < 2; ++i) {
+    pressed = false;
+    for (i = 0; i < 2; ++i) {
         if (TouchInfo->count) {
+            int32 t;
             int32 sizeX = touchStart[i].x >> 1;
             int32 sizeY = touchStart[i].y >> 1;
 
-            for (int32 t = 0; t < TouchInfo->count; ++t) {
+            for (t = 0; t < TouchInfo->count; ++t) {
                 int32 x = (ScreenInfo->position.x << 16) - ((TouchInfo->x[t] * ScreenInfo->size.x) * -65536.0f);
                 int32 y = (ScreenInfo->position.y << 16) - ((TouchInfo->y[t] * ScreenInfo->size.y) * -65536.0f);
 

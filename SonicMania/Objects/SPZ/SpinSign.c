@@ -181,17 +181,19 @@ void SpinSign_State_SlowDown(void)
 
 void SpinSign_Draw_SonicH(void)
 {
+    Animator *animator;
+    int32 scale;
     RSDK_THIS(SpinSign);
     Vector2 drawPos;
 
     self->drawFX = FX_SCALE;
     drawPos.x    = self->position.x;
 
-    Animator *animator = self->rotation <= 0x80 || self->rotation >= 0x180 ? &self->eggmanAnimator : &self->frontAnimator;
+    animator = self->rotation <= 0x80 || self->rotation >= 0x180 ? &self->eggmanAnimator : &self->frontAnimator;
     animator->frameID  = (Zone->timer >> 4) & 1;
 
     self->scale.y = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scale   = abs(RSDK.Sin512(self->rotation)) + 1;
+    scale   = abs(RSDK.Sin512(self->rotation)) + 1;
 
     switch (self->rotation >> 7) {
         case 0:
@@ -217,17 +219,19 @@ void SpinSign_Draw_SonicH(void)
 }
 void SpinSign_Draw_SonicV(void)
 {
+    Animator *animator;
+    int32 scale;
     RSDK_THIS(SpinSign);
     Vector2 drawPos;
 
     drawPos.y    = self->position.y;
     self->drawFX = FX_SCALE;
 
-    Animator *animator = self->rotation <= 0x80 || self->rotation >= 0x180 ? &self->eggmanAnimator : &self->frontAnimator;
+    animator = self->rotation <= 0x80 || self->rotation >= 0x180 ? &self->eggmanAnimator : &self->frontAnimator;
     animator->frameID  = (Zone->timer >> 4) & 1;
 
     self->scale.x = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scale   = abs(RSDK.Sin512(self->rotation)) + 1;
+    scale   = abs(RSDK.Sin512(self->rotation)) + 1;
 
     switch (self->rotation >> 7) {
         case 0:
@@ -253,6 +257,7 @@ void SpinSign_Draw_SonicV(void)
 }
 void SpinSign_Draw_ManiaH(void)
 {
+    int32 scale;
     RSDK_THIS(SpinSign);
     Vector2 drawPos;
 
@@ -261,7 +266,7 @@ void SpinSign_Draw_ManiaH(void)
     self->frontAnimator.frameID = self->rotation <= 0x80 || self->rotation >= 0x180;
 
     self->scale.y = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scale   = abs(RSDK.Sin512(self->rotation)) + 1;
+    scale   = abs(RSDK.Sin512(self->rotation)) + 1;
 
     switch (self->rotation >> 7) {
         case 0:
@@ -287,6 +292,7 @@ void SpinSign_Draw_ManiaH(void)
 }
 void SpinSign_Draw_ManiaV(void)
 {
+    int32 scale;
     RSDK_THIS(SpinSign);
     Vector2 drawPos;
 
@@ -295,7 +301,7 @@ void SpinSign_Draw_ManiaV(void)
     self->frontAnimator.frameID = self->rotation <= 0x80 || self->rotation >= 0x180;
 
     self->scale.x = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scale   = abs(RSDK.Sin512(self->rotation)) + 1;
+    scale   = abs(RSDK.Sin512(self->rotation)) + 1;
 
     switch (self->rotation >> 7) {
         case 0:

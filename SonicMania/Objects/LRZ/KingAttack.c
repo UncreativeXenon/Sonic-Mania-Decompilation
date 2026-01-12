@@ -28,8 +28,9 @@ void KingAttack_Draw(void)
     int32 y = ScreenInfo->position.y << 16;
 
     switch (self->type) {
+        int32 i;
         case KINGATTACK_LASER:
-            for (int32 i = 0; i < 6; i += 2) {
+            for (i = 0; i < 6; i += 2) {
                 Vector2 vertices[4];
                 color colors[4];
 
@@ -161,6 +162,7 @@ void KingAttack_Create(void *data)
 
 void KingAttack_StageLoad(void)
 {
+    int32 sfxID;
     KingAttack->aniFrames = RSDK.LoadSpriteAnimation("LRZ3/HeavyKing.bin", SCOPE_STAGE);
 
     KingAttack->sfxLaserSweep = RSDK.GetSfx("LRZ/LaserSweep.wav");
@@ -171,7 +173,7 @@ void KingAttack_StageLoad(void)
     KingAttack->sfxElecPulse = RSDK.GetSfx("Stage/ElecPulse.wav");
     KingAttack->sfxTwinShot  = RSDK.GetSfx("LRZ/TwinShot.wav");
 
-    int32 sfxID = Soundboard_LoadSfx("LRZ/ElecIdle.wav", true, KingAttack_SfxCheck_ElecIdle, StateMachine_None);
+    sfxID = Soundboard_LoadSfx("LRZ/ElecIdle.wav", true, KingAttack_SfxCheck_ElecIdle, StateMachine_None);
     if (sfxID >= 0)
         Soundboard->sfxFadeOutDuration[sfxID] = 30;
 }
@@ -203,6 +205,7 @@ void KingAttack_CheckPlayerCollisions(void)
 
 void KingAttack_HandleLaserPositions(void)
 {
+    int32 y; 
     RSDK_THIS(KingAttack);
 
     EntityHeavyKing *king = (EntityHeavyKing *)self->parent;
@@ -212,7 +215,7 @@ void KingAttack_HandleLaserPositions(void)
         x = king->position.x - 0x240000;
     else
         x = king->position.x + 0x240000;
-    int32 y = king->position.y - 0x300000;
+    y = king->position.y - 0x300000;
 
     self->laserVertPostions[0].x = x - 0x40000;
     self->laserVertPostions[1].x = self->position.x - 0x40000;
@@ -298,6 +301,7 @@ void KingAttack_State_LaserBlast_Erupt(void)
 
 void KingAttack_State_OrbitAppear(void)
 {
+    int32 x; 
     RSDK_THIS(KingAttack);
 
     EntityHeavyKing *king = (EntityHeavyKing *)self->parent;
@@ -313,7 +317,7 @@ void KingAttack_State_OrbitAppear(void)
     self->velocity.x = self->position.x;
     self->velocity.y = self->position.y;
 
-    int32 x = 0;
+    x = 0;
     if (king->direction)
         x = RSDK.Cos1024(self->angle) - 0x240;
     else
@@ -547,13 +551,15 @@ void KingAttack_State_SmallBullet(void)
 
     KingAttack_CheckPlayerCollisions();
 
-    foreach_active(HPZEmerald, emerald)
-    {
-        if (emerald->type && RSDK.CheckObjectCollisionPlatform(emerald, emerald->hitbox, self, &self->hitbox, true)) {
-            RSDK.SetSpriteAnimation(KingAttack->aniFrames, 22, &self->animator, false, 0);
-            self->position.y += 0x40000;
-            self->state = KingAttack_State_SmallBullet_Impact;
-            foreach_break;
+{
+        foreach_active(HPZEmerald, emerald)
+        {
+            if (emerald->type && RSDK.CheckObjectCollisionPlatform(emerald, emerald->hitbox, self, &self->hitbox, true)) {
+                RSDK.SetSpriteAnimation(KingAttack->aniFrames, 22, &self->animator, false, 0);
+                self->position.y += 0x40000;
+                self->state = KingAttack_State_SmallBullet_Impact;
+                foreach_break;
+            }
         }
     }
 

@@ -124,8 +124,9 @@ void ContinuePlayer_HandleDashAnim(void)
             }
         }
         else {
+            int32 vel;
             RSDK.SetSpriteAnimation(self->aniFrames, ANI_JOG, &self->animator, false, 0);
-            int32 vel            = (self->groundVel >> 16);
+            vel            = (self->groundVel >> 16);
             self->animator.speed = 4 * ((vel << 1) + vel) + 64;
         }
     }

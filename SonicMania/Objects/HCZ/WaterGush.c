@@ -11,77 +11,80 @@ ObjectWaterGush *WaterGush;
 
 void WaterGush_Update(void)
 {
+    bool32 wasActivated;
     RSDK_THIS(WaterGush);
 
     WaterGush_SetupHitboxes();
 
-    bool32 wasActivated = self->activated;
+    wasActivated = self->activated;
     self->direction     = FLIP_NONE;
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        if (!((1 << playerID) & self->activePlayers)) {
-            if (Player_CheckCollisionTouch(player, self, &self->hitboxGush)) {
-                self->active = ACTIVE_NORMAL;
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
+            if (!((1 << playerID) & self->activePlayers)) {
+                if (Player_CheckCollisionTouch(player, self, &self->hitboxGush)) {
+                    self->active = ACTIVE_NORMAL;
 
-                if (!player->sidekick)
-                    self->activated = true;
+                    if (!player->sidekick)
+                        self->activated = true;
 
-                RSDK.PlaySfx(WaterGush->sfxGush, false, 255);
-                self->activePlayers |= 1 << playerID;
+                    RSDK.PlaySfx(WaterGush->sfxGush, false, 255);
+                    self->activePlayers |= 1 << playerID;
 
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, true, 6);
-                player->nextGroundState = StateMachine_None;
-                player->nextAirState    = StateMachine_None;
-                player->velocity.x      = 0;
-                player->velocity.y      = 0;
-                player->tileCollisions  = TILECOLLISION_NONE;
-                player->onGround        = false;
-                player->state           = Player_State_Static;
-            }
-        }
-
-        if (((1 << playerID) & self->activePlayers)) {
-            int32 xDir = 0;
-            int32 yDir = 0;
-
-            int32 offsetX = 0;
-            int32 offsetY = 0;
-            switch (self->orientation) {
-                default: break;
-
-                case WATERGUSH_UP:
-                    yDir    = -1;
-                    offsetX = self->position.x;
-                    offsetY = self->position.y - self->gushPos - 0x140000;
-                    break;
-
-                case WATERGUSH_RIGHT:
-                    xDir    = 1;
-                    offsetX = self->gushPos + 0x140000 + self->position.x;
-                    offsetY = self->position.y;
-                    break;
-
-                case WATERGUSH_LEFT:
-                    xDir    = -1;
-                    offsetX = self->position.x - self->gushPos - 0x140000;
-                    offsetY = self->position.y;
-                    break;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, true, 6);
+                    player->nextGroundState = StateMachine_None;
+                    player->nextAirState    = StateMachine_None;
+                    player->velocity.x      = 0;
+                    player->velocity.y      = 0;
+                    player->tileCollisions  = TILECOLLISION_NONE;
+                    player->onGround        = false;
+                    player->state           = Player_State_Static;
+                }
             }
 
-            player->position.x += (offsetX - player->position.x) >> 2;
-            player->position.y += (offsetY - player->position.y) >> 2;
-            player->state = Player_State_Static;
+            if (((1 << playerID) & self->activePlayers)) {
+                int32 xDir = 0;
+                int32 yDir = 0;
 
-            if ((!Player_CheckCollisionTouch(player, self, &self->hitboxRange) && !Player_CheckCollisionTouch(player, self, &self->hitboxGush))
-                || self->finishedExtending) {
-                self->activePlayers &= ~(1 << playerID);
-                player->state          = Player_State_Air;
-                player->tileCollisions = TILECOLLISION_DOWN;
-                player->onGround       = false;
-                player->velocity.x     = xDir * (abs(self->speed) << 15);
-                player->velocity.y     = yDir * (abs(self->speed) << 15);
+                int32 offsetX = 0;
+                int32 offsetY = 0;
+                switch (self->orientation) {
+                    default: break;
+
+                    case WATERGUSH_UP:
+                        yDir    = -1;
+                        offsetX = self->position.x;
+                        offsetY = self->position.y - self->gushPos - 0x140000;
+                        break;
+
+                    case WATERGUSH_RIGHT:
+                        xDir    = 1;
+                        offsetX = self->gushPos + 0x140000 + self->position.x;
+                        offsetY = self->position.y;
+                        break;
+
+                    case WATERGUSH_LEFT:
+                        xDir    = -1;
+                        offsetX = self->position.x - self->gushPos - 0x140000;
+                        offsetY = self->position.y;
+                        break;
+                }
+
+                player->position.x += (offsetX - player->position.x) >> 2;
+                player->position.y += (offsetY - player->position.y) >> 2;
+                player->state = Player_State_Static;
+
+                if ((!Player_CheckCollisionTouch(player, self, &self->hitboxRange) && !Player_CheckCollisionTouch(player, self, &self->hitboxGush))
+                    || self->finishedExtending) {
+                    self->activePlayers &= ~(1 << playerID);
+                    player->state          = Player_State_Air;
+                    player->tileCollisions = TILECOLLISION_DOWN;
+                    player->onGround       = false;
+                    player->velocity.x     = xDir * (abs(self->speed) << 15);
+                    player->velocity.y     = yDir * (abs(self->speed) << 15);
+                }
             }
         }
     }
@@ -248,6 +251,7 @@ void WaterGush_SetupHitboxes(void)
 
 void WaterGush_DrawSprites(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(WaterGush);
 
     uint8 storeDir     = self->direction;
@@ -280,10 +284,11 @@ void WaterGush_DrawSprites(void)
             break;
     }
 
-    Vector2 drawPos = drawPosTop;
+    drawPos = drawPosTop;
     if (self->gushPos > 0) {
+        int32 i;
         int32 count = ((self->gushPos - 1) >> 22) + 1;
-        for (int32 i = 0; i < count; ++i) {
+        for (i = 0; i < count; ++i) {
             drawPos.x += offsetX;
             drawPos.y += offsetY;
             RSDK.DrawSprite(&self->plumeAnimator, &drawPos, false);
@@ -297,6 +302,7 @@ void WaterGush_DrawSprites(void)
 
 void WaterGush_SpawnBrickDebris(void)
 {
+    int32 i;
     RSDK_THIS(WaterGush);
 
     Vector2 brickPos[4];
@@ -385,7 +391,7 @@ void WaterGush_SpawnBrickDebris(void)
             break;
     }
 
-    for (int32 i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
         EntityDebris *brick = CREATE_ENTITY(Debris, Debris_State_Fall, brickPos[0].x, brickPos[0].y);
         RSDK.SetSpriteAnimation(WaterGush->aniFrames, 4, &brick->animator, true, 0);
         brick->position.x += RSDK.Rand(-0x80000, 0x80000);

@@ -11,18 +11,22 @@ ObjectSSZSpotlight *SSZSpotlight;
 
 void SSZSpotlight_Update(void)
 {
+    Vector2 *vertices;
+    int32 i;
     RSDK_THIS(SSZSpotlight);
 
     self->angle    = (self->angle + self->speed) & 0x1FF;
     self->rotation = RSDK.Sin512(self->angle) >> 2;
 
-    Vector2 *vertices = self->spotlightVertices;
-    for (int32 i = 0; i < 8; ++i) {
+    vertices = self->spotlightVertices;
+    for (i = 0; i < 8; ++i) {
+        int32 distX;
+        int32 distY;
         self->drawVertices[i].x = vertices[i].x;
         self->drawVertices[i].y = vertices[i].y;
 
-        int32 distX             = (self->drawVertices[i].x - self->originPos.x) >> 4;
-        int32 distY             = (self->drawVertices[i].y - self->originPos.y) >> 4;
+        distX             = (self->drawVertices[i].x - self->originPos.x) >> 4;
+        distY             = (self->drawVertices[i].y - self->originPos.y) >> 4;
         self->drawVertices[i].x = self->originPos.x + (distY * RSDK.Sin1024(self->rotation) >> 6) + (distX * RSDK.Cos1024(self->rotation) >> 6);
         self->drawVertices[i].y = self->originPos.y + (distY * RSDK.Cos1024(self->rotation) >> 6) - (distX * RSDK.Sin1024(self->rotation) >> 6);
     }
@@ -37,12 +41,13 @@ void SSZSpotlight_StaticUpdate(void) {}
 
 void SSZSpotlight_Draw(void)
 {
+    int32 i;
     RSDK_THIS(SSZSpotlight);
 
     Vector2 *drawVertex = self->drawVertices;
     int32 screenX       = self->position.x - (ScreenInfo[SceneInfo->currentScreenID].position.x << 16);
 
-    for (int32 i = 0; i < 6; i += 2) {
+    for (i = 0; i < 6; i += 2) {
         Vector2 vertices[4];
         color colors[4];
 
@@ -70,6 +75,9 @@ void SSZSpotlight_Create(void *data)
 {
     RSDK_THIS(SSZSpotlight);
     if (!SceneInfo->inEditor) {
+        int32 sizes[3];
+        Vector2 *vertex;
+        int32 i;
         self->visible = true;
 
         switch (self->drawFlag) {
@@ -82,7 +90,9 @@ void SSZSpotlight_Create(void *data)
 
         self->angle = self->offset;
 
-        int32 sizes[3] = { 4, 8, 16 };
+        sizes[0] = 4;
+        sizes[1] = 8;
+        sizes[2] = 16;
 
         self->alpha       = 0x100;
         self->originPos.y = 272 << 16;
@@ -111,8 +121,8 @@ void SSZSpotlight_Create(void *data)
         self->spotlightVertices[7].x = sizes[self->size] << 16;
         self->spotlightVertices[7].y = 256 << 16;
 
-        Vector2 *vertex = self->spotlightVertices;
-        for (int32 i = 0; i < 8; i += 2) {
+        vertex = self->spotlightVertices;
+        for (i = 0; i < 8; i += 2) {
             vertex->x = 720 * (vertex->x >> 8);
 
             vertex += 2;

@@ -53,11 +53,12 @@ void Dust_State_SpinDash(void)
         destroyEntity(self);
     }
     else {
+        int32 bottom;
         Hitbox *playerHitbox = Player_GetHitbox(player);
 
         self->position.x = player->position.x;
         self->position.y = player->position.y;
-        int32 bottom     = playerHitbox->bottom << 16;
+        bottom     = playerHitbox->bottom << 16;
         if (player->invertGravity)
             self->position.y -= bottom;
         else
@@ -74,9 +75,10 @@ void Dust_State_SpinDash(void)
 }
 void Dust_State_DustTrail(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Dust);
 
-    EntityPlayer *player = (EntityPlayer *)self->parent;
+    player = (EntityPlayer *)self->parent;
     if (!player) {
         destroyEntity(self);
     }

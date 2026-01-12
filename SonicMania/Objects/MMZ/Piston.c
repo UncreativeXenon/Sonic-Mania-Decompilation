@@ -81,12 +81,14 @@ void Piston_StageLoad(void)
 
 void Piston_Collide_Solid(void)
 {
+    int32 i;
+#if MANIA_USE_PLUS
+    RSDK_THIS(Piston);
+#endif
     Platform_Collision_Solid();
 
 #if MANIA_USE_PLUS
-    RSDK_THIS(Piston);
-
-    for (int32 i = 0; i < Player->playerCount; ++i) {
+    for (i = 0; i < Player->playerCount; ++i) {
         if (((1 << i) & self->stoodPlayers) != 0) {
             EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
             if (player->state == Player_State_MightyHammerDrop)
@@ -130,13 +132,14 @@ void Piston_StateMove_Vertical_Reverse(void)
 
 void Piston_StateMove_Up(void)
 {
+    int32 i; 
     RSDK_THIS(Piston);
 
     self->drawPos.y -= 0x80000;
     self->velocity.y = 0x80000;
 
     if (--self->timer <= 0) {
-        for (int32 i = 0; i < Player->playerCount; ++i) {
+        for (i = 0; i < Player->playerCount; ++i) {
             EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
             if ((1 << i) & self->stoodPlayers) {
                 player->velocity.y = -0x100000;
@@ -279,6 +282,7 @@ void Piston_StateActive_PreparingLaunch(void)
 
 void Piston_StateActive_LaunchPlayers(void)
 {
+    int32 i; 
     RSDK_THIS(Piston);
 
     self->drawPos.y -= 0x40000;
@@ -286,7 +290,7 @@ void Piston_StateActive_LaunchPlayers(void)
 
     self->timer -= 4;
     if (!self->timer) {
-        for (int32 i = 0; i < Player->playerCount; ++i) {
+        for (i = 0; i < Player->playerCount; ++i) {
             EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
             if ((1 << i) & self->stoodPlayers) {
                 RSDK.PlaySfx(Piston->sfxLaunch, false, 255);

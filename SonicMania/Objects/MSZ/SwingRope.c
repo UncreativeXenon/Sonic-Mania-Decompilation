@@ -11,6 +11,11 @@ ObjectSwingRope *SwingRope;
 
 void SwingRope_Update(void)
 {
+    int32 s;
+    int32 rotateX;
+    int32 rotateY;
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(SwingRope);
 
     int32 sine          = 11 * RSDK.Sin512(self->angleOffset + 3 * Zone->timer);
@@ -19,22 +24,22 @@ void SwingRope_Update(void)
     self->rotatePos.x   = self->position.x;
     self->rotatePos.y   = self->position.y;
 
-    for (int32 s = 0; s < self->ropeSize; ++s) {
+    for (s = 0; s < self->ropeSize; ++s) {
         self->angle = (sine >> 6) & 0x1FF;
         self->rotatePos.x -= RSDK.Sin512(self->angle) << 11;
         self->rotatePos.y += RSDK.Cos512(self->angle) << 11;
         sine += self->rotatedOffset;
     }
 
-    int32 rotateX = self->rotatePos.x;
-    int32 rotateY = self->rotatePos.y;
+    rotateX = self->rotatePos.x;
+    rotateY = self->rotatePos.y;
     self->angle   = (sine >> 6) & 0x1FF;
     rotateY += 0x700 * RSDK.Cos512(self->angle);
     self->rotatePos.x -= RSDK.Sin512(self->angle) << 11;
     self->rotatePos.y += RSDK.Cos512(self->angle) << 11;
 
-    int32 storeX     = self->position.x;
-    int32 storeY     = self->position.y;
+    storeX     = self->position.x;
+    storeY     = self->position.y;
     self->position.x = self->rotatePos.x;
     self->position.y = self->rotatePos.y;
     self->velocity.x = self->position.x - self->ropePos.x;
@@ -42,53 +47,55 @@ void SwingRope_Update(void)
     if (self->ropeGrabDelay > 0)
         self->ropeGrabDelay--;
 
-    foreach_active(Player, player)
     {
-        if (player->state == Player_State_Static) {
-            if (Player_CheckCollisionTouch(player, self, &SwingRope->hitboxHandle)) {
-                if (player->jumpPress) {
-                    player->jumpAbilityState = 1;
-                    player->state            = Player_State_Air;
-                    player->drawGroup        = self->playerLayers[player->playerID];
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+        foreach_active(Player, player)
+        {
+            if (player->state == Player_State_Static) {
+                if (Player_CheckCollisionTouch(player, self, &SwingRope->hitboxHandle)) {
+                    if (player->jumpPress) {
+                        player->jumpAbilityState = 1;
+                        player->state            = Player_State_Air;
+                        player->drawGroup        = self->playerLayers[player->playerID];
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
-                    player->velocity.x = self->velocity.x >> 1;
-                    if (player->left)
-                        player->velocity.x = -0x20000;
-                    else if (player->right)
-                        player->velocity.x = 0x20000;
+                        player->velocity.x = self->velocity.x >> 1;
+                        if (player->left)
+                            player->velocity.x = -0x20000;
+                        else if (player->right)
+                            player->velocity.x = 0x20000;
 
-                    player->velocity.y   = (self->velocity.y >> 1) - 0x38000;
-                    player->onGround     = false;
-                    player->applyJumpCap = false;
+                        player->velocity.y   = (self->velocity.y >> 1) - 0x38000;
+                        player->onGround     = false;
+                        player->applyJumpCap = false;
 
-                    self->ropeGrabDelay = 30;
-                }
-                else {
-                    player->position.x = rotateX + (-0x800 * RSDK.Sin512(self->angle));
-                    player->position.y = rotateY - ((Player_GetHitbox(player)->top + 2) << 16);
+                        self->ropeGrabDelay = 30;
+                    }
+                    else {
+                        player->position.x = rotateX + (-0x800 * RSDK.Sin512(self->angle));
+                        player->position.y = rotateY - ((Player_GetHitbox(player)->top + 2) << 16);
+                    }
                 }
             }
-        }
-        else if (!self->ropeGrabDelay && !player->onGround) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
-            Hitbox otherHitbox;
-            otherHitbox.left   = playerHitbox->left;
-            otherHitbox.right  = playerHitbox->right;
-            otherHitbox.top    = 0;
-            otherHitbox.bottom = 0;
+            else if (!self->ropeGrabDelay && !player->onGround) {
+                Hitbox *playerHitbox = Player_GetHitbox(player);
+                Hitbox otherHitbox;
+                otherHitbox.left   = playerHitbox->left;
+                otherHitbox.right  = playerHitbox->right;
+                otherHitbox.top    = 0;
+                otherHitbox.bottom = 0;
 
-            if (RSDK.CheckObjectCollisionTouchBox(self, &SwingRope->hitboxGrabHandle, player, &otherHitbox)) {
-                self->playerLayers[player->playerID] = player->drawGroup;
-                player->drawGroup                    = Zone->objectDrawGroup[0];
-                player->state                        = Player_State_Static;
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, 0, 0);
-                player->velocity.x = 0;
-                player->velocity.y = 0;
-                player->groundVel  = 0;
-                player->position.x = -0x800 * RSDK.Sin512(self->angle) + rotateX;
-                player->position.y = rotateY - ((playerHitbox->top + 2) << 16);
-                RSDK.PlaySfx(Player->sfxGrab, false, 255);
+                if (RSDK.CheckObjectCollisionTouchBox(self, &SwingRope->hitboxGrabHandle, player, &otherHitbox)) {
+                    self->playerLayers[player->playerID] = player->drawGroup;
+                    player->drawGroup                    = Zone->objectDrawGroup[0];
+                    player->state                        = Player_State_Static;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, 0, 0);
+                    player->velocity.x = 0;
+                    player->velocity.y = 0;
+                    player->groundVel  = 0;
+                    player->position.x = -0x800 * RSDK.Sin512(self->angle) + rotateX;
+                    player->position.y = rotateY - ((playerHitbox->top + 2) << 16);
+                    RSDK.PlaySfx(Player->sfxGrab, false, 255);
+                }
             }
         }
     }
@@ -103,6 +110,9 @@ void SwingRope_StaticUpdate(void) {}
 
 void SwingRope_Draw(void)
 {
+    int32 angle;
+    int32 rotAngle;
+    int32 s;
     RSDK_THIS(SwingRope);
 
     self->ropeAnimator.frameID = (self->rotatedAngle >> 10) & 0x1F;
@@ -113,9 +123,9 @@ void SwingRope_Draw(void)
     self->ropePos.x = self->position.x;
     self->ropePos.y = self->position.y;
 
-    int32 angle    = self->rotatedAngle >> 6;
-    int32 rotAngle = self->rotatedAngle;
-    for (int32 s = 0; s < self->ropeSize; ++s) {
+    angle    = self->rotatedAngle >> 6;
+    rotAngle = self->rotatedAngle;
+    for (s = 0; s < self->ropeSize; ++s) {
         self->angle = angle & 0x1FF;
         self->ropePos.x -= RSDK.Sin512(self->angle) << 11;
         self->ropePos.y += RSDK.Cos512(self->angle) << 11;

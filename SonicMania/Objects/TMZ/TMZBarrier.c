@@ -59,15 +59,17 @@ void TMZBarrier_StageLoad(void)
         }
 
         TMZBarrier->postID = StarPost->postIDs[0];
-        foreach_all(TMZBarrier, barrier)
         {
-            if ((1 << barrier->iD) & TMZBarrier->clearedBarriers) {
-                if (barrier->type)
-                    RSDK.CopyTileLayer(Zone->fgLayer[0], barrier->position.x >> 20, barrier->position.y >> 20, Zone->moveLayer, 59, 32, 2, 4);
-                else
-                    RSDK.CopyTileLayer(Zone->fgLayer[0], barrier->position.x >> 20, barrier->position.y >> 20, Zone->moveLayer, 56, 32, 2, 9);
+            foreach_all(TMZBarrier, barrier)
+            {
+                if ((1 << barrier->iD) & TMZBarrier->clearedBarriers) {
+                    if (barrier->type)
+                        RSDK.CopyTileLayer(Zone->fgLayer[0], barrier->position.x >> 20, barrier->position.y >> 20, Zone->moveLayer, 59, 32, 2, 4);
+                    else
+                        RSDK.CopyTileLayer(Zone->fgLayer[0], barrier->position.x >> 20, barrier->position.y >> 20, Zone->moveLayer, 56, 32, 2, 9);
 
-                destroyEntity(barrier);
+                    destroyEntity(barrier);
+                }
             }
         }
     }

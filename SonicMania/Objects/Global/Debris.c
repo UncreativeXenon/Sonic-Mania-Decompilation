@@ -65,11 +65,12 @@ void Debris_CreateFromEntries(int32 aniFrames, int32 *entries, int32 animationID
     RSDK_THIS(Debris);
 
     if (entries) {
+        int32 e;
         int32 entryCount  = *entries;
         DebrisEntry *entry = (DebrisEntry *)&entries[1];
 
         self->drawFX = FX_FLIP;
-        for (int32 e = 0; e < entryCount; ++e) {
+        for (e = 0; e < entryCount; ++e) {
             EntityDebris *debris = CREATE_ENTITY(Debris, (void *)Debris_State_FallAndFlicker, self->position.x, self->position.y);
 
             RSDK.SetSpriteAnimation(aniFrames, animationID, &debris->animator, true, entry->frame);
@@ -90,11 +91,12 @@ void Debris_CreateFromEntries_UseOffset(int32 aniFrames, int32 *entries)
     RSDK_THIS(Debris);
 
     if (entries) {
+        int32 e;
         int32 entryCount         = *entries;
         DebrisOffsetEntry *entry = (DebrisOffsetEntry *)&entries[1];
 
         self->drawFX = FX_FLIP;
-        for (int32 e = 0; e < entryCount; ++e) {
+        for (e = 0; e < entryCount; ++e) {
             int32 x              = self->position.x + entry->offset.x;
             int32 y              = self->position.y + entry->offset.y;
             EntityDebris *debris = CREATE_ENTITY(Debris, (void *)Debris_State_FallAndFlicker, x, y);

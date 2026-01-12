@@ -60,54 +60,56 @@ void SpikeLog_State_Main(void)
 {
     RSDK_THIS(SpikeLog);
     self->animator.frameID = (self->frame + SpikeLog->timer) & 0x1F;
-    foreach_active(Player, player)
     {
-        if (player->shield != SHIELD_FIRE || player->invincibleTimer) {
-            if ((self->animator.frameID & 0xFFFFFFFC) != 8)
-                continue;
+        foreach_active(Player, player)
+        {
+            if (player->shield != SHIELD_FIRE || player->invincibleTimer) {
+                if ((self->animator.frameID & 0xFFFFFFFC) != 8)
+                    continue;
 
-            if (Player_CheckCollisionTouch(player, self, &SpikeLog->hitboxSpikeLog)) {
+                if (Player_CheckCollisionTouch(player, self, &SpikeLog->hitboxSpikeLog)) {
 #if MANIA_USE_PLUS
-                if (player->characterID == ID_MIGHTY) {
-                    int32 anim = player->animator.animationID;
-                    if (anim == ANI_JUMP || anim == ANI_SPINDASH || anim == ANI_HAMMERDROP) {
-                        if (!player->invincibleTimer && player->blinkTimer <= 0) {
-                            if (abs(player->velocity.x) < 0x10000 || !player->groundedStore) {
-                                player->velocity.y       = -0x48000;
-                                player->onGround         = false;
-                                player->applyJumpCap     = false;
-                                player->jumpAbilityState = 0;
-                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_UNSPIN, &player->animator, false, 0);
-                                RSDK.PlaySfx(Player->sfxMightyUnspin, false, 255);
-                            }
+                    if (player->characterID == ID_MIGHTY) {
+                        int32 anim = player->animator.animationID;
+                        if (anim == ANI_JUMP || anim == ANI_SPINDASH || anim == ANI_HAMMERDROP) {
+                            if (!player->invincibleTimer && player->blinkTimer <= 0) {
+                                if (abs(player->velocity.x) < 0x10000 || !player->groundedStore) {
+                                    player->velocity.y       = -0x48000;
+                                    player->onGround         = false;
+                                    player->applyJumpCap     = false;
+                                    player->jumpAbilityState = 0;
+                                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_UNSPIN, &player->animator, false, 0);
+                                    RSDK.PlaySfx(Player->sfxMightyUnspin, false, 255);
+                                }
 
-                            if (!player->uncurlTimer) {
-                                player->uncurlTimer = 15;
-                                RSDK.PlaySfx(Player->sfxPimPom, false, 255);
+                                if (!player->uncurlTimer) {
+                                    player->uncurlTimer = 15;
+                                    RSDK.PlaySfx(Player->sfxPimPom, false, 255);
+                                }
                             }
                         }
+                        else if (player->animator.animationID != ANI_UNSPIN)
+                            Player_Hurt(player, self);
                     }
-                    else if (player->animator.animationID != ANI_UNSPIN)
+                    else {
+#endif
                         Player_Hurt(player, self);
-                }
-                else {
-#endif
-                    Player_Hurt(player, self);
 #if MANIA_USE_PLUS
-                }
+                    }
 #endif
+                }
             }
-        }
-        else if (Player_CheckCollisionTouch(player, self, &SpikeLog->hitboxSpikeLog)) {
-            if (!SpikeLog->hasAchievement) {
-                API_UnlockAchievement(&achievementList[ACH_GHZ]);
+            else if (Player_CheckCollisionTouch(player, self, &SpikeLog->hitboxSpikeLog)) {
+                if (!SpikeLog->hasAchievement) {
+                    API_UnlockAchievement(&achievementList[ACH_GHZ]);
 
-                SpikeLog->hasAchievement = true;
+                    SpikeLog->hasAchievement = true;
+                }
+                CREATE_ENTITY(BurningLog, INT_TO_VOID(16), self->position.x, self->position.y);
+                RSDK.SetTile(Zone->fgLayer[0], self->position.x >> 20, self->position.y >> 20, -1);
+                self->frame = 8;
+                self->state = SpikeLog_State_Burn;
             }
-            CREATE_ENTITY(BurningLog, INT_TO_VOID(16), self->position.x, self->position.y);
-            RSDK.SetTile(Zone->fgLayer[0], self->position.x >> 20, self->position.y >> 20, -1);
-            self->frame = 8;
-            self->state = SpikeLog_State_Burn;
         }
     }
 }

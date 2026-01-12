@@ -33,6 +33,9 @@ void Kabasira_Draw(void)
         RSDK.ProcessAnimation(&self->wingsAnimator);
     }
     else {
+        int32 alpha;
+        int32 angleVel;
+        int32 i;
         int32 speed = (2 * (self->direction == FLIP_NONE) - 1);
 
         int32 angle = self->angle + 72 * speed;
@@ -40,10 +43,10 @@ void Kabasira_Draw(void)
             angle = ((-1 - angle) & -0x200) + angle + 0x200;
         angle &= 0x1FF;
 
-        int32 alpha    = 0x100 / KABASIRA_BODY_COUNT; // default is 0x40
-        int32 angleVel = 24 * speed;
+        alpha    = 0x100 / KABASIRA_BODY_COUNT; // default is 0x40
+        angleVel = 24 * speed;
 
-        for (int32 i = 0; i < KABASIRA_BODY_COUNT - 1; ++i) {
+        for (i = 0; i < KABASIRA_BODY_COUNT - 1; ++i) {
             Kabasira_DrawSegment(angle, alpha);
 
             angle -= angleVel;
@@ -130,6 +133,7 @@ void Kabasira_DebugDraw(void)
 
 bool32 Kabasira_HandleAnimations(uint8 angle)
 {
+    int32 frameCount;
     RSDK_THIS(Kabasira);
 
     int32 rotation  = 2 * angle;
@@ -144,7 +148,7 @@ bool32 Kabasira_HandleAnimations(uint8 angle)
         case 3: frame = 3 - ((rotation >> 5) & 3); break;
     }
 
-    int32 frameCount               = 3 * frame;
+    frameCount               = 3 * frame;
     self->wingsAnimator.loopIndex  = frameCount;
     self->wingsAnimator.frameID    = prevFrame + frameCount;
     self->wingsAnimator.frameCount = frameCount + 3;
@@ -154,6 +158,10 @@ bool32 Kabasira_HandleAnimations(uint8 angle)
 
 void Kabasira_DrawSegment(int32 angle, int32 alpha)
 {
+    int32 frame;
+    uint8 dir;
+    int32 storedDir;
+    int32 storedAlpha;
     RSDK_THIS(Kabasira);
     Vector2 drawPos;
 
@@ -161,7 +169,7 @@ void Kabasira_DrawSegment(int32 angle, int32 alpha)
     drawPos.x      = RSDK.Sin512(rotation) * 0xA00 + self->startPos.x;
     drawPos.y      = (RSDK.Cos512(angle) << 13) + self->startPos.y;
 
-    int32 frame = 11 - rotation % 512 / 42 % 12;
+    frame = 11 - rotation % 512 / 42 % 12;
     RSDK.SetSpriteAnimation(Kabasira->aniFrames, 0, &self->bodyAnimator, true, frame);
 
     if (!self->bodyAnimator.frameID || self->bodyAnimator.frameID > 6) {
@@ -173,9 +181,9 @@ void Kabasira_DrawSegment(int32 angle, int32 alpha)
         self->scale.y = self->scale.x;
     }
 
-    uint8 dir         = Kabasira_HandleAnimations(angle) ? FLIP_X : FLIP_NONE;
-    int32 storedDir   = self->direction;
-    int32 storedAlpha = self->alpha;
+    dir         = Kabasira_HandleAnimations(angle) ? FLIP_X : FLIP_NONE;
+    storedDir   = self->direction;
+    storedAlpha = self->alpha;
 
     if (self->angle < 0x100) {
         self->direction = FLIP_NONE;
@@ -251,10 +259,12 @@ void Kabasira_State_Moving(void)
             EntityPlayer *player = Player_GetNearestPlayer();
 
             if (player) {
+                EntityKabasira *attack;
+                int32 angle; 
                 RSDK.PlaySfx(Kabasira->sfxPon, false, 255);
 
-                EntityKabasira *attack = CREATE_ENTITY(Kabasira, INT_TO_VOID(true), self->position.x, self->position.y);
-                int32 angle            = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
+                attack = CREATE_ENTITY(Kabasira, INT_TO_VOID(true), self->position.x, self->position.y);
+                angle            = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
                 attack->velocity.x     = RSDK.Cos256(angle) << 9;
                 attack->velocity.y     = RSDK.Sin256(angle) << 9;
                 attack->direction      = player->position.x < self->position.x;
@@ -276,18 +286,21 @@ void Kabasira_State_LaunchedAttack(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckBadnikTouch(player, self, &Kabasira->hitboxBadnik)) {
-            if (Player_CheckAttacking(player, self)) {
-                CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ITEMBOX), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
-                RSDK.PlaySfx(Kabasira->sfxExplosion2, false, 255);
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &Kabasira->hitboxBadnik)) {
+                if (Player_CheckAttacking(player, self)) {
+                    CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ITEMBOX), self->position.x, self->position.y)->drawGroup =
+                        Zone->objectDrawGroup[1];
+                    RSDK.PlaySfx(Kabasira->sfxExplosion2, false, 255);
 
-                destroyEntity(self);
-                foreach_break;
-            }
-            else {
-                Player_Hurt(player, self);
+                    destroyEntity(self);
+                    foreach_break;
+                }
+                else {
+                    Player_Hurt(player, self);
+                }
             }
         }
     }

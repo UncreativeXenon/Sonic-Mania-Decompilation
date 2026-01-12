@@ -140,17 +140,22 @@ void JuggleSaw_CheckPlayerCollisions(void)
     {
         if (Player_CheckBadnikTouch(player, self, &JuggleSaw->hitboxBadnik) && Player_CheckBadnikBreak(player, self, false)) {
             if (self->hasSaw == JUGGLESAW_HAS_SAW) {
+                EntityDebris *debris;
+                int32 minVelX;
+                int32 maxVelX;
+                int32 minVelY;
+                int32 maxVelY;
                 int32 debrisX = self->position.x;
                 int32 debrisY = self->position.y;
                 if (self->startDir >= FLIP_Y)
                     debrisX += 0x200000 * ((self->direction & FLIP_X) ? -1 : 1);
                 else
                     debrisY += 0x200000 * ((self->direction & FLIP_Y) ? 1 : -1);
-                EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, debrisX, debrisY);
+                debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, debrisX, debrisY);
 
                 RSDK.SetSpriteAnimation(JuggleSaw->aniFrames, 6, &debris->animator, true, 0);
 
-                int32 minVelX = -4, maxVelX = 5, minVelY = -4, maxVelY = 5;
+                minVelX = -4, maxVelX = 5, minVelY = -4, maxVelY = 5;
                 if (self->startDir >= FLIP_Y)
                     minVelY = (self->direction & FLIP_X) ? -1 : -4;
                 else
@@ -234,12 +239,14 @@ void JuggleSaw_StateCrab_Handle(void)
 
             if (!self->friends[0] || self->friends[0]->classID != JuggleSaw->classID) {
                 self->friendCount = 0;
-                foreach_active(JuggleSaw, newFriend)
                 {
-                    if (newFriend != self && newFriend->hasSaw == JUGGLESAW_NO_SAW && newFriend->setID == self->setID
-                        && self->friendCount < JUGGLESAW_MAX_FRIENDS) {
-                        if (RSDK.CheckObjectCollisionTouchBox(newFriend, &JuggleSaw->hitboxBadnik, self, &JuggleSaw->hitboxFriendRange))
-                            self->friends[self->friendCount++] = newFriend;
+                    foreach_active(JuggleSaw, newFriend)
+                    {
+                        if (newFriend != self && newFriend->hasSaw == JUGGLESAW_NO_SAW && newFriend->setID == self->setID
+                            && self->friendCount < JUGGLESAW_MAX_FRIENDS) {
+                            if (RSDK.CheckObjectCollisionTouchBox(newFriend, &JuggleSaw->hitboxBadnik, self, &JuggleSaw->hitboxFriendRange))
+                                self->friends[self->friendCount++] = newFriend;
+                        }
                     }
                 }
 
@@ -298,12 +305,16 @@ void JuggleSaw_StateCrab_ThrowSaw(void)
         EntityJuggleSaw *reciever = self->friends[0];
 
         if (reciever->classID == JuggleSaw->classID) {
+            EntityJuggleSaw *saw;
+            int32 sx, sy;
+            int32 targetX, targetY, sawDir;
+            int32 targetAngle;
             RSDK.PlaySfx(JuggleSaw->sfxThrow, false, 0xFF);
             reciever->hasSaw = JUGGLESAW_AWAITING_SAW;
             reciever->active = ACTIVE_NORMAL;
 
-            EntityJuggleSaw *saw = CREATE_ENTITY(JuggleSaw, INT_TO_VOID(true), self->position.x, self->position.y);
-            int32 sx = 0x2C0000, sy = -0xE0000;
+            saw = CREATE_ENTITY(JuggleSaw, INT_TO_VOID(true), self->position.x, self->position.y);
+            sx = 0x2C0000, sy = -0xE0000;
             if (self->startDir >= FLIP_Y) {
                 sx = 0xE0000;
                 sy = 0x2C0000;
@@ -312,9 +323,9 @@ void JuggleSaw_StateCrab_ThrowSaw(void)
             saw->position.x += sx * ((self->direction & FLIP_X) ? -1 : 1);
             saw->position.y += sy * ((self->direction & FLIP_Y) ? -1 : 1);
 
-            int32 targetX = 0;
-            int32 targetY = 0;
-            int32 sawDir  = 0;
+            targetX = 0;
+            targetY = 0;
+            sawDir  = 0;
             if (reciever->startDir >= FLIP_Y) {
                 targetX = reciever->position.x + 0x220000 * ((reciever->direction & FLIP_X) ? -1 : 1);
                 targetY = reciever->position.y + 0x140000 * (reciever->startPos.y >= self->startPos.y ? 1 : -1);
@@ -327,7 +338,7 @@ void JuggleSaw_StateCrab_ThrowSaw(void)
             }
 
             saw->direction    = sawDir;
-            int32 targetAngle = RSDK.ATan2(targetX - saw->position.x, targetY - saw->position.y);
+            targetAngle = RSDK.ATan2(targetX - saw->position.x, targetY - saw->position.y);
             saw->velocity.x   = self->sawSpeed * RSDK.Cos256(targetAngle);
             saw->velocity.y   = self->sawSpeed * RSDK.Sin256(targetAngle);
             saw->friends[0]   = reciever;
@@ -355,16 +366,22 @@ void JuggleSaw_StateCrab_ThrowSaw(void)
 
 void JuggleSaw_StateSaw_Handle(void)
 {
+    EntityJuggleSaw *reciever;
+    int32 oldDir;
+
+    Hitbox *hitboxGrab;
+    bool32 collided;
+
     RSDK_THIS(JuggleSaw);
 
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    EntityJuggleSaw *reciever = self->friends[0];
-    int32 oldDir              = reciever->direction;
+    reciever = self->friends[0];
+    oldDir              = reciever->direction;
     reciever->direction       = self->direction;
 
-    Hitbox *hitboxGrab = &JuggleSaw->hitboxGrabV;
+    hitboxGrab = &JuggleSaw->hitboxGrabV;
     if (reciever->startDir >= FLIP_Y)
         hitboxGrab = &JuggleSaw->hitboxGrabH;
 
@@ -373,7 +390,7 @@ void JuggleSaw_StateSaw_Handle(void)
     // reciever->direction = oldDir;
     // if (RSDK.CheckObjectCollisionTouchBox(reciever, hitboxGrab, self, &JuggleSaw->hitboxSaw)) {
 
-    bool32 collided     = RSDK.CheckObjectCollisionTouchBox(reciever, hitboxGrab, self, &JuggleSaw->hitboxSaw);
+    collided     = RSDK.CheckObjectCollisionTouchBox(reciever, hitboxGrab, self, &JuggleSaw->hitboxSaw);
     reciever->direction = oldDir;
 
     if (collided) {
@@ -400,17 +417,19 @@ void JuggleSaw_StateSaw_Handle(void)
     else if (RSDK.CheckOnScreen(self, &self->updateRange)) {
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionTouch(player, self, &JuggleSaw->hitboxSaw)) {
+{
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &JuggleSaw->hitboxSaw)) {
 #if MANIA_USE_PLUS
-                if (Player_CheckMightyShellHit(player, self, -0x400, -0x600)) {
-                    self->interaction = false;
-                    self->state       = JuggleSaw_StateSaw_Debris;
-                }
-                else
+                    if (Player_CheckMightyShellHit(player, self, -0x400, -0x600)) {
+                        self->interaction = false;
+                        self->state       = JuggleSaw_StateSaw_Debris;
+                    }
+                    else
 #endif
-                    Player_Hurt(player, self);
+                        Player_Hurt(player, self);
+                }
             }
         }
     }

@@ -61,9 +61,10 @@ EntityUIPopover *UIPopover_CreatePopover(void)
             return NULL;
         }
         else {
+            EntityUIPopover *popover;
             RSDK.ResetEntitySlot(SLOT_POPOVER, UIPopover->classID, NULL);
 
-            EntityUIPopover *popover = RSDK_GET_ENTITY(SLOT_POPOVER, UIPopover);
+            popover = RSDK_GET_ENTITY(SLOT_POPOVER, UIPopover);
             popover->position.x      = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
             popover->position.y      = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
             UIPopover->activePopover = popover;
@@ -78,13 +79,16 @@ void UIPopover_AddButton(EntityUIPopover *popover, uint8 frameID, void (*callbac
     int32 id = popover->buttonCount;
 
     if (id < UIPOPOVER_OPTION_COUNT) {
+        int32 slot;
+        EntityUIButton *button;
+        EntityUIControl *parent;
         popover->frameIDs[id]      = frameID;
         popover->callbacks[id]     = callback;
         popover->closeOnSelect[id] = closeOnSelect;
 
-        int32 slot = popover->buttonCount + SLOT_POPOVER_BUTTONS;
+        slot = popover->buttonCount + SLOT_POPOVER_BUTTONS;
         RSDK.ResetEntitySlot(slot, UIButton->classID, 0);
-        EntityUIButton *button = RSDK_GET_ENTITY(slot, UIButton);
+        button = RSDK_GET_ENTITY(slot, UIButton);
 
         button->position.x = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
         button->position.y = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
@@ -102,7 +106,7 @@ void UIPopover_AddButton(EntityUIPopover *popover, uint8 frameID, void (*callbac
         popover->buttons[id] = button;
         ++popover->buttonCount;
 
-        EntityUIControl *parent = popover->parent;
+        parent = popover->parent;
         if (parent) {
             button->parent      = (Entity *)parent;
             parent->buttons[id] = button;
@@ -115,59 +119,66 @@ void UIPopover_Setup(EntityUIPopover *popover, int32 x, int32 y)
 {
     if (popover) {
         Vector2 size;
+        bool32 tookFocus;
+        EntityUIControl *control;
+        int32 b;
+        int32 sizeY;
         size.x = ScreenInfo->size.x << 16;
         size.y = ScreenInfo->size.y << 16;
 
-        bool32 tookFocus = false;
-        foreach_all(UIControl, controlPtr)
+        tookFocus = false;
         {
-            if (controlPtr->active == ACTIVE_ALWAYS) {
-                tookFocus                     = true;
-                controlPtr->popoverHasFocus   = true;
-                UIPopover->storedControl      = controlPtr;
-                UIPopover->storedControlState = controlPtr->state;
-                foreach_break;
+            foreach_all(UIControl, controlPtr)
+            {
+                if (controlPtr->active == ACTIVE_ALWAYS) {
+                    tookFocus                     = true;
+                    controlPtr->popoverHasFocus   = true;
+                    UIPopover->storedControl      = controlPtr;
+                    UIPopover->storedControlState = controlPtr->state;
+                    foreach_break;
+                }
             }
+
+            RSDK.ResetEntitySlot(SLOT_POPOVER_UICONTROL, UIControl->classID, &size);
+
+            control                    = RSDK_GET_ENTITY(SLOT_POPOVER_UICONTROL, UIControl);
+            control->menuWasSetup      = true;
+            control->position.x        = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
+            control->position.y        = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+            control->rowCount          = popover->buttonCount;
+            control->columnCount       = 1;
+            control->buttonID          = 0;
+            control->backPressCB       = UIPopover_BackPressCB;
+            control->selectionDisabled = true;
+
+            popover->parent = control;
+            if (!tookFocus) {
+                UIPopover->storedControl      = NULL;
+                UIPopover->storedControlState = StateMachine_None;
+            }
+
+            b = 0;
+            for (; b < UIPOPOVER_OPTION_COUNT; ++b) {
+                EntityUIButton *button;
+                if (!popover->buttons[b])
+                    break;
+
+                button              = popover->buttons[b];
+                control->buttons[b] = button;
+                button->parent      = (Entity *)control;
+            }
+
+            control->buttonCount = b;
+            sizeY                = (0x180000 * b) + 0x200000;
+            popover->position.x  = x;
+            popover->position.y  = y;
+            popover->size.y      = sizeY;
+            popover->size.x      = 0x800000;
+            popover->position.y += -0x80000 - (sizeY >> 1);
+            popover->triangleMode = 1;
+            popover->timer        = 0;
+            popover->state        = UIPopover_State_Appear;
         }
-
-        RSDK.ResetEntitySlot(SLOT_POPOVER_UICONTROL, UIControl->classID, &size);
-
-        EntityUIControl *control   = RSDK_GET_ENTITY(SLOT_POPOVER_UICONTROL, UIControl);
-        control->menuWasSetup      = true;
-        control->position.x        = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
-        control->position.y        = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-        control->rowCount          = popover->buttonCount;
-        control->columnCount       = 1;
-        control->buttonID          = 0;
-        control->backPressCB       = UIPopover_BackPressCB;
-        control->selectionDisabled = true;
-
-        popover->parent = control;
-        if (!tookFocus) {
-            UIPopover->storedControl      = NULL;
-            UIPopover->storedControlState = StateMachine_None;
-        }
-
-        int32 b = 0;
-        for (; b < UIPOPOVER_OPTION_COUNT; ++b) {
-            if (!popover->buttons[b])
-                break;
-
-            EntityUIButton *button = popover->buttons[b];
-            control->buttons[b]    = button;
-            button->parent         = (Entity *)control;
-        }
-
-        control->buttonCount = b;
-        int32 sizeY          = (0x180000 * b) + 0x200000;
-        popover->position.x  = x;
-        popover->position.y  = y;
-        popover->size.y      = sizeY;
-        popover->size.x      = 0x800000;
-        popover->position.y += -0x80000 - (sizeY >> 1);
-        popover->triangleMode = 1;
-        popover->timer        = 0;
-        popover->state        = UIPopover_State_Appear;
     }
 }
 
@@ -191,6 +202,8 @@ void UIPopover_DrawSprites(void)
 
 void UIPopover_SetupButtonPositions(void)
 {
+    int32 b;
+    EntityUIButton *button;
     RSDK_THIS(UIPopover);
 
     int32 offsets[] = { 0, 0, 24, 24, 24 };
@@ -199,11 +212,11 @@ void UIPopover_SetupButtonPositions(void)
     int32 offsetY = offsets[self->buttonCount] << 16;
 
     int32 posY = self->position.y - ((offsetY * MAX(self->buttonCount - 1, 0)) >> 1);
-    for (int32 b = 0; b < UIPOPOVER_OPTION_COUNT; ++b) {
+    for (b = 0; b < UIPOPOVER_OPTION_COUNT; ++b) {
         if (!self->buttons[b])
             break;
 
-        EntityUIButton *button = self->buttons[b];
+        button = self->buttons[b];
         button->position.x     = posX;
         button->position.y     = posY;
         button->startPos.x     = posX;
@@ -215,6 +228,8 @@ void UIPopover_SetupButtonPositions(void)
 
 void UIPopover_Close(void)
 {
+    int32 i;
+    EntityUIControl *control;
     RSDK_THIS(UIPopover);
 
     EntityUIControl *parent = (EntityUIControl *)self->parent;
@@ -224,12 +239,12 @@ void UIPopover_Close(void)
         destroyEntity(parent);
     }
 
-    for (int32 i = UIPOPOVER_OPTION_COUNT - 1; i > 0; --i) {
+    for (i = UIPOPOVER_OPTION_COUNT - 1; i > 0; --i) {
         if (self->buttons[i])
             destroyEntity(self->buttons[i]);
     }
 
-    EntityUIControl *control = UIPopover->storedControl;
+    control = UIPopover->storedControl;
     if (control) {
         UIControl_SetMenuLostFocus(UIPopover->storedControl);
         control->state           = UIPopover->storedControlState;
@@ -285,9 +300,10 @@ void UIPopover_State_Appear(void)
     RSDK_THIS(UIPopover);
 
     if (self->timer == 1) {
+        EntityUIControl *control;
         RSDK.PlaySfx(UIWidgets->sfxWoosh, false, 255);
 
-        EntityUIControl *control = (EntityUIControl *)self->parent;
+        control = (EntityUIControl *)self->parent;
         UIControl_HandleMenuLoseFocus(control);
         control->selectionDisabled = false;
 

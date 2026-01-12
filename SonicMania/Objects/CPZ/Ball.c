@@ -120,11 +120,12 @@ void Ball_CheckOffScreen(void)
 
 void Ball_SpawnSplashes(void)
 {
+    int32 i;
     RSDK_THIS(Ball);
 
     RSDK.PlaySfx(Ball->sfxSplash, false, 255);
 
-    for (int32 i = 0; i < 5; ++i) {
+    for (i = 0; i < 5; ++i) {
         EntityBall *ball = CREATE_ENTITY(Ball, INT_TO_VOID(true), self->position.x, self->position.y);
         ball->drawGroup  = Zone->objectDrawGroup[1];
         ball->velocity.x = RSDK.Rand(-0x100, 0x100) << 10;
@@ -168,11 +169,13 @@ void Ball_State_AwaitPlayer(void)
 
     RSDK.ProcessAnimation(&self->animator);
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Ball->hitboxRange)) {
-            self->targetPlayer = player;
-            self->state        = Ball_State_TargetingPlayer;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Ball->hitboxRange)) {
+                self->targetPlayer = player;
+                self->state        = Ball_State_TargetingPlayer;
+            }
         }
     }
 
@@ -240,12 +243,14 @@ void Ball_State_ChemicalDrop(void)
         self->position.y += self->velocity.y;
         self->velocity.y += 0x3800;
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Ball->hitboxBall)) {
-                Player_ElementHurt(player, self, SHIELD_BUBBLE);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Ball->hitboxBall)) {
+                    Player_ElementHurt(player, self, SHIELD_BUBBLE);
 
-                Ball_SpawnSplashes();
+                    Ball_SpawnSplashes();
+                }
             }
         }
 

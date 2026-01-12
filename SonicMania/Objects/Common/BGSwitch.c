@@ -14,6 +14,7 @@ void BGSwitch_Update(void)
     RSDK_THIS(BGSwitch);
 
     for (BGSwitch->screenID = 0; BGSwitch->screenID < SCREEN_COUNT; BGSwitch->screenID++) {
+        int32 id;
         EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1 + BGSwitch->screenID, Camera);
         if (!camera->classID)
             break;
@@ -23,7 +24,7 @@ void BGSwitch_Update(void)
                 BGSwitch->layerIDs[BGSwitch->screenID] = self->bgID;
         }
 
-        int32 id = BGSwitch->layerIDs[BGSwitch->screenID];
+        id = BGSwitch->layerIDs[BGSwitch->screenID];
         if (id != BGSwitch->layerIDs[BGSwitch->screenID + 4]) {
             BGSwitch->layerIDs[BGSwitch->screenID + 4] = id;
             StateMachine_Run(BGSwitch->switchCallback[id]);

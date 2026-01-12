@@ -126,6 +126,7 @@ void LRZ1Intro_HandleExplosions(void)
 
 void LRZ1Intro_State_SetupActors(void)
 {
+    int32 p;
     RSDK_THIS(LRZ1Intro);
 
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
@@ -137,7 +138,7 @@ void LRZ1Intro_State_SetupActors(void)
     self->playerOffset[0].x = 0x600000;
     self->playerOffset[0].y = -0x10000 * playerHitbox->bottom;
 
-    for (int32 p = 1; p < Player->playerCount; ++p) {
+    for (p = 1; p < Player->playerCount; ++p) {
         EntityPlayer *playerPtr = RSDK_GET_ENTITY(p, Player);
 
         if (playerPtr->classID == Player->classID) {
@@ -149,14 +150,16 @@ void LRZ1Intro_State_SetupActors(void)
         }
     }
 
-    foreach_all(Player, player)
     {
-        player->position.x = self->position.x;
-        player->position.y = self->position.y;
+        foreach_all(Player, player)
+        {
+            player->position.x = self->position.x;
+            player->position.y = self->position.y;
 
-        if (player->camera) {
-            player->camera->position.x = self->position.x;
-            player->camera->position.y = self->position.y;
+            if (player->camera) {
+                player->camera->position.x = self->position.x;
+                player->camera->position.y = self->position.y;
+            }
         }
     }
 
@@ -186,6 +189,7 @@ void LRZ1Intro_State_IntroDelay(void)
 
 void LRZ1Intro_State_EnterSub(void)
 {
+    EntityCamera *camera;
     RSDK_THIS(LRZ1Intro);
 
     if (self->velocity.y < 0x100000)
@@ -194,7 +198,7 @@ void LRZ1Intro_State_EnterSub(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     if (self->velocity.y > 0x60000)
         camera->lookPos.y += 3;
 

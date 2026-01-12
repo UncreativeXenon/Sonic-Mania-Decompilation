@@ -224,12 +224,13 @@ void Spring_State_Horizontal(void)
                     }
 
                     if (player->state != Ice_PlayerState_Frozen) {
+                        int32 anim;
                         if (player->state != Player_State_Roll && player->state != Player_State_TubeAirRoll
                             && player->state != Player_State_TubeRoll) {
                             player->state = player->onGround ? Player_State_Ground : Player_State_Air;
                         }
 
-                        int32 anim = player->animator.animationID;
+                        anim = player->animator.animationID;
                         if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
                             player->animator.animationID = ANI_WALK;
                     }
@@ -267,12 +268,13 @@ void Spring_State_Horizontal(void)
                     }
 
                     if (player->state != Ice_PlayerState_Frozen) {
+                        int32 anim;
                         if (player->state != Player_State_Roll && player->state != Player_State_TubeAirRoll
                             && player->state != Player_State_TubeRoll) {
                             player->state = player->onGround ? Player_State_Ground : Player_State_Air;
                         }
 
-                        int32 anim = player->animator.animationID;
+                        anim = player->animator.animationID;
                         if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
                             player->animator.animationID = ANI_WALK;
                     }
@@ -315,9 +317,10 @@ void Spring_State_Diagonal(void)
                             player->state = Player_State_TubeAirRoll;
                         }
                         else {
+                            int32 anim;
                             player->state = Player_State_Air;
 
-                            int32 anim = player->animator.animationID;
+                            anim = player->animator.animationID;
                             if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
                                 player->animator.animationID = ANI_WALK;
                         }

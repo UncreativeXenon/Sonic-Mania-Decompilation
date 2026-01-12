@@ -37,11 +37,12 @@ void UIMedallionPanel_StageLoad(void) { UIMedallionPanel->aniFrames = RSDK.LoadS
 
 void UIMedallionPanel_DrawPanel(void)
 {
+    int32 m;
     RSDK_THIS(UIMedallionPanel);
     Vector2 drawPos;
 
     ProgressRAM *progressRAM = GameProgress_GetProgressRAM();
-    for (int32 m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
+    for (m = 0; m < GAMEPROGRESS_MEDAL_COUNT; ++m) {
         drawPos.x = (self->position.x - TO_FIXED(49)) + TO_FIXED(14) * (m % 8);
         drawPos.y = (self->position.y - TO_FIXED(21)) + TO_FIXED(14) * (m / 8);
 

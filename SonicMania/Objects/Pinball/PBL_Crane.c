@@ -178,12 +178,14 @@ void PBL_Crane_HandlePrizes(void)
                 }
             }
 
-            foreach_all(PBL_Ring, ring)
-            {
-                if (ring->active == ACTIVE_NEVER) {
-                    ring->active = ACTIVE_BOUNDS;
-                    RSDK.SetSpriteAnimation(PBL_Ring->aniFrames, 1, &ring->animator, true, 0);
-                    ring->state = PBL_Ring_State_Ring;
+{
+                foreach_all(PBL_Ring, ring)
+                {
+                    if (ring->active == ACTIVE_NEVER) {
+                        ring->active = ACTIVE_BOUNDS;
+                        RSDK.SetSpriteAnimation(PBL_Ring->aniFrames, 1, &ring->animator, true, 0);
+                        ring->state = PBL_Ring_State_Ring;
+                    }
                 }
             }
 
@@ -266,6 +268,9 @@ void PBL_Crane_Draw_Crane(void)
 
 void PBL_Crane_State_CreatePrizes(void)
 {
+    int32 spawnX;
+    int32 spawnY;
+    int32 i;
     RSDK_THIS(PBL_Crane);
 
     EntityPBL_Camera *camera = RSDK_GET_ENTITY(SLOT_PBL_CAMERA, PBL_Camera);
@@ -276,11 +281,11 @@ void PBL_Crane_State_CreatePrizes(void)
     camera->target     = NULL;
     self->visible      = true;
 
-    int32 spawnX = self->position.x - 0x6C0000;
-    int32 spawnY = 0x600000 + self->position.y;
+    spawnX = self->position.x - 0x6C0000;
+    spawnY = 0x600000 + self->position.y;
     self->state  = PBL_Crane_State_DisplayPrizes;
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         EntityPBL_Crane *prize = CREATE_ENTITY(PBL_Crane, INT_TO_VOID(PBL_CRANE_PRIZEDISPLAY), spawnX, spawnY);
         if (globals->gameMode == MODE_ENCORE) {
             if (!((1 << i) & globals->characterFlags) || i == PBL_CRANE_PRIZE_EGGMAN) {
@@ -335,12 +340,13 @@ void PBL_Crane_State_DisplayPrizes(void)
 
 void PBL_Crane_StatePrizeDisplay_Move(void)
 {
+    int32 dist;
     RSDK_THIS(PBL_Crane);
 
     EntityPBL_Crane *parent = self->parent;
 
     self->position.x -= 0x10000;
-    int32 dist       = abs(self->position.x - parent->position.x);
+    dist       = abs(self->position.x - parent->position.x);
     self->position.y = (dist >> 13) * (dist >> 13) + (parent->position.y + 0x300000);
 
     if (self->position.x < parent->position.x - 0x980000) {
@@ -540,6 +546,7 @@ void PBL_Crane_StatePrize_Flash(void)
 
 void PBL_Crane_StatePrize_PrizeGet(void)
 {
+    EntityPBL_Camera *camera;
     RSDK_THIS(PBL_Crane);
 
     if (++self->timer == 24) {
@@ -550,7 +557,7 @@ void PBL_Crane_StatePrize_PrizeGet(void)
         }
     }
 
-    EntityPBL_Camera *camera = RSDK_GET_ENTITY(SLOT_PBL_CAMERA, PBL_Camera);
+    camera = RSDK_GET_ENTITY(SLOT_PBL_CAMERA, PBL_Camera);
     if (self->position.y <= 0) {
         foreach_active(PBL_Crane, crane)
         {
@@ -561,27 +568,31 @@ void PBL_Crane_StatePrize_PrizeGet(void)
         self->timer = 0;
         self->state = StateMachine_None;
 
-        foreach_all(PBL_Sector, sector)
         {
-            if (sector->craneID == PBL_Setup->sectorID)
-                sector->active = ACTIVE_NORMAL;
+            foreach_all(PBL_Sector, sector)
+            {
+                if (sector->craneID == PBL_Setup->sectorID)
+                    sector->active = ACTIVE_NORMAL;
+            }
         }
 
         LogHelpers_PrintInt32("Sector", PBL_Setup->sectorID);
         camera->target    = self->cameraTarget;
         camera->rotationY = -96;
 
-        foreach_active(PBL_HUD, hud)
         {
-            switch (PBL_Crane->prizeID) {
-                case PBL_CRANE_PRIZEID_NOTHING: PBL_HUD_DisplayMessage(hud, "TOO BAD!", PBL_HUD_MSG_FLASH); continue;
-                case PBL_CRANE_PRIZEID_BAD: PBL_HUD_DisplayMessage(hud, "OH NO!", PBL_HUD_MSG_FLASH); continue;
-                case PBL_CRANE_PRIZEID_BUDDY: PBL_HUD_DisplayMessage(hud, "NICE SAVE!", PBL_HUD_MSG_SCROLL_RIGHT); continue;
-                case PBL_CRANE_PRIZEID_RINGS: PBL_HUD_DisplayMessage(hud, "!RINGS DEPOSITED!", PBL_HUD_MSG_SCROLL_LEFT); break;
-                case PBL_CRANE_PRIZEID_ITEM: PBL_HUD_DisplayMessage(hud, "!ITEM COLLECTED!", PBL_HUD_MSG_SCROLL_LEFT); break;
-                case PBL_CRANE_PRIZEID_TBLRESTORE: PBL_HUD_DisplayMessage(hud, "!TABLE RESTORED!", PBL_HUD_MSG_SCROLL_LEFT); break;
-                case PBL_CRANE_PRIZEID_1UP: PBL_HUD_DisplayMessage(hud, "!EXTRA LIFE!", PBL_HUD_MSG_SCROLL_LEFT); break;
-                default: break;
+            foreach_active(PBL_HUD, hud)
+            {
+                switch (PBL_Crane->prizeID) {
+                    case PBL_CRANE_PRIZEID_NOTHING: PBL_HUD_DisplayMessage(hud, "TOO BAD!", PBL_HUD_MSG_FLASH); continue;
+                    case PBL_CRANE_PRIZEID_BAD: PBL_HUD_DisplayMessage(hud, "OH NO!", PBL_HUD_MSG_FLASH); continue;
+                    case PBL_CRANE_PRIZEID_BUDDY: PBL_HUD_DisplayMessage(hud, "NICE SAVE!", PBL_HUD_MSG_SCROLL_RIGHT); continue;
+                    case PBL_CRANE_PRIZEID_RINGS: PBL_HUD_DisplayMessage(hud, "!RINGS DEPOSITED!", PBL_HUD_MSG_SCROLL_LEFT); break;
+                    case PBL_CRANE_PRIZEID_ITEM: PBL_HUD_DisplayMessage(hud, "!ITEM COLLECTED!", PBL_HUD_MSG_SCROLL_LEFT); break;
+                    case PBL_CRANE_PRIZEID_TBLRESTORE: PBL_HUD_DisplayMessage(hud, "!TABLE RESTORED!", PBL_HUD_MSG_SCROLL_LEFT); break;
+                    case PBL_CRANE_PRIZEID_1UP: PBL_HUD_DisplayMessage(hud, "!EXTRA LIFE!", PBL_HUD_MSG_SCROLL_LEFT); break;
+                    default: break;
+                }
             }
         }
     }

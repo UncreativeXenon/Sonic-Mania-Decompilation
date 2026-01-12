@@ -11,13 +11,17 @@ ObjectFXSpinRay *FXSpinRay;
 
 void FXSpinRay_Update(void)
 {
+    int32 i;
+    Entity *parent;
+    int32 angle;
     RSDK_THIS(FXSpinRay);
 
     self->angle = ((self->angle & 0xFF) + self->spinSpeed) & 0xFF;
-    int32 angle = self->angle;
+    angle = self->angle;
 
-    for (int32 i = 0; i < 20; i += 4) {
-        for (int32 v = 0; v < 4; ++v) {
+    for (i = 0; i < 20; i += 4) {
+        int32 v;
+        for (v = 0; v < 4; ++v) {
             self->vertices[i + v] = self->vertexPos[v];
             Zone_RotateOnPivot(&self->vertices[i + v] , &self->vertexOffset, angle);
         }
@@ -27,7 +31,7 @@ void FXSpinRay_Update(void)
 
     StateMachine_Run(self->state);
 
-    Entity *parent = self->parent;
+    parent = self->parent;
     if (parent) {
         self->position.x = parent->position.x + self->offsetPos.x;
         self->position.y = parent->position.y + self->offsetPos.y;
@@ -40,12 +44,13 @@ void FXSpinRay_StaticUpdate(void) {}
 
 void FXSpinRay_Draw(void)
 {
+    int32 i;
     RSDK_THIS(FXSpinRay);
 
     int32 scrX = self->position.x - (ScreenInfo->position.x << 16);
     int32 scrY = self->position.y - (ScreenInfo->position.y << 16);
 
-    for (int32 i = 0; i < 20; i += 4) {
+    for (i = 0; i < 20; i += 4) {
         Vector2 vertices[4];
 
         vertices[0].x = scrX + self->vertices[i + 0].x;

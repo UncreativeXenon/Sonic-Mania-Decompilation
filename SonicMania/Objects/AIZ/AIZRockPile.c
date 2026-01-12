@@ -18,6 +18,15 @@ void AIZRockPile_Update(void)
 
     foreach_active(Player, player)
     {
+        int32 cMode;
+        int32 playerX;
+        int32 playerY;
+        int32 xVelocity;
+        int32 yVelocity;
+        int32 jumping;
+        int32 groundVel;
+        int32 side;
+
         if (self->onlyMighty && player->characterID != ID_MIGHTY) {
             if (!self->onlyKnux || player->characterID != ID_KNUCKLES) {
                 Player_CheckCollisionBox(player, self, hitbox);
@@ -29,15 +38,15 @@ void AIZRockPile_Update(void)
             continue;
         }
 
-        int32 cMode     = player->collisionMode;
-        int32 playerX   = player->position.x;
-        int32 playerY   = player->position.y;
-        int32 xVelocity = player->velocity.x;
-        int32 yVelocity = player->velocity.y;
-        int32 jumping   = player->animator.animationID == ANI_JUMP;
-        int32 groundVel = player->groundVel;
+        cMode     = player->collisionMode;
+        playerX   = player->position.x;
+        playerY   = player->position.y;
+        xVelocity = player->velocity.x;
+        yVelocity = player->velocity.y;
+        jumping   = player->animator.animationID == ANI_JUMP;
+        groundVel = player->groundVel;
 
-        int32 side = Player_CheckCollisionBox(player, self, hitbox);
+        side = Player_CheckCollisionBox(player, self, hitbox);
         if (side == C_LEFT || side == C_RIGHT) {
             bool32 canBreak = jumping && player->onGround && abs(groundVel) >= 0x48000;
             if (player->shield == SHIELD_FIRE) {
@@ -141,9 +150,10 @@ void AIZRockPile_StageLoad(void)
 
 void AIZRockPile_SpawnRocks(int32 *speeds)
 {
+    int32 i;
     RSDK_THIS(AIZRockPile);
 
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, self->position.x + self->rockPositions[2 * i],
                                              self->position.y + self->rockPositions[(2 * i) + 1]);
         RSDK.SetSpriteAnimation(AIZRockPile->aniFrames, 1, &debris->animator, true, 0);

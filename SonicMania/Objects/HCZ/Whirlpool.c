@@ -57,14 +57,17 @@ void Whirlpool_Update(void)
 
                 if (self->activePlayers & (1 << playerID)) {
                     if (player->state == Player_State_Air) {
+                        int32 newX;
+                        int32 newY;
+
                         self->playerAngle[playerID] += self->angVel;
 
                         if (self->playerAngle[playerID] < 0)
                             self->playerAngle[playerID] += 0x400;
                         self->playerAngle[playerID] %= 0x3FF;
 
-                        int32 newX         = self->position.x + ((RSDK.Cos1024(self->playerAngle[playerID]) << 6) * self->playerAmplitude[playerID]);
-                        int32 newY         = player->position.y + (self->yVel << 15);
+                        newX         = self->position.x + ((RSDK.Cos1024(self->playerAngle[playerID]) << 6) * self->playerAmplitude[playerID]);
+                        newY         = player->position.y + (self->yVel << 15);
                         player->velocity.x = newX - player->position.x;
                         player->velocity.y = newY - player->position.y;
                         player->drawGroup  = self->playerAngle[playerID] <= 0x200 ? Zone->playerDrawGroup[1] : Zone->playerDrawGroup[0];
@@ -179,11 +182,13 @@ void WhirlPool_DrawSprites(void)
 {
     RSDK_THIS(Whirlpool);
     Vector2 drawPos;
+    int32 offset;
+    int32 i;
 
     drawPos      = self->position;
-    int32 offset = (self->yVel * Zone->timer % (self->size.y >> 15)) << 15;
+    offset = (self->yVel * Zone->timer % (self->size.y >> 15)) << 15;
 
-    for (int32 i = 0; i < 0x80; ++i) {
+    for (i = 0; i < 0x80; ++i) {
         int32 angle = self->angle + self->bubbleAngles[i];
         if (angle < 0)
             angle += 0x400;
@@ -200,9 +205,10 @@ void WhirlPool_DrawSprites(void)
 
 void Whirlpool_SetupBubbles(void)
 {
+    int32 i;
     RSDK_THIS(Whirlpool);
 
-    for (int32 i = 0; i < 0x80; ++i) {
+    for (i = 0; i < 0x80; ++i) {
         // bubble angle proper
         int32 angle_high = RSDK.Rand(self->hitbox.left, self->hitbox.right);
 

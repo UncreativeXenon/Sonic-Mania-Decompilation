@@ -125,10 +125,11 @@ void Technosqueek_CheckOffScreen(void)
 
 void Technosqueek_State_Init(void)
 {
+    bool32 flipped;
     RSDK_THIS(Technosqueek);
 
     self->active   = ACTIVE_NORMAL;
-    bool32 flipped = self->type ? (self->direction & FLIP_Y) : (self->direction & FLIP_X);
+    flipped = self->type ? (self->direction & FLIP_Y) : (self->direction & FLIP_X);
 
     if (!flipped) {
         self->acceleration = 0x2000;

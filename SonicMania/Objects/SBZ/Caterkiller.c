@@ -52,14 +52,17 @@ void Caterkiller_Create(void *data)
         self->stateDraw = Caterkiller_Draw_Segment;
     }
     else {
+        int32 offset;
+        int32 posX;
+        int32 i;
         self->startPos = self->position;
         self->startDir = self->direction;
 
         self->headOffset = 0;
-        int32 offset     = self->startDir ? -0xC0000 : 0xC0000;
+        offset     = self->startDir ? -0xC0000 : 0xC0000;
 
-        int32 posX = self->position.x;
-        for (int32 i = 0; i < CATERKILLER_BODY_COUNT; ++i) {
+        posX = self->position.x;
+        for (i = 0; i < CATERKILLER_BODY_COUNT; ++i) {
             posX += offset;
             self->bodyPosition[i].x = posX;
             self->bodyPosition[i].y = self->position.y;
@@ -113,6 +116,7 @@ void Caterkiller_CheckOffScreen(void)
 
 void Caterkiller_CheckTileCollisions(void)
 {
+    int32 i;
     RSDK_THIS(Caterkiller);
 
     int32 storeX = 0;
@@ -133,7 +137,7 @@ void Caterkiller_CheckTileCollisions(void)
             self->direction ^= FLIP_X;
     }
 
-    for (int32 i = 0; i < CATERKILLER_BODY_COUNT; ++i) {
+    for (i = 0; i < CATERKILLER_BODY_COUNT; ++i) {
         if (self->state != Caterkiller_State_LowerHead || i != (CATERKILLER_BODY_COUNT - 1)) {
             self->position.x = self->bodyPosition[i].x;
             self->position.y = self->bodyPosition[i].y;
@@ -153,17 +157,19 @@ void Caterkiller_CheckTileCollisions(void)
 
 void Caterkiller_Draw_Body(void)
 {
+    int32 i;
+    Vector2 drawPos;
     RSDK_THIS(Caterkiller);
 
     int32 storeDir = self->direction;
-    for (int32 i = CATERKILLER_BODY_COUNT - 1; i >= 0; --i) {
+    for (i = CATERKILLER_BODY_COUNT - 1; i >= 0; --i) {
         Vector2 drawPos = self->bodyPosition[i];
         drawPos.y -= self->bodyOffset[i] << 15;
         self->direction = self->bodyDirection[i];
         RSDK.DrawSprite(&self->bodyAnimator, &drawPos, false);
     }
 
-    Vector2 drawPos = self->position;
+    drawPos = self->position;
     drawPos.y -= self->headOffset << 15;
     self->direction = storeDir;
     RSDK.DrawSprite(&self->headAnimator, &drawPos, false);
@@ -190,14 +196,17 @@ void Caterkiller_HandlePlayerInteractions(void)
                 Player_CheckBadnikBreak(player, self, true);
             }
             else {
-                for (int32 i = 0; i < CATERKILLER_BODY_COUNT; ++i) {
+                int32 i;
+                for (i = 0; i < CATERKILLER_BODY_COUNT; ++i) {
+                    int32 d;
                     self->position.x = self->bodyPosition[i].x;
                     self->position.y = self->bodyPosition[i].y;
 
                     if (Player_CheckCollisionTouch(player, self, &Caterkiller->hitbox)) {
                         Player_Hurt(player, self);
 
-                        for (int32 d = 0; d < CATERKILLER_BODY_COUNT + 1; ++d) {
+                        for (d = 0; d < CATERKILLER_BODY_COUNT + 1; ++d) {
+                            EntityCaterkiller *segment;
                             int32 spawnX             = storeX;
                             int32 spawnY             = storeY;
                             int32 spawnDir           = self->direction;
@@ -210,7 +219,7 @@ void Caterkiller_HandlePlayerInteractions(void)
                                 spawnState = Caterkiller_StateSplit_Body;
                             }
 
-                            EntityCaterkiller *segment = CREATE_ENTITY(Caterkiller, spawnState, spawnX, spawnY);
+                            segment = CREATE_ENTITY(Caterkiller, spawnState, spawnX, spawnY);
                             segment->direction         = spawnDir;
                             if (!segment->direction)
                                 segment->velocity.x = (d & 1) ? -0x18000 : -0x20000;
@@ -245,12 +254,13 @@ bool32 Caterkiller_CheckTileAngle(int32 x, int32 y, int32 dir)
 {
     int32 tx = x >> 16;
     int32 ty = (y >> 16) + 8;
+    uint8 angle;
 
     uint16 tile = RSDK.GetTile(Zone->fgLayer[1], tx, ty);
     if (tile == (uint16)-1)
         tile = RSDK.GetTile(Zone->fgLayer[0], tx, ty);
 
-    uint8 angle = RSDK.GetTileAngle(tile, 0, CMODE_FLOOR);
+    angle = RSDK.GetTileAngle(tile, 0, CMODE_FLOOR);
 
     if (dir) {
         if (angle > 0x80 && angle < 0xE8)
@@ -297,8 +307,9 @@ void Caterkiller_State_LiftHead(void)
     RSDK_THIS(Caterkiller);
 
     if (self->timer) {
+        int32 b;
         self->timer--;
-        for (int32 b = 0; b < CATERKILLER_BODY_COUNT; ++b) {
+        for (b = 0; b < CATERKILLER_BODY_COUNT; ++b) {
             if (self->bodyDirection[b])
                 self->bodyPosition[b].x += 0x4000 * (b + 1);
             else
@@ -342,10 +353,12 @@ void Caterkiller_State_LowerHead(void)
     RSDK_THIS(Caterkiller);
 
     if (self->timer) {
+        int32 mult;
+        int32 b;
         self->timer--;
 
-        int32 mult = 1;
-        for (int32 b = CATERKILLER_BODY_COUNT - 2; b >= 0; --b) {
+        mult = 1;
+        for (b = CATERKILLER_BODY_COUNT - 2; b >= 0; --b) {
             self->bodyPosition[b].x += self->bodyDirection[b] ? (0x4000 * mult) : (-0x4000 * mult);
             ++mult;
         }
@@ -378,11 +391,13 @@ void Caterkiller_StateSplit_Head(void)
             self->velocity.y = -0x40000;
         }
 
-        foreach_active(Player, player)
-        {
-            if ((self->planeFilter <= 0 || player->collisionPlane == ((uint8)(self->planeFilter - 1) & 1))
-                && Player_CheckBadnikTouch(player, self, &Caterkiller->hitbox)) {
-                Player_CheckBadnikBreak(player, self, true);
+{
+            foreach_active(Player, player)
+            {
+                if ((self->planeFilter <= 0 || player->collisionPlane == ((uint8)(self->planeFilter - 1) & 1))
+                    && Player_CheckBadnikTouch(player, self, &Caterkiller->hitbox)) {
+                    Player_CheckBadnikBreak(player, self, true);
+                }
             }
         }
     }
@@ -404,11 +419,13 @@ void Caterkiller_StateSplit_Body(void)
             self->velocity.y = -0x40000;
         }
 
-        foreach_active(Player, player)
-        {
-            if (self->planeFilter <= 0 || player->collisionPlane == ((self->planeFilter - 1) & 1)) {
-                if (Player_CheckCollisionTouch(player, self, &Caterkiller->hitbox))
-                    Player_Hurt(player, self);
+{
+            foreach_active(Player, player)
+            {
+                if (self->planeFilter <= 0 || player->collisionPlane == ((self->planeFilter - 1) & 1)) {
+                    if (Player_CheckCollisionTouch(player, self, &Caterkiller->hitbox))
+                        Player_Hurt(player, self);
+                }
             }
         }
     }

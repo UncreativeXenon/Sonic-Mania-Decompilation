@@ -11,17 +11,21 @@ ObjectMetalArm *MetalArm;
 
 void MetalArm_Update(void)
 {
+    int32 timerA;
+    int32 interpolateA;
+    int32 timerB;
+    int32 interpolateB;
     RSDK_THIS(MetalArm);
 
     self->moveOffset.x = -self->armPosition.x;
     self->moveOffset.y = -self->armPosition.y;
 
-    int32 timerA       = MIN(self->durationA, self->moveTimer);
-    int32 interpolateA = ((self->endAngleA - self->startAngleA) << 16) / self->durationA;
+    timerA       = MIN(self->durationA, self->moveTimer);
+    interpolateA = ((self->endAngleA - self->startAngleA) << 16) / self->durationA;
     self->armAngle.x   = (self->startAngleA << 16) + interpolateA * timerA;
 
-    int32 timerB       = MIN(self->durationB, self->moveTimer);
-    int32 interpolateB = ((self->endAngleB - self->startAngleB) << 16) / self->durationB;
+    timerB       = MIN(self->durationB, self->moveTimer);
+    interpolateB = ((self->endAngleB - self->startAngleB) << 16) / self->durationB;
     self->armAngle.y   = (self->startAngleB << 16) + interpolateB * timerB;
 
     self->armPosition = MetalArm_GetArmPosition();
@@ -47,15 +51,18 @@ void MetalArm_StaticUpdate(void) {}
 
 void MetalArm_Draw(void)
 {
+    int32 x;
+    int32 y;
+    Vector2 drawPos;
     RSDK_THIS(MetalArm);
 
     self->rotation = 0;
     RSDK.DrawSprite(&self->baseAnimator, NULL, false);
 
-    int32 x = 0x2400 * RSDK.Cos512((self->armAngle.x >> 16)) + self->position.x;
-    int32 y = 0x2400 * RSDK.Sin512((self->armAngle.x >> 16)) + self->position.y;
+    x = 0x2400 * RSDK.Cos512((self->armAngle.x >> 16)) + self->position.x;
+    y = 0x2400 * RSDK.Sin512((self->armAngle.x >> 16)) + self->position.y;
 
-    Vector2 drawPos  = MetalArm_GetArmPosition();
+    drawPos  = MetalArm_GetArmPosition();
     self->position.x = x;
     self->position.y = y;
     self->position.x &= 0xFFFF0000;

@@ -140,6 +140,7 @@ void Kanabun_State_Init(void)
 
 void Kanabun_State_Moving(void)
 {
+    int32 offset;
     RSDK_THIS(Kanabun);
 
     Kanabun_HandleMovement();
@@ -153,7 +154,7 @@ void Kanabun_State_Moving(void)
             self->groundVel = 1;
     }
 
-    int32 offset = self->hVel * self->hDist * (0x100 / self->angleVel);
+    offset = self->hVel * self->hDist * (0x100 / self->angleVel);
 
     if ((self->direction == FLIP_NONE && self->position.x <= (self->startPos.x - offset))
         || (self->direction == FLIP_X && self->position.x >= (self->startPos.x + offset))) {

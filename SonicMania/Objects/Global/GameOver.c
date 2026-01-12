@@ -22,6 +22,7 @@ void GameOver_StaticUpdate(void) {}
 
 void GameOver_Draw(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(GameOver);
 
 #if MANIA_USE_PLUS
@@ -31,7 +32,7 @@ void GameOver_Draw(void)
         }
     }
 
-    EntityPlayer *player = RSDK_GET_ENTITY(SceneInfo->currentScreenID + Player->playerCount, Player);
+    player = RSDK_GET_ENTITY(SceneInfo->currentScreenID + Player->playerCount, Player);
     if (SceneInfo->currentScreenID == self->playerID || player->classID != GameOver->classID)
         RSDK.DrawFace(self->verts, 4, 0x00, 0x00, 0x00, 0xFF, INK_NONE);
 
@@ -60,6 +61,8 @@ void GameOver_Create(void *data)
     RSDK_THIS(GameOver);
 
     if (!SceneInfo->inEditor) {
+        int32 posY;
+        int32 i;
         self->active  = ACTIVE_ALWAYS;
         self->visible = true;
         self->drawFX  = FX_ROTATE | FX_SCALE;
@@ -77,8 +80,8 @@ void GameOver_Create(void *data)
         self->finalOffsets[6].x = TO_FIXED(46);
         self->finalOffsets[7].x = TO_FIXED(63);
 
-        int32 posY = -TO_FIXED(32);
-        for (int32 i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
+        posY = -TO_FIXED(32);
+        for (i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
             self->letterPosMove[i].x = -(self->finalOffsets[i].x >> 4);
             self->letterPosMove[i].y = 0x2000;
 
@@ -98,7 +101,9 @@ void GameOver_Create(void *data)
 
         HUD_MoveOut();
 
-        foreach_all(HUD, hud) { hud->active = ACTIVE_ALWAYS; }
+        {
+            foreach_all(HUD, hud) { hud->active = ACTIVE_ALWAYS; }
+        }
     }
 }
 
@@ -125,6 +130,7 @@ void GameOver_SaveGameCallback(void)
 
 void GameOver_State_EnterLetters(void)
 {
+    int32 i;
     RSDK_THIS(GameOver);
 
     if (self->barPos.x > 0)
@@ -139,7 +145,7 @@ void GameOver_State_EnterLetters(void)
     self->verts[2].y = self->barPos.y + TO_FIXED(8);
     self->verts[3].y = self->barPos.y + TO_FIXED(8);
 
-    for (int32 i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
+    for (i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
         self->letterPositions[i].x = TO_FIXED(ScreenInfo->center.x) + self->scale.x * (self->finalOffsets[i].x >> 9);
         if (self->letterBounceCount[i] < 3) {
             self->letterPosMove[i].y += 0x4000;
@@ -176,10 +182,12 @@ void GameOver_State_EnterLetters(void)
                     Music_TransitionTrack(TRACK_GAMEOVER, 0.025);
             }
             else {
+                int32 i;
+                bool32 playMusic;
                 EntityCompetition *manager = Competition->sessionManager;
                 int32 gameOverCount        = 0;
                 int32 deathCount           = 0;
-                for (int32 i = 0; i < session->playerCount; ++i) {
+                for (i = 0; i < session->playerCount; ++i) {
                     EntityGameOver *gameOver = RSDK_GET_ENTITY(i + Player->playerCount, GameOver);
 
                     if (gameOver->classID == GameOver->classID) {
@@ -191,7 +199,7 @@ void GameOver_State_EnterLetters(void)
                     }
                 }
 
-                bool32 playMusic = true;
+                playMusic = true;
                 if (gameOverCount < session->playerCount - 1 && deathCount != session->playerCount) {
                     if (!Zone->gotTimeOver)
                         playMusic = false;
@@ -220,6 +228,7 @@ void GameOver_State_EnterLetters(void)
 #if MANIA_USE_PLUS
 void GameOver_State_WaitComp(void)
 {
+    int32 i;
     RSDK_THIS(GameOver);
 
     EntityCompetition *manager        = Competition->sessionManager;
@@ -227,7 +236,7 @@ void GameOver_State_WaitComp(void)
 
     int32 gameOverCount = 0;
     int32 deathCount    = 0;
-    for (int32 i = 0; i < session->playerCount; ++i) {
+    for (i = 0; i < session->playerCount; ++i) {
         EntityGameOver *gameOver = RSDK_GET_ENTITY(i + Player->playerCount, GameOver);
 
         if (gameOver->classID == GameOver->classID) {
@@ -246,11 +255,12 @@ void GameOver_State_WaitComp(void)
 
 void GameOver_State_Wait(void)
 {
+    int32 id;
     RSDK_THIS(GameOver);
 
     ++self->timer;
 
-    int32 id = globals->gameMode == MODE_COMPETITION ? (self->playerID + 1) : INPUT_NONE;
+    id = globals->gameMode == MODE_COMPETITION ? (self->playerID + 1) : INPUT_NONE;
 
     if (ControllerInfo[id].keyA.press || ControllerInfo[id].keyB.press || ControllerInfo[id].keyC.press || ControllerInfo[id].keyX.press
         || ControllerInfo[id].keyStart.press)
@@ -262,27 +272,31 @@ void GameOver_State_Wait(void)
 #endif
         Music_FadeOut(0.05);
 
-        foreach_all(GameOver, gameOver)
         {
-            int32 angle = 0x88;
-            for (int32 i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
-                gameOver->letterPosMove[i].x   = RSDK.Cos256(angle) << 11;
-                gameOver->letterPosMove[i].y   = RSDK.Sin256(angle) << 11;
-                gameOver->letterRotateSpeed[i] = RSDK.Rand(-8, 8);
-                angle += 0x10;
+            foreach_all(GameOver, gameOver)
+            {
+                int32 i;
+                int32 angle = 0x88;
+                for (i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
+                    gameOver->letterPosMove[i].x   = RSDK.Cos256(angle) << 11;
+                    gameOver->letterPosMove[i].y   = RSDK.Sin256(angle) << 11;
+                    gameOver->letterRotateSpeed[i] = RSDK.Rand(-8, 8);
+                    angle += 0x10;
+                }
+                gameOver->timer = 0;
+                gameOver->state = GameOver_State_ExitLetters;
             }
-            gameOver->timer = 0;
-            gameOver->state = GameOver_State_ExitLetters;
         }
     }
 }
 
 void GameOver_State_ExitLetters(void)
 {
+    int32 i;
     RSDK_THIS(GameOver);
 
     if (self->timer < 120) {
-        for (int32 i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
+        for (i = 0; i < GAMEOVER_LETTER_COUNT; ++i) {
             self->letterPositions[i].x += self->letterPosMove[i].x;
             self->letterPositions[i].y += self->letterPosMove[i].y;
             self->letterRotations[i] += self->letterRotateSpeed[i];
@@ -301,9 +315,10 @@ void GameOver_State_ExitLetters(void)
     }
 
     if (self->timer == 90) {
+        EntityCompetitionSession *session;
         self->timer = 0;
 
-        EntityCompetitionSession *session = CompetitionSession_GetSession();
+        session = CompetitionSession_GetSession();
         if (globals->gameMode == MODE_COMPETITION) {
             session->completedStages[session->stageIndex] = true;
 #if MANIA_USE_PLUS

@@ -61,7 +61,8 @@ void UIVsResults_Create(void *data)
     self->textFrames = UIWidgets->textFrames;
 
     if (!SceneInfo->inEditor) {
-        for (int32 i = 0; i < self->numRows; ++i) {
+        int32 i;
+        for (i = 0; i < self->numRows; ++i) {
             if (!SceneInfo->inEditor) {
                 RSDK.InitString(&self->rowText[i], "00", 0);
                 RSDK.SetSpriteString(UIVsResults->aniFrames, 18, &self->rowText[i]);
@@ -78,6 +79,9 @@ void UIVsResults_StageLoad(void)
 
 void UIVsResults_SetupSprites(void)
 {
+    int32 frame;
+    uint8 *rowLabels;
+    int32 r;
     RSDK_THIS(UIVsResults);
 
     EntityCompetitionSession *session = CompetitionSession_GetSession();
@@ -102,7 +106,7 @@ void UIVsResults_SetupSprites(void)
     RSDK.SetSpriteAnimation(UIVsResults->aniFrames, 14, &self->edgeAnimator, true, self->playerID);
 #endif
 
-    int32 frame = self->characterID;
+    frame = self->characterID;
 #if MANIA_USE_PLUS
     if (frame >= UICHARBUTTON_MIGHTY)
         ++frame;
@@ -111,8 +115,8 @@ void UIVsResults_SetupSprites(void)
     RSDK.SetSpriteAnimation(UIVsResults->aniFrames, 2, &self->shadowAnimator, true, frame);
     RSDK.SetSpriteAnimation(UIVsResults->aniFrames, 18, &self->numbersAnimator, true, 0);
 
-    uint8 *rowLabels = &self->row0Label;
-    for (int32 r = 0; r < self->numRows; ++r) RSDK.SetSpriteAnimation(UIWidgets->textFrames, 13, &self->rowAnimators[r], true, rowLabels[r]);
+    rowLabels = &self->row0Label;
+    for (r = 0; r < self->numRows; ++r) RSDK.SetSpriteAnimation(UIWidgets->textFrames, 13, &self->rowAnimators[r], true, rowLabels[r]);
 
     RSDK.SetSpriteAnimation(UIWidgets->textFrames, 12, &self->textAnimator, true, self->playerID + 8);
 
@@ -175,9 +179,10 @@ void UIVsResults_DrawRow(int32 row, int32 x, int32 y)
     RSDK.DrawSprite(&self->rowAnimators[row], &drawPos, false);
 
     if (!SceneInfo->inEditor) {
+        int32 width;
         drawPos.y   = y + 0x80000;
         drawPos.x   = x + 0x590000;
-        int32 width = RSDK.GetStringWidth(UIVsResults->aniFrames, 18, &self->rowText[row], 0, self->rowText[row].length, 0);
+        width = RSDK.GetStringWidth(UIVsResults->aniFrames, 18, &self->rowText[row], 0, self->rowText[row].length, 0);
         drawPos.x -= width << 16;
         RSDK.DrawText(&self->numbersAnimator, &drawPos, &self->rowText[row], 0, self->rowText[row].length, ALIGN_LEFT, 0, NULL, NULL, false);
     }
@@ -186,10 +191,11 @@ void UIVsResults_DrawRow(int32 row, int32 x, int32 y)
 #if MANIA_USE_PLUS
 void UIVsResults_DrawTrophies(void)
 {
+    int32 count;
     RSDK_THIS(UIVsResults);
     Vector2 drawPos;
 
-    int32 count = self->trophyCount;
+    count = self->trophyCount;
     drawPos.x   = self->position.x - 0x2B0000;
     drawPos.y   = self->position.y + 0x1C0000;
 
@@ -223,6 +229,7 @@ void UIVsResults_DrawTrophies(void)
 
 void UIVsResults_DrawResults(void)
 {
+    int32 r;
     RSDK_THIS(UIVsResults);
 
     Vector2 drawPos;
@@ -247,7 +254,7 @@ void UIVsResults_DrawResults(void)
 
     drawPos.x = self->position.x - 0x2D0000;
     drawPos.y = self->position.y + 0x1D8000;
-    for (int32 r = 0; r < self->numRows; ++r) {
+    for (r = 0; r < self->numRows; ++r) {
         UIVsResults_DrawRow(r, drawPos.x, drawPos.y);
 
         drawPos.y += 0x100000;

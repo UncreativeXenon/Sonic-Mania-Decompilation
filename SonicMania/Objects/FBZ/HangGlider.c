@@ -95,6 +95,7 @@ void HangGlider_State_CheckGrab(void)
 }
 void HangGlider_State_Glide(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(HangGlider);
 
     self->velocity.y += self->gravityStrength;
@@ -104,7 +105,7 @@ void HangGlider_State_Glide(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    EntityPlayer *player = self->attachedPlayer;
+    player = self->attachedPlayer;
     if (player) {
         player->position.x = self->position.x;
         player->position.y = self->position.y;

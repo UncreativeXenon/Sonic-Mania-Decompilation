@@ -11,11 +11,12 @@ ObjectFXExpandRing *FXExpandRing;
 
 void FXExpandRing_Update(void)
 {
+    Entity *parent;
     RSDK_THIS(FXExpandRing);
 
     StateMachine_Run(self->state);
 
-    Entity *parent = self->parent;
+    parent = self->parent;
     if (parent) {
         if (self->drawFX == FX_FLIP && parent->direction) {
             self->position.x = parent->position.x - self->posOffset.x;

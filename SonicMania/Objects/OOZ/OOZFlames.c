@@ -24,12 +24,13 @@ void OOZFlames_StaticUpdate(void) {}
 
 void OOZFlames_Draw(void)
 {
+    int32 angle;
     RSDK_THIS(OOZFlames);
 
     Vector2 drawPos;
     drawPos.x = (ScreenInfo[SceneInfo->currentScreenID].center.x - 240) << 16;
 
-    for (int32 angle = 0; angle < 0x100; angle += 0x10) {
+    for (angle = 0; angle < 0x100; angle += 0x10) {
         drawPos.y = (RSDK.Sin256(4 * (angle + Zone->timer)) << 11) + self->flamePos;
         RSDK.DrawSprite(&self->animator, &drawPos, true);
 

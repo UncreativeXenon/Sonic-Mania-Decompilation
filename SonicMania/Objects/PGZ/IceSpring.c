@@ -19,6 +19,7 @@ void IceSpring_Update(void)
     self->activePlayers = 0;
 
     if (self->state) {
+        int32 i;
         if (!self->animator.speed) {
             // Bug Details:
             // due to this foreach loop using playerID as a variable instead of player->playerID there's a bug where if you have P2 hit the spring
@@ -39,6 +40,7 @@ void IceSpring_Update(void)
                         collided = MathHelpers_CheckBoxCollision(self, &self->hitbox, player, Player_GetHitbox(player));
 
                     if (collided) {
+                        EntityShield *shield;
                         int32 type       = self->type;
                         bool32 canSpring = false;
                         switch (self->type) {
@@ -58,7 +60,7 @@ void IceSpring_Update(void)
                             memcpy(&IceSpring->animators[playerID], &player->animator, sizeof(Animator));
                         }
 
-                        EntityShield *shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
+                        shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
                         if (player->state != Ice_PlayerState_Frozen && shield->shieldAnimator.animationID != SHIELDANI_FIREATTACK
 #if MANIA_USE_PLUS
                             && player->state != Player_State_MightyHammerDrop
@@ -96,14 +98,14 @@ void IceSpring_Update(void)
 
         StateMachine_Run(self->state);
 
-        for (int32 i = 0; i < Player->playerCount; ++i) {
+        for (i = 0; i < Player->playerCount; ++i) {
             if ((1 << i) & self->activePlayers) {
                 EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
                 if (IceSpring->animators[i].animationID == ANI_JUMP)
                     memcpy(&player->animator, &IceSpring->animators[i], sizeof(Animator));
 
                 player->applyJumpCap = false;
-                if (player->sidekick && self->activePlayers == 0b10) {
+                if (player->sidekick && self->activePlayers == 0x02) {
                     RSDK.SetSpriteAnimation(IceSpring->aniFrames, self->type, &self->animator, true, 0);
                     self->animator.speed = 0;
                     self->activePlayers  = 0;

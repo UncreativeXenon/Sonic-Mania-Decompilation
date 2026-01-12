@@ -11,15 +11,18 @@ ObjectPlatformControl *PlatformControl;
 
 void PlatformControl_Update(void)
 {
+    int32 startNodeSlot;
+    int32 platformSlot;
     RSDK_THIS(PlatformControl);
 
     self->active = ACTIVE_NORMAL;
 
-    int32 startNodeSlot = RSDK.GetEntitySlot(self) + 1;
-    int32 platformSlot  = startNodeSlot + self->nodeCount;
+    startNodeSlot = RSDK.GetEntitySlot(self) + 1;
+    platformSlot  = startNodeSlot + self->nodeCount;
 
     if (self->isActive) {
-        for (int32 c = 0; c < self->childCount; ++c) {
+        int32 c; 
+        for (c = 0; c < self->childCount; ++c) {
             EntityPlatform *platform = RSDK_GET_ENTITY(platformSlot, Platform);
             EntityPlatformNode *node = RSDK_GET_ENTITY(platform->speed, PlatformNode);
 
@@ -106,7 +109,8 @@ void PlatformControl_Update(void)
             self->setActive = true;
 
         if (self->setActive) {
-            for (int32 c = 0; c < self->childCount; ++c) {
+            int32 c; 
+            for (c = 0; c < self->childCount; ++c) {
                 EntityPlatform *platform = RSDK_GET_ENTITY(platformSlot, Platform);
                 if (platform->state == Platform_State_PathStop)
                     platform->state = Platform_State_Path;
@@ -127,10 +131,12 @@ void PlatformControl_Update(void)
     }
 
     if (!RSDK.CheckOnScreen(self, NULL)) {
+        int32 slot;
+        int32 c;
         self->active = ACTIVE_BOUNDS;
 
-        int32 slot = startNodeSlot + self->nodeCount;
-        for (int32 c = 0; c < self->childCount; ++c) {
+        slot = startNodeSlot + self->nodeCount;
+        for (c = 0; c < self->childCount; ++c) {
             EntityPlatform *platform = RSDK_GET_ENTITY(slot, Platform);
             if (platform->state == Platform_State_Path) {
                 platform->speed -= startNodeSlot;
@@ -155,10 +161,13 @@ void PlatformControl_Create(void *data)
     RSDK_THIS(PlatformControl);
 
     if (!SceneInfo->inEditor) {
+        int32 id;
+        int32 i;
+        EntityButton *taggedButton;
         self->active = ACTIVE_BOUNDS;
 
-        int32 id = RSDK.GetEntitySlot(self) + 1;
-        for (int32 i = 0; i < self->nodeCount; ++i) {
+        id = RSDK.GetEntitySlot(self) + 1;
+        for (i = 0; i < self->nodeCount; ++i) {
             Entity *node = RSDK_GET_ENTITY_GEN(id++);
 
             if (abs(node->position.x - self->position.x) > self->updateRange.x)
@@ -175,7 +184,7 @@ void PlatformControl_Create(void *data)
         self->updateRange.y += TO_FIXED(128);
 
         self->taggedButton         = NULL;
-        EntityButton *taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
+        taggedButton = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Button);
         if (self->buttonTag > 0) {
             bool32 foundButton = false;
             if (Button) {

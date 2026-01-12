@@ -247,71 +247,85 @@ void Button_HandleFloor(void)
     int32 startPressPos = self->pressPos;
     self->pressPos      = 0;
 
-    foreach_active(Player, player)
     {
-        self->hitboxButton.top    = (startPressPos >> 16) - (Button->hitboxOffset & 0xFFFF);
-        self->hitboxButton.bottom = self->hitboxButton.top + 32;
+        foreach_active(Player, player)
+        {
+            int32 playerX;
+            int32 playerY;
+            int32 xVel;
+            int32 yVel;
+            int32 vel;
+            bool32 grounded;
+            bool32 groundedStore;
+            StateMachine(nextGState);
+            StateMachine(nextAState);
+            StateMachine(state);
 
-        int32 playerX            = player->position.x;
-        int32 playerY            = player->position.y;
-        int32 xVel               = player->velocity.x;
-        int32 yVel               = player->velocity.y;
-        int32 vel                = player->groundVel;
-        bool32 grounded          = player->onGround;
-        bool32 groundedStore     = player->groundedStore;
-        StateMachine(nextGState) = player->nextGroundState;
-        StateMachine(nextAState) = player->nextAirState;
-        StateMachine(state)      = player->state;
+            self->hitboxButton.top    = (startPressPos >> 16) - (Button->hitboxOffset & 0xFFFF);
+            self->hitboxButton.bottom = self->hitboxButton.top + 32;
 
-        if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_TOP || self->walkOnto) {
-            player->position.x      = playerX;
-            player->position.y      = playerY;
-            player->velocity.x      = xVel;
-            player->velocity.y      = yVel;
-            player->groundVel       = vel;
-            player->onGround        = grounded;
-            player->groundedStore   = groundedStore;
-            player->nextGroundState = nextGState;
-            player->nextAirState    = nextAState;
-            player->state           = state;
+            playerX            = player->position.x;
+            playerY            = player->position.y;
+            xVel               = player->velocity.x;
+            yVel               = player->velocity.y;
+            vel                = player->groundVel;
+            grounded          = player->onGround;
+            groundedStore     = player->groundedStore;
+            nextGState         = player->nextGroundState;
+            nextAState         = player->nextAirState;
+            state              = player->state;
 
-            self->hitboxButton.top -= (startPressPos >> 16);
-            self->hitboxButton.top += (Button->activatePos >> 16);
-            int32 newPressPos = self->pressPos;
+            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_TOP || self->walkOnto) {
+                int32 newPressPos;
+                player->position.x      = playerX;
+                player->position.y      = playerY;
+                player->velocity.x      = xVel;
+                player->velocity.y      = yVel;
+                player->groundVel       = vel;
+                player->onGround        = grounded;
+                player->groundedStore   = groundedStore;
+                player->nextGroundState = nextGState;
+                player->nextAirState    = nextAState;
+                player->state           = state;
 
-            if (Player_CheckCollisionPlatform(player, self, &self->hitboxButton) == C_TOP) {
-                self->pressPos = Button->activatePos;
-            }
-            else {
-                self->position.y -= Button->activatePos;
-                if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
-                    Hitbox *playerHitbox = Player_GetHitbox(player);
-                    self->pressPos       = Button->buttonOffset + (player->position.y & 0xFFFF0000) + (playerHitbox->bottom << 16) - self->position.y;
-                    self->pressPos       = CLAMP(self->pressPos, 0, Button->activatePos) & 0xFFFF0000;
+                self->hitboxButton.top -= (startPressPos >> 16);
+                self->hitboxButton.top += (Button->activatePos >> 16);
+                newPressPos = self->pressPos;
+
+                if (Player_CheckCollisionPlatform(player, self, &self->hitboxButton) == C_TOP) {
+                    self->pressPos = Button->activatePos;
+                }
+                else {
+                    self->position.y -= Button->activatePos;
+                    if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
+                        Hitbox *playerHitbox = Player_GetHitbox(player);
+                        self->pressPos = Button->buttonOffset + (player->position.y & 0xFFFF0000) + (playerHitbox->bottom << 16) - self->position.y;
+                        self->pressPos = CLAMP(self->pressPos, 0, Button->activatePos) & 0xFFFF0000;
+                    }
+
+                    self->position.y += Button->activatePos;
                 }
 
-                self->position.y += Button->activatePos;
-            }
-
-            if (self->pressPos == Button->activatePos) {
-                Player_CheckCollisionBox(player, self, &self->hitboxButton);
-                player->angle = 0;
-                if (!self->wasActivated) {
-                    RSDK.PlaySfx(Button->sfxButton, false, 255);
-                    self->currentlyActive = true;
-                    self->toggled ^= true;
+                if (self->pressPos == Button->activatePos) {
+                    Player_CheckCollisionBox(player, self, &self->hitboxButton);
+                    player->angle = 0;
+                    if (!self->wasActivated) {
+                        RSDK.PlaySfx(Button->sfxButton, false, 255);
+                        self->currentlyActive = true;
+                        self->toggled ^= true;
+                    }
+                    self->wasActivated = true;
+                    self->down         = true;
+                    self->activated    = true;
                 }
-                self->wasActivated = true;
-                self->down         = true;
-                self->activated    = true;
+
+                if (newPressPos > self->pressPos)
+                    self->pressPos = newPressPos;
             }
 
-            if (newPressPos > self->pressPos)
-                self->pressPos = newPressPos;
+            if (self->pressPos)
+                startPressPos = self->pressPos;
         }
-
-        if (self->pressPos)
-            startPressPos = self->pressPos;
     }
 }
 void Button_HandleRoof(void)
@@ -321,70 +335,83 @@ void Button_HandleRoof(void)
     int32 startPressPos = self->pressPos;
     self->pressPos      = 0;
 
-    foreach_active(Player, player)
     {
-        self->hitboxButton.top    = -1 - (Button->hitboxOffset & 0xFFFF) - (startPressPos >> 16);
-        self->hitboxButton.bottom = self->hitboxButton.top + 32;
+        foreach_active(Player, player)
+        {
+            int32 playerX;
+            int32 playerY;
+            int32 xVel;
+            int32 yVel;
+            int32 vel;
+            bool32 grounded;
+            bool32 groundedStore;
+            StateMachine(nextGState);
+            StateMachine(nextAState);
+            StateMachine(state);
+            self->hitboxButton.top    = -1 - (Button->hitboxOffset & 0xFFFF) - (startPressPos >> 16);
+            self->hitboxButton.bottom = self->hitboxButton.top + 32;
 
-        int32 playerX            = player->position.x;
-        int32 playerY            = player->position.y;
-        int32 xVel               = player->velocity.x;
-        int32 yVel               = player->velocity.y;
-        int32 vel                = player->groundVel;
-        bool32 grounded          = player->onGround;
-        bool32 groundedStore     = player->groundedStore;
-        StateMachine(nextGState) = player->nextGroundState;
-        StateMachine(nextAState) = player->nextAirState;
-        StateMachine(state)      = player->state;
+            playerX       = player->position.x;
+            playerY       = player->position.y;
+            xVel          = player->velocity.x;
+            yVel          = player->velocity.y;
+            vel           = player->groundVel;
+            grounded      = player->onGround;
+            groundedStore = player->groundedStore;
+            nextGState    = player->nextGroundState;
+            nextAState    = player->nextAirState;
+            state         = player->state;
 
-        if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_BOTTOM || self->walkOnto) {
-            player->position.x      = playerX;
-            player->position.y      = playerY;
-            player->velocity.x      = xVel;
-            player->velocity.y      = yVel;
-            player->groundVel       = vel;
-            player->onGround        = grounded;
-            player->groundedStore   = groundedStore;
-            player->nextGroundState = nextGState;
-            player->nextAirState    = nextAState;
-            player->state           = state;
+            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_BOTTOM || self->walkOnto) {
+                int32 newPressPos;
+                player->position.x      = playerX;
+                player->position.y      = playerY;
+                player->velocity.x      = xVel;
+                player->velocity.y      = yVel;
+                player->groundVel       = vel;
+                player->onGround        = grounded;
+                player->groundedStore   = groundedStore;
+                player->nextGroundState = nextGState;
+                player->nextAirState    = nextAState;
+                player->state           = state;
 
-            self->hitboxButton.top += (startPressPos >> 16);
-            self->hitboxButton.top += (Button->activatePos >> 16);
-            int32 newPressPos = self->pressPos;
+                self->hitboxButton.top += (startPressPos >> 16);
+                self->hitboxButton.top += (Button->activatePos >> 16);
+                newPressPos = self->pressPos;
 
-            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_BOTTOM) {
-                self->pressPos = -Button->activatePos;
-            }
-            else {
-                self->position.y += Button->activatePos;
-                if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
-                    Hitbox *playerHitbox = Player_GetHitbox(player);
-                    self->pressPos       = (player->position.y & 0xFFFF0000) + (playerHitbox->top << 16) - Button->buttonOffset - self->position.y;
-                    self->pressPos       = CLAMP(self->pressPos, -Button->activatePos, 0) & 0xFFFF0000;
+                if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_BOTTOM) {
+                    self->pressPos = -Button->activatePos;
+                }
+                else {
+                    self->position.y += Button->activatePos;
+                    if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
+                        Hitbox *playerHitbox = Player_GetHitbox(player);
+                        self->pressPos = (player->position.y & 0xFFFF0000) + (playerHitbox->top << 16) - Button->buttonOffset - self->position.y;
+                        self->pressPos = CLAMP(self->pressPos, -Button->activatePos, 0) & 0xFFFF0000;
+                    }
+
+                    self->position.y -= Button->activatePos;
                 }
 
-                self->position.y -= Button->activatePos;
-            }
+                if (self->pressPos == -Button->activatePos) {
+                    if (!self->wasActivated) {
+                        RSDK.PlaySfx(Button->sfxButton, false, 255);
+                        self->currentlyActive = true;
+                        self->toggled ^= true;
+                    }
 
-            if (self->pressPos == -Button->activatePos) {
-                if (!self->wasActivated) {
-                    RSDK.PlaySfx(Button->sfxButton, false, 255);
-                    self->currentlyActive = true;
-                    self->toggled ^= true;
+                    self->wasActivated = true;
+                    self->down         = true;
+                    self->activated    = true;
                 }
 
-                self->wasActivated = true;
-                self->down         = true;
-                self->activated    = true;
+                if (newPressPos < self->pressPos)
+                    self->pressPos = newPressPos;
             }
 
-            if (newPressPos < self->pressPos)
-                self->pressPos = newPressPos;
+            if (self->pressPos)
+                startPressPos = self->pressPos;
         }
-
-        if (self->pressPos)
-            startPressPos = self->pressPos;
     }
 }
 void Button_HandleRWall(void)
@@ -394,69 +421,82 @@ void Button_HandleRWall(void)
     int32 startPressPos = self->pressPos;
     self->pressPos      = 0;
 
-    foreach_active(Player, player)
     {
-        self->hitboxButton.right = (Button->hitboxOffset & 0xFFFF) - (startPressPos >> 16) + 1;
-        self->hitboxButton.left  = self->hitboxButton.right - 16;
+        foreach_active(Player, player)
+        {
+            int32 playerX;
+            int32 playerY;
+            int32 xVel;
+            int32 yVel;
+            int32 vel;
+            bool32 grounded;
+            bool32 groundedStore;
+            StateMachine(nextGState);
+            StateMachine(nextAState);
+            StateMachine(state);
+            self->hitboxButton.right = (Button->hitboxOffset & 0xFFFF) - (startPressPos >> 16) + 1;
+            self->hitboxButton.left  = self->hitboxButton.right - 16;
 
-        int32 playerX            = player->position.x;
-        int32 playerY            = player->position.y;
-        int32 xVel               = player->velocity.x;
-        int32 yVel               = player->velocity.y;
-        int32 vel                = player->groundVel;
-        bool32 grounded          = player->onGround;
-        bool32 groundedStore     = player->groundedStore;
-        StateMachine(nextGState) = player->nextGroundState;
-        StateMachine(nextAState) = player->nextAirState;
-        StateMachine(state)      = player->state;
+            playerX       = player->position.x;
+            playerY       = player->position.y;
+            xVel          = player->velocity.x;
+            yVel          = player->velocity.y;
+            vel           = player->groundVel;
+            grounded      = player->onGround;
+            groundedStore = player->groundedStore;
+            nextGState    = player->nextGroundState;
+            nextAState    = player->nextAirState;
+            state         = player->state;
 
-        if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_RIGHT || self->walkOnto) {
-            player->position.x      = playerX;
-            player->position.y      = playerY;
-            player->velocity.x      = xVel;
-            player->velocity.y      = yVel;
-            player->groundVel       = vel;
-            player->onGround        = grounded;
-            player->groundedStore   = groundedStore;
-            player->nextGroundState = nextGState;
-            player->nextAirState    = nextAState;
-            player->state           = state;
+            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_RIGHT || self->walkOnto) {
+                int32 newPressPos;
+                player->position.x      = playerX;
+                player->position.y      = playerY;
+                player->velocity.x      = xVel;
+                player->velocity.y      = yVel;
+                player->groundVel       = vel;
+                player->onGround        = grounded;
+                player->groundedStore   = groundedStore;
+                player->nextGroundState = nextGState;
+                player->nextAirState    = nextAState;
+                player->state           = state;
 
-            self->hitboxButton.right += (startPressPos >> 16);
-            self->hitboxButton.right = self->hitboxButton.right - (Button->activatePos >> 16) - 1;
-            int32 newPressPos        = self->pressPos;
+                self->hitboxButton.right += (startPressPos >> 16);
+                self->hitboxButton.right = self->hitboxButton.right - (Button->activatePos >> 16) - 1;
+                newPressPos        = self->pressPos;
 
-            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_RIGHT) {
-                self->pressPos = Button->activatePos;
-            }
-            else {
-                self->position.x += Button->activatePos;
-                if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
-                    Hitbox *playerHitbox = Player_GetHitbox(player);
-                    self->pressPos       = Button->buttonOffset - (playerHitbox->left << 16) - (player->position.x & 0xFFFF0000) + self->position.x;
-                    self->pressPos       = CLAMP(self->pressPos, 0, Button->activatePos) & 0xFFFF0000;
+                if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_RIGHT) {
+                    self->pressPos = Button->activatePos;
                 }
-                self->position.x -= Button->activatePos;
-            }
-
-            if (self->pressPos == Button->activatePos) {
-                if (!self->wasActivated) {
-                    RSDK.PlaySfx(Button->sfxButton, false, 255);
-                    self->currentlyActive = true;
-                    self->toggled ^= true;
+                else {
+                    self->position.x += Button->activatePos;
+                    if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
+                        Hitbox *playerHitbox = Player_GetHitbox(player);
+                        self->pressPos = Button->buttonOffset - (playerHitbox->left << 16) - (player->position.x & 0xFFFF0000) + self->position.x;
+                        self->pressPos = CLAMP(self->pressPos, 0, Button->activatePos) & 0xFFFF0000;
+                    }
+                    self->position.x -= Button->activatePos;
                 }
 
-                self->wasActivated = true;
-                self->down         = true;
-                self->activated    = true;
+                if (self->pressPos == Button->activatePos) {
+                    if (!self->wasActivated) {
+                        RSDK.PlaySfx(Button->sfxButton, false, 255);
+                        self->currentlyActive = true;
+                        self->toggled ^= true;
+                    }
+
+                    self->wasActivated = true;
+                    self->down         = true;
+                    self->activated    = true;
+                }
+
+                if (newPressPos > self->pressPos)
+                    self->pressPos = newPressPos;
             }
 
-            if (newPressPos > self->pressPos)
-                self->pressPos = newPressPos;
+            if (self->pressPos)
+                startPressPos = self->pressPos;
         }
-
-        if (self->pressPos)
-            startPressPos = self->pressPos;
     }
 }
 void Button_HandleLWall(void)
@@ -465,69 +505,82 @@ void Button_HandleLWall(void)
     int32 startPressPos = self->pressPos;
     self->pressPos      = 0;
 
-    foreach_active(Player, player)
     {
-        self->hitboxButton.right = (startPressPos >> 16) + (Button->hitboxOffset & 0xFFFF);
-        self->hitboxButton.left  = self->hitboxButton.right - 16;
+        foreach_active(Player, player)
+        {
+            int32 playerX;
+            int32 playerY;
+            int32 xVel;
+            int32 yVel;
+            int32 vel;
+            bool32 grounded;
+            bool32 groundedStore;
+            StateMachine(nextGState);
+            StateMachine(nextAState);
+            StateMachine(state);
+            self->hitboxButton.right = (startPressPos >> 16) + (Button->hitboxOffset & 0xFFFF);
+            self->hitboxButton.left  = self->hitboxButton.right - 16;
 
-        int32 playerX            = player->position.x;
-        int32 playerY            = player->position.y;
-        int32 xVel               = player->velocity.x;
-        int32 yVel               = player->velocity.y;
-        int32 vel                = player->groundVel;
-        bool32 grounded          = player->onGround;
-        bool32 groundedStore     = player->groundedStore;
-        StateMachine(nextGState) = player->nextGroundState;
-        StateMachine(nextAState) = player->nextAirState;
-        StateMachine(state)      = player->state;
+            playerX       = player->position.x;
+            playerY       = player->position.y;
+            xVel          = player->velocity.x;
+            yVel          = player->velocity.y;
+            vel           = player->groundVel;
+            grounded      = player->onGround;
+            groundedStore = player->groundedStore;
+            nextGState    = player->nextGroundState;
+            nextAState    = player->nextAirState;
+            state         = player->state;
 
-        if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_LEFT || self->walkOnto) {
-            player->position.x      = playerX;
-            player->position.y      = playerY;
-            player->velocity.x      = xVel;
-            player->velocity.y      = yVel;
-            player->groundVel       = vel;
-            player->onGround        = grounded;
-            player->groundedStore   = groundedStore;
-            player->nextGroundState = nextGState;
-            player->nextAirState    = nextAState;
-            player->state           = state;
+            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_LEFT || self->walkOnto) {
+                int32 newPressPos;
+                player->position.x      = playerX;
+                player->position.y      = playerY;
+                player->velocity.x      = xVel;
+                player->velocity.y      = yVel;
+                player->groundVel       = vel;
+                player->onGround        = grounded;
+                player->groundedStore   = groundedStore;
+                player->nextGroundState = nextGState;
+                player->nextAirState    = nextAState;
+                player->state           = state;
 
-            self->hitboxButton.right -= (startPressPos >> 16);
-            self->hitboxButton.right -= (Button->activatePos >> 16);
-            int32 newPressPos = self->pressPos;
+                self->hitboxButton.right -= (startPressPos >> 16);
+                self->hitboxButton.right -= (Button->activatePos >> 16);
+                newPressPos = self->pressPos;
 
-            if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_LEFT) {
-                self->pressPos = -Button->activatePos;
-            }
-            else {
-                self->position.x -= Button->activatePos;
-                if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
-                    Hitbox *playerHitbox = Player_GetHitbox(player);
-                    self->pressPos       = self->position.x - (playerHitbox->right << 16) - (player->position.x & 0xFFFF0000) - Button->buttonOffset;
-                    self->pressPos       = CLAMP(self->pressPos, -Button->activatePos, 0) & 0xFFFF0000;
+                if (Player_CheckCollisionBox(player, self, &self->hitboxButton) == C_LEFT) {
+                    self->pressPos = -Button->activatePos;
+                }
+                else {
+                    self->position.x -= Button->activatePos;
+                    if (Player_CheckCollisionTouch(player, self, &self->hitboxButton)) {
+                        Hitbox *playerHitbox = Player_GetHitbox(player);
+                        self->pressPos = self->position.x - (playerHitbox->right << 16) - (player->position.x & 0xFFFF0000) - Button->buttonOffset;
+                        self->pressPos = CLAMP(self->pressPos, -Button->activatePos, 0) & 0xFFFF0000;
+                    }
+
+                    self->position.x += Button->activatePos;
                 }
 
-                self->position.x += Button->activatePos;
-            }
-
-            if (self->pressPos == -Button->activatePos) {
-                if (!self->wasActivated) {
-                    RSDK.PlaySfx(Button->sfxButton, false, 255);
-                    self->currentlyActive = true;
-                    self->toggled ^= true;
+                if (self->pressPos == -Button->activatePos) {
+                    if (!self->wasActivated) {
+                        RSDK.PlaySfx(Button->sfxButton, false, 255);
+                        self->currentlyActive = true;
+                        self->toggled ^= true;
+                    }
+                    self->wasActivated = true;
+                    self->down         = true;
+                    self->activated    = true;
                 }
-                self->wasActivated = true;
-                self->down         = true;
-                self->activated    = true;
+
+                if (newPressPos < self->pressPos)
+                    self->pressPos = newPressPos;
             }
 
-            if (newPressPos < self->pressPos)
-                self->pressPos = newPressPos;
+            if (self->pressPos)
+                startPressPos = self->pressPos;
         }
-
-        if (self->pressPos)
-            startPressPos = self->pressPos;
     }
 
     self->hitboxButton.right = (Button->hitboxOffset & 0xFFFF) + (startPressPos >> 16);

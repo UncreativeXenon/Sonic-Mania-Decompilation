@@ -78,13 +78,15 @@ void UIOptionPanel_StageLoad(void) {}
 
 void UIOptionPanel_DrawBG(void)
 {
+    int32 x;
+    int32 y; 
     RSDK_THIS(UIOptionPanel);
 
     RSDK.DrawRect(self->position.x - (self->size.x >> 1), self->position.y - (self->size.y >> 1), self->size.x, self->size.y, 0x30A0F0, 255, INK_NONE,
                   false);
 
-    int32 x = self->position.x - (self->size.x >> 1);
-    int32 y = self->position.y - (self->size.y >> 1);
+    x = self->position.x - (self->size.x >> 1);
+    y = self->position.y - (self->size.y >> 1);
     RSDK.DrawRect(x, y, 0xE60000, 0x180000, 0, 255, INK_NONE, false);
 
     UIWidgets_DrawRightTriangle(0xE60000 + x, y, 23, 0x00, 0x00, 0x00);

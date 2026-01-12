@@ -74,65 +74,69 @@ void Pinata_State_CheckPlayerCollisions(void)
 
     RSDK.ProcessAnimation(&self->animator);
 
-    foreach_active(Player, player)
     {
-        if (player->animator.animationID != ANI_HURT && Player_CheckBadnikTouch(player, self, &Pinata->hitboxPinata)) {
-            RSDK.PlaySfx(Pinata->sfxPinata, false, 0xFF);
+        foreach_active(Player, player)
+        {
+            if (player->animator.animationID != ANI_HURT && Player_CheckBadnikTouch(player, self, &Pinata->hitboxPinata)) {
+                int32 i; 
+                RSDK.PlaySfx(Pinata->sfxPinata, false, 0xFF);
 
 #if MANIA_USE_PLUS
-            if (player->state != Player_State_MightyHammerDrop) {
+                if (player->state != Player_State_MightyHammerDrop) {
+                    int32 anim;
 #endif
-                if (player->state == Player_State_FlyCarried)
-                    RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
+                    if (player->state == Player_State_FlyCarried)
+                        RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
 
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED) {
-                    if (player->state != Player_State_TailsFlight) {
-                        if (player->state != Player_State_DropDash)
-                            player->state = Player_State_Air;
+                    anim = player->animator.animationID;
+                    if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED) {
+                        if (player->state != Player_State_TailsFlight) {
+                            if (player->state != Player_State_DropDash)
+                                player->state = Player_State_Air;
 
-                        if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                            player->animator.animationID = ANI_WALK;
+                            if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                                player->animator.animationID = ANI_WALK;
+                        }
                     }
+
+                    if (player->animator.animationID != ANI_FLY)
+                        player->applyJumpCap = false;
+
+                    if (player->velocity.y > -0x80000)
+                        player->velocity.y = -0x80000;
+
+                    player->onGround       = false;
+                    player->tileCollisions = TILECOLLISION_DOWN;
+#if MANIA_USE_PLUS
+                }
+#endif
+                CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y)->animator.frameID = 16;
+                Player_GiveScore(player, 10);
+                CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y - 0x100000)->drawGroup =
+                    Zone->objectDrawGroup[1];
+
+                for (i = 0; i < 6; ++i) {
+                    int32 x              = self->position.x + RSDK.Rand(-0x80000, 0x80000);
+                    int32 y              = self->position.y + RSDK.Rand(-0x80000, 0x80000);
+                    EntityDebris *debris = CREATE_ENTITY(Debris, NULL, x, y);
+
+                    debris->state           = Debris_State_Fall;
+                    debris->gravityStrength = 0x4000;
+                    debris->velocity.x      = RSDK.Rand(0, 0x20000);
+                    if (debris->position.x < self->position.x)
+                        debris->velocity.x = -debris->velocity.x;
+
+                    debris->velocity.y = RSDK.Rand(-0x40000, -0x10000);
+                    debris->drawFX     = FX_FLIP;
+                    debris->direction  = i & 3;
+                    debris->drawGroup  = Zone->objectDrawGroup[1];
+                    RSDK.SetSpriteAnimation(Pinata->aniFrames, 0, &debris->animator, true, RSDK.Rand(0, 4));
                 }
 
-                if (player->animator.animationID != ANI_FLY)
-                    player->applyJumpCap = false;
-
-                if (player->velocity.y > -0x80000)
-                    player->velocity.y = -0x80000;
-
-                player->onGround       = false;
-                player->tileCollisions = TILECOLLISION_DOWN;
-#if MANIA_USE_PLUS
+                self->state   = Pinata_State_Destroyed;
+                self->visible = false;
+                self->active  = ACTIVE_NORMAL;
             }
-#endif
-            CREATE_ENTITY(ScoreBonus, NULL, self->position.x, self->position.y)->animator.frameID = 16;
-            Player_GiveScore(player, 10);
-            CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y - 0x100000)->drawGroup =
-                Zone->objectDrawGroup[1];
-
-            for (int32 i = 0; i < 6; ++i) {
-                int32 x              = self->position.x + RSDK.Rand(-0x80000, 0x80000);
-                int32 y              = self->position.y + RSDK.Rand(-0x80000, 0x80000);
-                EntityDebris *debris = CREATE_ENTITY(Debris, NULL, x, y);
-
-                debris->state           = Debris_State_Fall;
-                debris->gravityStrength = 0x4000;
-                debris->velocity.x      = RSDK.Rand(0, 0x20000);
-                if (debris->position.x < self->position.x)
-                    debris->velocity.x = -debris->velocity.x;
-
-                debris->velocity.y = RSDK.Rand(-0x40000, -0x10000);
-                debris->drawFX     = FX_FLIP;
-                debris->direction  = i & 3;
-                debris->drawGroup  = Zone->objectDrawGroup[1];
-                RSDK.SetSpriteAnimation(Pinata->aniFrames, 0, &debris->animator, true, RSDK.Rand(0, 4));
-            }
-
-            self->state   = Pinata_State_Destroyed;
-            self->visible = false;
-            self->active  = ACTIVE_NORMAL;
         }
     }
 }

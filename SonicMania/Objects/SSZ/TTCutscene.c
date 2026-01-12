@@ -38,10 +38,12 @@ void TTCutscene_StageLoad(void)
 {
     TTCutscene->fxFade = NULL;
 
-    foreach_all(FXFade, fade)
-    {
-        TTCutscene->fxFade = fade;
-        foreach_break;
+{
+        foreach_all(FXFade, fade)
+        {
+            TTCutscene->fxFade = fade;
+            foreach_break;
+        }
     }
 }
 
@@ -111,11 +113,13 @@ bool32 TTCutscene_Cutscene_Setup(EntityCutsceneSeq *host)
 
 bool32 TTCutscene_Cutscene_FlyIn(EntityCutsceneSeq *host)
 {
+    int32 targetY;
+    int32 startY;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    int32 targetY = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-    int32 startY  = (ScreenInfo->position.y + ScreenInfo->size.y + 32) << 16;
+    targetY = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+    startY  = (ScreenInfo->position.y + ScreenInfo->size.y + 32) << 16;
 
     if (host->timer) {
         if (host->timer >= 60) {
@@ -173,11 +177,13 @@ bool32 TTCutscene_Cutscene_Wait(EntityCutsceneSeq *host)
 
 bool32 TTCutscene_Cutscene_FlyOut(EntityCutsceneSeq *host)
 {
+    int32 startY;
+    int32 targetY;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    int32 startY  = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
-    int32 targetY = (ScreenInfo->position.y - 32) << 16;
+    startY  = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+    targetY = (ScreenInfo->position.y - 32) << 16;
 
     if (host->timer) {
         if (host->timer >= 60) {

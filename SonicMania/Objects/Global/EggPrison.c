@@ -252,6 +252,10 @@ void EggPrison_HandleMovement(void)
 
 void EggPrison_State_Opened(void)
 {
+    int32 a;
+    int32 angle = 0x90;
+    int32 r;
+    EntityDebris *debris;
     RSDK_THIS(EggPrison);
 
     RSDK.SetSpriteAnimation(-1, 0, &self->panelAnimator, true, 0);
@@ -263,7 +267,7 @@ void EggPrison_State_Opened(void)
         case EGGPRISON_FLYING:
         case EGGPRISON_DUD:
         case EGGPRISON_SPRING:
-            for (int32 a = 0; a < 10; ++a) {
+            for (a = 0; a < 10; ++a) {
                 int32 x                = self->position.x + TO_FIXED((RSDK.Rand(0, 48) & -4) - 24);
                 int32 y                = self->position.y + TO_FIXED(4);
                 EntityAnimals *animals = CREATE_ENTITY(Animals, INT_TO_VOID(Animals->animalTypes[a & 1] + 1), x, y);
@@ -276,8 +280,8 @@ void EggPrison_State_Opened(void)
             break;
 
         case EGGPRISON_RINGS: {
-            int32 angle = 0x90;
-            for (int32 r = 0; r < 6; ++r) {
+            angle = 0x90;
+            for (r = 0; r < 6; ++r) {
                 int32 x          = self->position.x + TO_FIXED((RSDK.Rand(0, 48) & -4) - 24);
                 int32 y          = self->position.y;
                 EntityRing *ring = CREATE_ENTITY(Ring, self, x, y);
@@ -299,6 +303,7 @@ void EggPrison_State_Opened(void)
         }
 
         case EGGPRISON_TRAP: {
+            EntityBlaster *blaster;
             EntityTechnosqueek *technosqueek = CREATE_ENTITY(Technosqueek, NULL, self->position.x - TO_FIXED(8), self->position.y);
             technosqueek->velocity.x         = -TO_FIXED(3);
             technosqueek->velocity.y         = -TO_FIXED(4);
@@ -312,7 +317,7 @@ void EggPrison_State_Opened(void)
             technosqueek->direction  = FLIP_X;
             technosqueek->state      = Technosqueek_State_Fall;
 
-            EntityBlaster *blaster = CREATE_ENTITY(Blaster, NULL, self->position.x - TO_FIXED(24), self->position.y);
+            blaster = CREATE_ENTITY(Blaster, NULL, self->position.x - TO_FIXED(24), self->position.y);
             blaster->velocity.x    = -TO_FIXED(3);
             blaster->velocity.y    = -TO_FIXED(3);
             blaster->active        = ACTIVE_NORMAL;
@@ -328,7 +333,7 @@ void EggPrison_State_Opened(void)
         }
     }
 
-    EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x - TO_FIXED(22), self->position.y);
+    debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x - TO_FIXED(22), self->position.y);
     RSDK.SetSpriteAnimation(EggPrison->aniFrames, 2, &debris->animator, true, 2);
     debris->velocity.x      = -TO_FIXED(2);
     debris->velocity.y      = -TO_FIXED(2);
@@ -372,9 +377,10 @@ void EggPrison_State_Init(void)
 
 void EggPrison_State_Idle(void)
 {
+    int32 p;
     RSDK_THIS(EggPrison);
 
-    for (int32 p = 0; p < Player->playerCount && self->type < EGGPRISON_DUD; ++p) {
+    for (p = 0; p < Player->playerCount && self->type < EGGPRISON_DUD; ++p) {
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
         if (!player->sidekick) {
             if (abs(self->position.x - player->position.x) < TO_FIXED(256)) {

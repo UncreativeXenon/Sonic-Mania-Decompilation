@@ -22,13 +22,14 @@ void Dragonfly_StaticUpdate(void) {}
 
 void Dragonfly_Draw(void)
 {
+    int32 i; 
     RSDK_THIS(Dragonfly);
 
     if (self->animator.animationID == 3) {
         RSDK.DrawSprite(&self->animator, NULL, false);
     }
     else {
-        for (int32 i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
+        for (i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
             self->bodyAnimator.frameID = i == 0;
             self->direction            = self->directions[i];
             RSDK.DrawSprite(&self->bodyAnimator, &self->positions[i], false);
@@ -132,7 +133,8 @@ void Dragonfly_CheckPlayerCollisions(void)
     {
         if (Player_CheckBadnikTouch(player, self, &Dragonfly->hitboxBadnik)) {
             if (Player_CheckBadnikBreak(player, self, false)) {
-                for (int32 i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
+                int32 i;
+                for (i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
                     EntityDragonfly *child  = CREATE_ENTITY(Dragonfly, INT_TO_VOID(true), self->positions[i].x, self->positions[i].y);
                     child->animator.frameID = i == 0;
                     child->velocity.x       = RSDK.Rand(-4, 4) << 15;
@@ -143,8 +145,9 @@ void Dragonfly_CheckPlayerCollisions(void)
             }
         }
         else {
+            int32 i;
             Vector2 storePos = self->position;
-            for (int32 i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
+            for (i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
                 self->position = self->positions[i];
                 if (Player_CheckCollisionTouch(player, self, &Dragonfly->hitboxSpine)) {
                     self->position = storePos;
@@ -177,6 +180,9 @@ void Dragonfly_State_Init(void)
 
 void Dragonfly_State_Move(void)
 {
+    int32 currentAngle;
+    int32 i;
+    bool32 dir;
     RSDK_THIS(Dragonfly);
 
     self->angle += self->speed;
@@ -184,8 +190,8 @@ void Dragonfly_State_Move(void)
     self->position.x = self->startPos.x + 0xC00 * RSDK.Cos256(self->angle + 0x40);
     self->position.y = self->startPos.y + (self->dist << 6) * RSDK.Sin1024(self->angle);
 
-    int32 currentAngle = self->angle - (((DRAGONFLY_SPINE_COUNT * 13) + 13) - 1);
-    for (int32 i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
+    currentAngle = self->angle - (((DRAGONFLY_SPINE_COUNT * 13) + 13) - 1);
+    for (i = 0; i < DRAGONFLY_SPINE_COUNT; ++i) {
         self->directions[i] = ((currentAngle + 0x100) & 0x3FF) < 0x200 ? 2 : 0;
 
         self->positions[i].x = self->startPos.x + 0xC00 * RSDK.Cos256(currentAngle + 0x40);
@@ -194,7 +200,7 @@ void Dragonfly_State_Move(void)
         currentAngle += 13;
     }
 
-    bool32 dir = ((self->angle + 0x100) & 0x3FF) < 0x200;
+    dir = ((self->angle + 0x100) & 0x3FF) < 0x200;
     if (self->animator.animationID == 1) {
         if (dir)
             RSDK.SetSpriteAnimation(Dragonfly->aniFrames, 0, &self->animator, true, 0);

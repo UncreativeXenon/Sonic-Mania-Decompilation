@@ -380,10 +380,11 @@ bool32 DiveEggman_CheckNoBombExplode(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (!--self->timer) {
+        EntityWater *water;
         CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSS), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
         RSDK.PlaySfx(DiveEggman->sfxExplosion, false, 255);
 
-        EntityWater *water = CREATE_ENTITY(Water, INT_TO_VOID(WATER_BUBBLE), self->position.x, self->position.y);
+        water = CREATE_ENTITY(Water, INT_TO_VOID(WATER_BUBBLE), self->position.x, self->position.y);
         water->velocity.y  = -0x8800;
         water->angle       = 2 * RSDK.Rand(0, 256);
         water->bubbleX     = water->position.x;
@@ -473,11 +474,12 @@ void DiveEggman_StateBomb_WhirlpoolRise(void)
 
         if (screwMobile->propellerAnimator.speed >= 0x100) {
             if (self->position.y < screwMobile->position.y + 0x180000) {
+                EntityPlayer *player1;
                 self->timer = 1;
                 --screwMobile->health; // ??? what the...
                 screwMobile->invincibilityTimer = 30;
                 screwMobile->whirlPoolTimer     = 30;
-                EntityPlayer *player1           = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+                player1           = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
                 // Hit that player!
                 if (!player1->blinkTimer && !player1->invincibleTimer) {

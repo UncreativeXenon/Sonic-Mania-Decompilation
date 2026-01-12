@@ -122,16 +122,20 @@ void GasPlatform_State_Popped(void)
     }
 
     if (self->centerPos.y - self->drawPos.y > 0x180000) {
+        int32 storeX;
+        int32 storeY;
         RSDK.ProcessAnimation(&self->gasAnimator);
-        int32 storeX     = self->position.x;
-        int32 storeY     = self->position.y;
+        storeX     = self->position.x;
+        storeY     = self->position.y;
         self->position.x = self->centerPos.x;
         self->position.y = self->centerPos.y;
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionTouch(player, self, &GasPlatform->hitboxGas))
-                Player_ElementHurt(player, self, SHIELD_FIRE);
+{
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &GasPlatform->hitboxGas))
+                    Player_ElementHurt(player, self, SHIELD_FIRE);
+            }
         }
 
         self->position.x = storeX;
@@ -172,19 +176,23 @@ void GasPlatform_State_Popped(void)
 
 void GasPlatform_State_SpringCooldown(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(GasPlatform);
 
     RSDK.ProcessAnimation(&self->gasAnimator);
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
     self->position.x = self->centerPos.x;
     self->position.y = self->centerPos.y;
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &GasPlatform->hitboxGas))
-            Player_ElementHurt(player, self, SHIELD_FIRE);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &GasPlatform->hitboxGas))
+                Player_ElementHurt(player, self, SHIELD_FIRE);
+        }
     }
 
     self->position.x = storeX;

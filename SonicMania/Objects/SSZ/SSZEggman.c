@@ -88,17 +88,19 @@ void SSZEggman_State_HoldingRuby(void)
         self->ruby->position.y = self->position.y - 0x100000;
     }
 
-    foreach_active(MetalSonic, metal)
-    {
-        if (metal->state == MetalSonic_State_ObtainRuby) {
-            self->speed = -0x28000;
-            RSDK.SetSpriteAnimation(SSZEggman->aniFrames, 3, &self->eggmanAnimator, true, 0);
-            self->state = SSZEggman_State_ThrownRuby;
+{
+        foreach_active(MetalSonic, metal)
+        {
+            if (metal->state == MetalSonic_State_ObtainRuby) {
+                self->speed = -0x28000;
+                RSDK.SetSpriteAnimation(SSZEggman->aniFrames, 3, &self->eggmanAnimator, true, 0);
+                self->state = SSZEggman_State_ThrownRuby;
 
-            if (self->ruby) {
-                self->ruby->state      = PhantomRuby_State_MoveGravity;
-                self->ruby->velocity.x = -0x40000;
-                self->ruby->velocity.y = -0x40000;
+                if (self->ruby) {
+                    self->ruby->state      = PhantomRuby_State_MoveGravity;
+                    self->ruby->velocity.x = -0x40000;
+                    self->ruby->velocity.y = -0x40000;
+                }
             }
         }
     }

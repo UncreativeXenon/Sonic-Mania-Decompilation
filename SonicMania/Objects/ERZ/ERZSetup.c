@@ -31,6 +31,7 @@ void ERZSetup_Create(void *data) {}
 
 void ERZSetup_StageLoad(void)
 {
+    int32 p;
     ERZSetup->aniTiles = RSDK.LoadSpriteSheet("Phantom/Sky.gif", SCOPE_STAGE);
 
     RSDK.GetTileLayer(1)->scanlineCallback = ERZSetup_Scanline_Sky;
@@ -40,21 +41,25 @@ void ERZSetup_StageLoad(void)
     Animals->animalTypes[1] = ANIMAL_ROCKY;
 
     // Remove all players except for P1
-    for (int32 p = 1; p < Player->playerCount; ++p) destroyEntitySlot(p);
+    for (p = 1; p < Player->playerCount; ++p) destroyEntitySlot(p);
     Player->playerCount = 1;
 }
 
 void ERZSetup_Scanline_Sky(ScanlineInfo *scanlines)
 {
+    int32 a;
+    int32 sineAngle;
+    int32 cosineAngle;
+    int32 i;
     RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
 
     RSDK.SetClipBounds(0, 0, 0, screen->size.x, 136);
 
-    int32 a           = 0x1000000;
-    int32 sineAngle   = RSDK.Sin256(0);
-    int32 cosineAngle = RSDK.Cos256(0);
+    a           = 0x1000000;
+    sineAngle   = RSDK.Sin256(0);
+    cosineAngle = RSDK.Cos256(0);
 
-    for (int32 i = 160; i > 16; --i) {
+    for (i = 160; i > 16; --i) {
         int32 angle = a / (8 * i);
         int32 sin   = sineAngle * angle;
         int32 cos   = cosineAngle * angle;

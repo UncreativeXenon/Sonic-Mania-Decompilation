@@ -92,25 +92,27 @@ void PSZLauncher_HandlePlayerCollisions(void)
     hitboxStand.left   = -32;
     hitboxStand.right  = 0;
     hitboxStand.bottom = 0;
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        int32 standPos = 31 - CLAMP(abs(player->position.x - self->position.x) >> 16, 0, 31);
-        if ((self->direction == FLIP_NONE && player->position.x > self->position.x)
-            || (self->direction == FLIP_X && player->position.x < self->position.x))
-            standPos = 31;
+            int32 standPos = 31 - CLAMP(abs(player->position.x - self->position.x) >> 16, 0, 31);
+            if ((self->direction == FLIP_NONE && player->position.x > self->position.x)
+                || (self->direction == FLIP_X && player->position.x < self->position.x))
+                standPos = 31;
 
-        hitboxStand.top = -PSZLauncher->heightTable[standPos];
-        if ((1 << playerID) & self->stoodPlayers)
-            player->position.y += 0x10000;
+            hitboxStand.top = -PSZLauncher->heightTable[standPos];
+            if ((1 << playerID) & self->stoodPlayers)
+                player->position.y += 0x10000;
 
-        if (Player_CheckCollisionPlatform(player, self, &hitboxStand)) {
-            self->stoodPlayers |= 1 << playerID;
-            player->position.y &= 0xFFFF0000;
-        }
-        else {
-            self->stoodPlayers &= ~(1 << playerID);
+            if (Player_CheckCollisionPlatform(player, self, &hitboxStand)) {
+                self->stoodPlayers |= 1 << playerID;
+                player->position.y &= 0xFFFF0000;
+            }
+            else {
+                self->stoodPlayers &= ~(1 << playerID);
+            }
         }
     }
 }

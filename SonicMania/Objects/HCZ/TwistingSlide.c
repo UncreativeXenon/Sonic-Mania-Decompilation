@@ -29,12 +29,13 @@ void TwistingSlide_Update(void)
             switch (self->type) {
                 case TWISTINGSLIDE_START:
                     if (player->state == Player_State_Static) {
+                        int32 angle;
                         if (!((1 << playerID) & self->activePlayers)) {
                             self->playerAngles[playerID] = (player->position.y - self->position.y + 0x4A0000) >> 16;
                             self->activePlayers |= 1 << playerID;
                         }
 
-                        int32 angle = 221 * self->playerAngles[playerID];
+                        angle = 221 * self->playerAngles[playerID];
                         if (221 * self->playerAngles[playerID] >= 0x3FC0)
                             angle = 170 * self->playerAngles[playerID];
 
@@ -119,12 +120,13 @@ void TwistingSlide_Update(void)
             switch (self->type) {
                 case TWISTINGSLIDE_START:
                     if (player->state == Player_State_Static) {
+                        int32 angle;
                         if (!((1 << playerID) & self->activePlayers)) {
                             self->playerAngles[playerID] = (player->position.y - self->position.y + 0x4A0000) >> 16;
                             self->activePlayers |= 1 << playerID;
                         }
 
-                        int32 angle = 221 * self->playerAngles[playerID];
+                        angle = 221 * self->playerAngles[playerID];
                         if (221 * self->playerAngles[playerID] >= 0x3FC0)
                             angle = 170 * self->playerAngles[playerID];
 
@@ -211,6 +213,8 @@ void TwistingSlide_Update(void)
         }
 
         if (((1 << playerID) & self->activePlayers)) {
+            int32 x;
+            int32 y;
             if (self->direction) {
                 self->playerAngles[playerID] += ((-player->groundVel >> 16) * RSDK.Sin256(40)) >> 8;
 
@@ -242,8 +246,8 @@ void TwistingSlide_Update(void)
             if (player->animator.speed > 0xF0)
                 player->animator.speed = 0xF0;
 
-            int32 x = player->position.x - storeX;
-            int32 y = player->position.y - storeY;
+            x = player->position.x - storeX;
+            y = player->position.y - storeY;
             if (player->position.x != storeX && y) {
                 if (player->groundVel <= 0) {
                     x = storeX - player->position.x;

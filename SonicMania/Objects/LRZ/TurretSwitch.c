@@ -172,10 +172,12 @@ void TurretSwitch_State_Projectile(void)
             self->position.x += self->velocity.x;
             self->position.y += self->velocity.y;
 
-            foreach_active(Player, player)
             {
-                if (Player_CheckCollisionTouch(player, self, &TurretSwitch->hitboxProjectile))
-                    Player_ProjectileHurt(player, self);
+                foreach_active(Player, player)
+                {
+                    if (Player_CheckCollisionTouch(player, self, &TurretSwitch->hitboxProjectile))
+                        Player_ProjectileHurt(player, self);
+                }
             }
         }
     }

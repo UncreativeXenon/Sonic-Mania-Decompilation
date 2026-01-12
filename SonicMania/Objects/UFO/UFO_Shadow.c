@@ -24,10 +24,13 @@ void UFO_Shadow_LateUpdate(void)
             self->visible = false;
         }
         else {
+            int32 x;
+            int32 z;
+            Matrix *mat;
             self->visible = true;
-            int32 x       = self->position.x >> 8;
-            int32 z       = self->position.y >> 8;
-            Matrix *mat   = &UFO_Camera->matWorld;
+            x       = self->position.x >> 8;
+            z       = self->position.y >> 8;
+            mat   = &UFO_Camera->matWorld;
 
             self->zdepth = mat->values[2][3] + (z * mat->values[2][2] >> 8) + (x * mat->values[2][0] >> 8);
 
@@ -78,50 +81,59 @@ void UFO_Shadow_Create(void *data)
 
 void UFO_Shadow_StageLoad(void)
 {
+    int32 slot;
     UFO_Shadow->modelIndex = RSDK.LoadMesh("Special/Shadow.bin", SCOPE_STAGE);
     UFO_Shadow->sceneID    = RSDK.Create3DScene("View:Special", 4096, SCOPE_STAGE);
 
-    int32 slot = TEMPENTITY_START;
-    foreach_all(UFO_Player, player)
+    slot = TEMPENTITY_START;
     {
-        EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
-        RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
-        shadow->position.x  = player->position.x;
-        shadow->position.y  = player->position.y;
-        shadow->parent      = (Entity *)player;
-        shadow->shadowScale = 0x140;
-    }
-
-    foreach_all(UFO_Circuit, ufo)
-    {
-        if (ufo->startNode) {
+        foreach_all(UFO_Player, player)
+        {
             EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
             RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
-            shadow->position.x  = ufo->position.x;
-            shadow->position.y  = ufo->position.y;
-            shadow->parent      = (Entity *)ufo;
-            shadow->shadowScale = 0x400;
+            shadow->position.x  = player->position.x;
+            shadow->position.y  = player->position.y;
+            shadow->parent      = (Entity *)player;
+            shadow->shadowScale = 0x140;
         }
     }
 
-    foreach_all(UFO_Ring, ring)
-    {
-        EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
-        RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
-        shadow->position.x  = ring->position.x;
-        shadow->position.y  = ring->position.y;
-        shadow->parent      = (Entity *)ring;
-        shadow->shadowScale = 0xC0;
+{
+        foreach_all(UFO_Circuit, ufo)
+        {
+            if (ufo->startNode) {
+                EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
+                RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
+                shadow->position.x  = ufo->position.x;
+                shadow->position.y  = ufo->position.y;
+                shadow->parent      = (Entity *)ufo;
+                shadow->shadowScale = 0x400;
+            }
+        }
     }
 
-    foreach_all(UFO_Sphere, sphere)
     {
-        EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
-        RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
-        shadow->position.x  = sphere->position.x;
-        shadow->position.y  = sphere->position.y;
-        shadow->parent      = (Entity *)sphere;
-        shadow->shadowScale = 0x100;
+        foreach_all(UFO_Ring, ring)
+        {
+            EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
+            RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
+            shadow->position.x  = ring->position.x;
+            shadow->position.y  = ring->position.y;
+            shadow->parent      = (Entity *)ring;
+            shadow->shadowScale = 0xC0;
+        }
+    }
+
+    {
+        foreach_all(UFO_Sphere, sphere)
+        {
+            EntityUFO_Shadow *shadow = RSDK_GET_ENTITY(slot--, UFO_Shadow);
+            RSDK.ResetEntity(shadow, UFO_Shadow->classID, NULL);
+            shadow->position.x  = sphere->position.x;
+            shadow->position.y  = sphere->position.y;
+            shadow->parent      = (Entity *)sphere;
+            shadow->shadowScale = 0x100;
+        }
     }
 
     LogHelpers_Print("%d shadow entities spawned", TEMPENTITY_START - slot);

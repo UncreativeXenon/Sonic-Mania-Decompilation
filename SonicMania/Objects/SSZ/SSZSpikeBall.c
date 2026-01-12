@@ -15,22 +15,25 @@ void SSZSpikeBall_Update(void)
 
     StateMachine_Run(self->state);
 
-    foreach_active(Player, player)
-    {
-        if (self->type < SSZSPIKEBALL_MOVEBALL_UP)
-            Player_CheckCollisionBox(player, self, &SSZSpikeBall->hitboxBase[self->type]);
+{
+        foreach_active(Player, player)
+        {
+            Vector2 posStore;
+            if (self->type < SSZSPIKEBALL_MOVEBALL_UP)
+                Player_CheckCollisionBox(player, self, &SSZSpikeBall->hitboxBase[self->type]);
 
-        Vector2 posStore = self->position;
-        self->position   = self->spikeBallPos;
-        if (Player_CheckCollisionTouch(player, self, &SSZSpikeBall->hitboxSpikeBall)) {
-            self->position = posStore;
+            posStore = self->position;
+            self->position   = self->spikeBallPos;
+            if (Player_CheckCollisionTouch(player, self, &SSZSpikeBall->hitboxSpikeBall)) {
+                self->position = posStore;
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x400, 2, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x400, 2, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
-        }
-        else {
-            self->position = posStore;
+                    Player_Hurt(player, self);
+            }
+            else {
+                self->position = posStore;
+            }
         }
     }
 }

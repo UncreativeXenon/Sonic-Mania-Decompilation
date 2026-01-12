@@ -51,18 +51,20 @@ void LRZ1Setup_StaticUpdate(void)
     RSDK.SetLimitedFade(0, 1, 2, (RSDK.Sin256(2 * Zone->timer + 128) >> 1) + 128, 142, 143);
     RSDK.SetLimitedFade(0, 1, 2, (RSDK.Sin256(Zone->timer) >> 1) + 128, 156, 158);
 
-    foreach_active(Player, player)
     {
-        if (player->onGround) {
-            Hitbox *hitbox = Player_GetHitbox(player);
+        foreach_active(Player, player)
+        {
+            if (player->onGround) {
+                Hitbox *hitbox = Player_GetHitbox(player);
 
-            int32 tileInfo  = 0;
-            uint8 behaviour = LRZ1_TFLAGS_NORMAL;
-            LRZ2Setup_GetTileInfo(player->position.x, (hitbox->bottom << 16) + player->position.y, player->moveLayerPosition.x,
-                                  player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
+                int32 tileInfo  = 0;
+                uint8 behaviour = LRZ1_TFLAGS_NORMAL;
+                LRZ2Setup_GetTileInfo(player->position.x, (hitbox->bottom << 16) + player->position.y, player->moveLayerPosition.x,
+                                      player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
 
-            if (behaviour == LRZ1_TFLAGS_LAVA && player->shield != SHIELD_FIRE && !LRZ1Setup->fadeTimer) {
-                Player_HurtFlip(player);
+                if (behaviour == LRZ1_TFLAGS_LAVA && player->shield != SHIELD_FIRE && !LRZ1Setup->fadeTimer) {
+                    Player_HurtFlip(player);
+                }
             }
         }
     }
@@ -111,12 +113,13 @@ void LRZ1Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreLRZ1.act", 0b0000000011111111);
+        int32 i;
+        RSDK.LoadPalette(0, "EncoreLRZ1.act", 0xFF);
 
-        for (int32 i = 0; i < 0x400; ++i) LRZ1Setup->fgLow->deformationData[i] = LRZ1Setup->deformFG[i & 0x1F];
-        for (int32 i = 0; i < 0x400; ++i) LRZ1Setup->fgHigh->deformationData[i] = LRZ1Setup->deformFG[i & 0x1F];
-        for (int32 i = 0; i < 0x400; ++i) LRZ1Setup->background1->deformationData[i] = LRZ1Setup->deformBG[i & 0x1F];
-        for (int32 i = 0; i < 0x400; ++i) LRZ1Setup->background2->deformationData[i] = LRZ1Setup->deformBG[i & 0x1F];
+        for (i = 0; i < 0x400; ++i) LRZ1Setup->fgLow->deformationData[i] = LRZ1Setup->deformFG[i & 0x1F];
+        for (i = 0; i < 0x400; ++i) LRZ1Setup->fgHigh->deformationData[i] = LRZ1Setup->deformFG[i & 0x1F];
+        for (i = 0; i < 0x400; ++i) LRZ1Setup->background1->deformationData[i] = LRZ1Setup->deformBG[i & 0x1F];
+        for (i = 0; i < 0x400; ++i) LRZ1Setup->background2->deformationData[i] = LRZ1Setup->deformBG[i & 0x1F];
     }
 
     if (!isMainGameMode() || !globals->enableIntro || CutsceneRules_CheckStageReload()) {
@@ -124,7 +127,9 @@ void LRZ1Setup_StageLoad(void)
         Zone->cameraBoundsL[1] = 2732;
         Zone->cameraBoundsL[2] = 2732;
         Zone->cameraBoundsL[3] = 2732;
-        foreach_all(LRZ1Intro, intro) { destroyEntity(intro); }
+        {
+            foreach_all(LRZ1Intro, intro) { destroyEntity(intro); }
+        }
     }
 #else
     Zone->cameraBoundsL[0] = 648;

@@ -86,6 +86,7 @@ void UITABanner_SetupDetails(EntityUITABanner *banner, uint8 zoneID, uint8 actID
 
 void UITABanner_DrawBGShapes(int32 drawX, int32 drawY, bool32 isEncore)
 {
+    uint32 color;
     if (!SceneInfo->inEditor)
         RSDK.DrawRect(drawX - 0x990000, drawY - 0x1E8000, 0x1320000, 0x3D0000, 0xFFFFFF, 127, INK_BLEND, false);
 
@@ -94,7 +95,7 @@ void UITABanner_DrawBGShapes(int32 drawX, int32 drawY, bool32 isEncore)
     RSDK.DrawRect(drawX + 0x790000, (drawY + 0x1D8000) - 0x3D0000, 0x200000, 0x3D0000, 0x5870E0, 255, INK_NONE, false);
     RSDK.DrawRect(drawX - 0x990000, drawY - 0x1E8000, 0x1320000, 0x220000, 0, 255, INK_NONE, false);
 
-    uint32 color = isEncore ? 0xF26C4F : 0x5FA0B0;
+    color = isEncore ? 0xF26C4F : 0x5FA0B0;
     UIWidgets_DrawRightTriangle(drawX + 0x990000, drawY + 0x1D8000, -58, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
 
     if (!SceneInfo->inEditor)
@@ -105,24 +106,24 @@ void UITABanner_DrawBGShapes(int32 drawX, int32 drawY, bool32 isEncore)
 
 void UITABanner_DrawStageInfo(int32 drawX, int32 drawY, uint8 actID, uint8 characterID, bool32 isEncore)
 {
+    Vector2 drawPos;
+    color colors[3];
+    int32 widths[3];
+    Vector2 drawOffsets[3];
+    int32 i;
     RSDK_THIS(UITABanner);
 
-    Vector2 drawPos;
-
-    color colors[3];
     colors[0] = isEncore ? 0xF26C4F : 0x5870E0;
     colors[1] = 0xF0D808;
     colors[2] = 0x010101;
 
-    int32 widths[3];
     widths[0] = 60;
     widths[1] = 52;
     widths[2] = 70;
     drawPos.x = drawX - 0x390000;
     drawPos.y = drawY + 0x118000;
 
-    Vector2 drawOffsets[3];
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         RSDK.DrawRect(drawPos.x, drawPos.y, widths[i] << 16, 0xD0000, colors[i], 255, INK_NONE, false);
 
         drawOffsets[i].x = drawPos.x + 0x10000;
@@ -164,6 +165,7 @@ void UITABanner_DrawZoneIcon(int32 drawX, int32 drawY, int32 zoneID)
     drawPos.y = drawY;
     drawPos.x = drawX - 0x690000;
     if (!SceneInfo->inEditor && (control->active == ACTIVE_ALWAYS || control->dialogHasFocus == 1 || control->popoverHasFocus == 1)) {
+        SpriteFrame *frame;
         int32 clipY  = (drawY >> 16) - ScreenInfo->position.y;
         int32 clipX  = ((drawX - 0x690000) >> 16) - ScreenInfo->position.x;
         int32 clipX1 = ScreenInfo->clipBound_X1;
@@ -172,7 +174,7 @@ void UITABanner_DrawZoneIcon(int32 drawX, int32 drawY, int32 zoneID)
         int32 clipY2 = ScreenInfo->clipBound_Y2;
         RSDK.SetClipBounds(SceneInfo->currentScreenID, clipX - 48, clipY - 27, clipX + 48, clipY + 27);
 
-        SpriteFrame *frame = RSDK.GetFrame(UITABanner->aniFrames, 11, zoneID);
+        frame = RSDK.GetFrame(UITABanner->aniFrames, 11, zoneID);
         frame->pivotX      = -45;
         frame->width       = 90;
         frame->sprX        = self->timer;

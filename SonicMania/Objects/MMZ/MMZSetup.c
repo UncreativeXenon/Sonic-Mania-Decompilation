@@ -67,6 +67,7 @@ void MMZSetup_Create(void *data) {}
 
 void MMZSetup_StageLoad(void)
 {
+    int32 l;
     MMZSetup->aniTiles = RSDK.LoadSpriteSheet("MMZ/AniTiles.gif", SCOPE_STAGE);
 
     Animals->animalTypes[0] = ANIMAL_CUCKY;
@@ -77,7 +78,7 @@ void MMZSetup_StageLoad(void)
         RSDK.GetTileLayer(1)->scrollPos = 384 << 16;
 
 #if MANIA_USE_PLUS
-        for (int32 l = 3; l < 5; ++l) RSDK.GetTileLayer(l)->scrollInfo[0].scrollPos = (0x100 - ScreenInfo->center.x) << 16;
+        for (l = 3; l < 5; ++l) RSDK.GetTileLayer(l)->scrollInfo[0].scrollPos = (0x100 - ScreenInfo->center.x) << 16;
 #endif
 
         MMZSetup->panelAniDuration = 16;
@@ -112,9 +113,9 @@ void MMZSetup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreMMZ.act", 0b0000000011111111);
-        RSDK.LoadPalette(3, "EncoreMMZfp.act", 0b0000000011111111);
-        RSDK.LoadPalette(4, "EncoreMMZf.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreMMZ.act", 0xFF);
+        RSDK.LoadPalette(3, "EncoreMMZfp.act", 0xFF);
+        RSDK.LoadPalette(4, "EncoreMMZf.act", 0xFF);
     }
 #endif
 }

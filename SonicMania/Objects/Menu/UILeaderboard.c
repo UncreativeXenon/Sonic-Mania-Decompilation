@@ -11,6 +11,7 @@ ObjectUILeaderboard *UILeaderboard;
 
 void UILeaderboard_Update(void)
 {
+    EntityUIControl *parent;
     RSDK_THIS(UILeaderboard);
 
     if (self->textFrames != UIWidgets->textFrames) {
@@ -23,7 +24,7 @@ void UILeaderboard_Update(void)
     if (++self->zoneIconSprX >= 192)
         self->zoneIconSprX -= 192;
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
     if (self->state == UILeaderboard_State_Selected && (parent->buttonID != self->zoneID || parent->state != UIControl_ProcessInputs)) {
         self->isSelected = false;
         self->state      = UILeaderboard_State_Unselected;
@@ -76,10 +77,11 @@ void UILeaderboard_StageLoad(void) { UILeaderboard->aniFrames = RSDK.LoadSpriteA
 
 void UILeaderboard_SetupEntrySprites(EntityUILeaderboard *leaderboard)
 {
+    int32 frame;
     RSDK.SetSpriteAnimation(UILeaderboard->aniFrames, 12, &leaderboard->fuzzAnimator, true, 0);
     RSDK.SetSpriteAnimation(UILeaderboard->aniFrames, 13, &leaderboard->zoneIconAnimator, true, leaderboard->zoneID);
 
-    int32 frame = leaderboard->characterID <= 1 ? 0 : (leaderboard->characterID - 1);
+    frame = leaderboard->characterID <= 1 ? 0 : (leaderboard->characterID - 1);
     RSDK.SetSpriteAnimation(UILeaderboard->aniFrames, 1, &leaderboard->playerAnimator, true, frame);
     RSDK.SetSpriteAnimation(UILeaderboard->aniFrames, 2, &leaderboard->playerShadowAnimator, true, frame);
 
@@ -147,7 +149,8 @@ void UILeaderboard_SetupLeaderboard(EntityUILeaderboard *leaderboard, uint8 char
 void UILeaderboard_LoadEntries(EntityUILeaderboard *entity)
 {
     if (!SceneInfo->inEditor) {
-        for (int32 i = 0; i < 5; ++i) {
+        int32 i;
+        for (i = 0; i < 5; ++i) {
             LeaderboardEntry *entry = API_ReadLeaderboardEntry(i + entity->entryOffset);
 #if MANIA_USE_PLUS
             if (entry && entry->status == STATUS_OK) {
@@ -263,11 +266,12 @@ void UILeaderboard_DrawPrimitives(void)
 
 void UILeaderboard_DrawEntries(void)
 {
+    Vector2 drawPos;
+    int32 i;
     RSDK_THIS(UILeaderboard);
 
     UILeaderboard_DrawZonePreview();
 
-    Vector2 drawPos;
     drawPos.x = self->position.x - 0x8C0000;
     drawPos.y = self->position.y - 0x4C0000;
     if (!SceneInfo->inEditor) {
@@ -311,14 +315,14 @@ void UILeaderboard_DrawEntries(void)
     RSDK.SetSpriteAnimation(UIWidgets->textFrames, 11, &self->taAnimator, true, 2);
     RSDK.DrawSprite(&self->taAnimator, &drawPos, false);
 
-    for (int32 i = 0; i < 5; ++i) UILeaderboard_DrawRank(i);
+    for (i = 0; i < 5; ++i) UILeaderboard_DrawRank(i);
 }
 
 void UILeaderboard_DrawZonePreview(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(UILeaderboard);
 
-    Vector2 drawPos;
     drawPos.x = self->position.x - 0xA80000;
     drawPos.y = self->position.y - 0x380000;
     UIWidgets_DrawRectOutline_Black(drawPos.x, drawPos.y, 72, 40);
@@ -354,6 +358,7 @@ void UILeaderboard_DrawZonePreview(void)
 
 void UILeaderboard_DrawTime(int32 mins, int32 secs, int32 millisecs, int32 x, int32 y)
 {
+    int32 i;
     RSDK_THIS(UILeaderboard);
 
     Vector2 drawPos;
@@ -368,7 +373,7 @@ void UILeaderboard_DrawTime(int32 mins, int32 secs, int32 millisecs, int32 x, in
 
     drawPos.x = x;
     drawPos.y = y;
-    for (int32 i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         if (!scoreText[i])
             break;
         RSDK.SetSpriteAnimation(UILeaderboard->aniFrames, 8, &self->timeAnimator, true, (scoreText[i] - '0'));
@@ -379,13 +384,14 @@ void UILeaderboard_DrawTime(int32 mins, int32 secs, int32 millisecs, int32 x, in
 
 void UILeaderboard_DrawRank(int32 id)
 {
+    int32 color;
     RSDK_THIS(UILeaderboard);
 
     Vector2 drawPos;
     drawPos.x = (id << 20) + self->position.x - 0x200000;
     drawPos.y = (id << 20) + self->position.y + 0x40000;
 
-    int32 color = 0x5870E0;
+    color = 0x5870E0;
     switch (self->ranks[id]) {
         default: break;
         case 1: color = 0xD9AD04; break;
@@ -396,6 +402,7 @@ void UILeaderboard_DrawRank(int32 id)
 
     drawPos.x -= 0x7A0000;
     if (!self->isUser[id] || !(UIControl->timer & 4)) {
+        int32 min, sec, ms;
         if (SceneInfo->inEditor) {
             drawPos.x += 0xE60000;
         }
@@ -406,7 +413,6 @@ void UILeaderboard_DrawRank(int32 id)
             drawPos.x += 0xB40000;
         }
 
-        int32 min, sec, ms;
         TimeAttackData_GetUnpackedTime(self->times[id], &min, &sec, &ms);
         drawPos.y -= 0x40000;
         UILeaderboard_DrawTime(min, sec, ms, drawPos.x, drawPos.y);
@@ -439,6 +445,7 @@ void UILeaderboard_State_Selected(void)
 
 void UILeaderboard_ProcessButtonCB(void)
 {
+    int32 end;
     RSDK_THIS(UILeaderboard);
 
 #if MANIA_USE_PLUS
@@ -454,7 +461,7 @@ void UILeaderboard_ProcessButtonCB(void)
     else if (UIControl->anyRightPress)
         newID += 5;
 
-    int32 end = avail.start + avail.length;
+    end = avail.start + avail.length;
     if (newID >= end)
         newID = end - 5;
     if (newID < avail.start)

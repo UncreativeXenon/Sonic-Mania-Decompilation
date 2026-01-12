@@ -75,6 +75,7 @@ void Bungee_Update(void)
                         && player->position.y >= self->position.y) {
                         if (abs(player->groundVel) > 0x20000 || player->velocity.y > 0x20000) {
                             if (player->state != Player_State_Static && !self->hasAttachedPlayer && !self->timer) {
+                                int32 velocity;
                                 self->stretchForce       = -0x2C00;
                                 self->timer              = 2;
                                 self->attachedPlayer    = player;
@@ -83,7 +84,7 @@ void Bungee_Update(void)
                                 self->hasAttachedPlayer = true;
                                 self->velocity.x         = 0;
 
-                                int32 velocity = player->onGround ? abs(player->groundVel) : player->velocity.y;
+                                velocity = player->onGround ? abs(player->groundVel) : player->velocity.y;
 
                                 self->velocity.y   = velocity >> 1;
                                 player->velocity.x = 0;
@@ -136,11 +137,12 @@ void Bungee_Draw(void)
     RSDK_THIS(Bungee);
 
     if (self->hasAttachedPlayer) {
+        int32 i;
         EntityPlayer *player = self->attachedPlayer;
         Vector2 drawPos      = self->startPos;
 
         int32 playerY = player->position.y;
-        for (int32 i = 0; i < 9; ++i) {
+        for (i = 0; i < 9; ++i) {
             int32 offset = i * ((playerY - 0x1A0000 - self->startPos.y) >> 3);
 
             drawPos.x = self->startPos.x & 0xFFFF0000;

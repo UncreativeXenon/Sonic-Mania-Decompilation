@@ -127,26 +127,30 @@ void BigSqueeze_HandleWallCollisions(void)
 {
     RSDK_THIS(BigSqueeze);
 
-    foreach_active(Player, player)
     {
-        int32 side = Player_CheckCollisionBox(player, self, &self->hitbox);
+        foreach_active(Player, player)
+        {
+            int32 side = Player_CheckCollisionBox(player, self, &self->hitbox);
 
-        if (side == C_RIGHT)
-            player->collisionFlagH |= 2;
-        else if (side == C_LEFT)
-            player->collisionFlagH |= 1;
+            if (side == C_RIGHT)
+                player->collisionFlagH |= 2;
+            else if (side == C_LEFT)
+                player->collisionFlagH |= 1;
+        }
     }
 
-    foreach_active(SignPost, signPost)
     {
-        if (signPost->state == SignPost_State_Falling) {
-            if (signPost->velocity.x >= 0) {
-                if (signPost->position.x > self->position.x + ((self->hitbox.left - 24) << 16) && signPost->position.x < self->position.x)
-                    signPost->velocity.x = -signPost->velocity.x;
-            }
-            else {
-                if (signPost->position.x < self->position.x + ((self->hitbox.right + 24) << 16) && signPost->position.x > self->position.x)
-                    signPost->velocity.x = -signPost->velocity.x;
+        foreach_active(SignPost, signPost)
+        {
+            if (signPost->state == SignPost_State_Falling) {
+                if (signPost->velocity.x >= 0) {
+                    if (signPost->position.x > self->position.x + ((self->hitbox.left - 24) << 16) && signPost->position.x < self->position.x)
+                        signPost->velocity.x = -signPost->velocity.x;
+                }
+                else {
+                    if (signPost->position.x < self->position.x + ((self->hitbox.right + 24) << 16) && signPost->position.x > self->position.x)
+                        signPost->velocity.x = -signPost->velocity.x;
+                }
             }
         }
     }
@@ -160,10 +164,12 @@ void BigSqueeze_CheckPlayerCollisions_Vulnerable(void)
         if (self->invincibilityTimer > 0)
             self->invincibilityTimer--;
 
-        foreach_active(Player, player)
         {
-            if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self))
-                BigSqueeze_Hit();
+            foreach_active(Player, player)
+            {
+                if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox) && Player_CheckBossHit(player, self))
+                    BigSqueeze_Hit();
+            }
         }
     }
 }
@@ -176,15 +182,17 @@ void BigSqueeze_CheckPlayerCollisions_Electrified(void)
         if (self->invincibilityTimer > 0)
             self->invincibilityTimer--;
 
-        foreach_active(Player, player)
         {
-            if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox)) {
-                if (player->invincibleTimer || player->blinkTimer > 0 || player->shield == SHIELD_LIGHTNING) {
-                    if (Player_CheckBossHit(player, self))
-                        BigSqueeze_Hit();
-                }
-                else {
-                    Player_Hurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (!self->invincibilityTimer && Player_CheckBadnikTouch(player, self, &self->hitbox)) {
+                    if (player->invincibleTimer || player->blinkTimer > 0 || player->shield == SHIELD_LIGHTNING) {
+                        if (Player_CheckBossHit(player, self))
+                            BigSqueeze_Hit();
+                    }
+                    else {
+                        Player_Hurt(player, self);
+                    }
                 }
             }
         }
@@ -196,6 +204,7 @@ void BigSqueeze_Hit(void)
     RSDK_THIS(BigSqueeze);
 
     if (--self->timer <= 0) {
+        EntityPlayer *player;
         foreach_active(BigSqueeze, boss)
         {
             if (boss->type == BIGSQUEEZE_CRUSHER_L || boss->type == BIGSQUEEZE_CRUSHER_R)
@@ -207,7 +216,7 @@ void BigSqueeze_Hit(void)
         self->state            = BigSqueeze_StateBoss_Destroyed;
         self->setupTimer       = 0;
         SceneInfo->timeEnabled = false;
-        EntityPlayer *player   = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player   = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         Player_GiveScore(player, 1000);
     }
     else {
@@ -238,15 +247,17 @@ void BigSqueeze_HandleBossMovement(void)
     if (BigSqueeze->crushTimer < 10)
         self->position.x += self->velocity.x;
 
-    foreach_active(BigSqueeze, boss)
     {
-        if (boss->type == BIGSQUEEZE_CRUSHER_L) {
-            if (self->position.x < boss->position.x + 0x340000 && self->velocity.x < 0)
-                self->velocity.x = -self->velocity.x;
-        }
-        else if (boss->type == BIGSQUEEZE_CRUSHER_R) {
-            if (self->position.x > boss->position.x - 0x340000 && self->velocity.x > 0)
-                self->velocity.x = -self->velocity.x;
+        foreach_active(BigSqueeze, boss)
+        {
+            if (boss->type == BIGSQUEEZE_CRUSHER_L) {
+                if (self->position.x < boss->position.x + 0x340000 && self->velocity.x < 0)
+                    self->velocity.x = -self->velocity.x;
+            }
+            else if (boss->type == BIGSQUEEZE_CRUSHER_R) {
+                if (self->position.x > boss->position.x - 0x340000 && self->velocity.x > 0)
+                    self->velocity.x = -self->velocity.x;
+            }
         }
     }
 
@@ -264,10 +275,11 @@ void BigSqueeze_SpawnDebris(int32 *debrisInfo)
 {
     RSDK_THIS(BigSqueeze);
     if (debrisInfo) {
+        int32 i;
         int32 count = debrisInfo[0];
         debrisInfo++;
 
-        for (int32 i = 0; i < count; ++i) {
+        for (i = 0; i < count; ++i) {
             EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
 
             RSDK.SetSpriteAnimation(BigSqueeze->aniFrames, 6, &debris->animator, true, debrisInfo[0]);
@@ -330,13 +342,17 @@ void BigSqueeze_StateManager_SetupIntro(void)
 
     if (++self->setupTimer >= 8) {
         self->setupTimer = 0;
-        foreach_all(CollapsingPlatform, platform)
         {
-            platform->collapseDelay = 1;
-            platform->active        = ACTIVE_NEVER;
+            foreach_all(CollapsingPlatform, platform)
+            {
+                platform->collapseDelay = 1;
+                platform->active        = ACTIVE_NEVER;
+            }
         }
 
-        foreach_active(Eggman, eggman) { eggman->direction = FLIP_X; }
+        {
+            foreach_active(Eggman, eggman) { eggman->direction = FLIP_X; }
+        }
 
         Zone->playerBoundActiveL[0] = true;
         Zone->playerBoundActiveR[0] = true;
@@ -351,8 +367,9 @@ void BigSqueeze_StateManager_SetupEggman(void)
     RSDK_THIS(BigSqueeze);
 
     if (self->setupTimer) {
+        EntityEggman *eggmanPtr;
         self->setupTimer++;
-        EntityEggman *eggmanPtr = self->eggman;
+        eggmanPtr = self->eggman;
 
         if (self->setupTimer == 104)
             RSDK.SetSpriteAnimation(Eggman->aniFrames, 5, &eggmanPtr->animator, true, 0);
@@ -372,14 +389,18 @@ void BigSqueeze_StateManager_SetupEggman(void)
             Music_TransitionTrack(TRACK_MINIBOSS, 0.0125);
             ++self->setupTimer;
 
-            foreach_active(LightBarrier, barrier) { barrier->enabled = true; }
-
-            foreach_active(Eggman, eggman)
             {
-                self->eggman = eggman;
-                RSDK.SetSpriteAnimation(Eggman->aniFrames, 2, &eggman->animator, true, 0);
-                eggman->state  = Eggman_State_ProcessThenSet;
-                eggman->animID = 0;
+                foreach_active(LightBarrier, barrier) { barrier->enabled = true; }
+            }
+
+            {
+                foreach_active(Eggman, eggman)
+                {
+                    self->eggman = eggman;
+                    RSDK.SetSpriteAnimation(Eggman->aniFrames, 2, &eggman->animator, true, 0);
+                    eggman->state  = Eggman_State_ProcessThenSet;
+                    eggman->animID = 0;
+                }
             }
         }
     }
@@ -516,13 +537,15 @@ void BigSqueeze_StateBoss_Destroyed(void)
                 self->setupTimer = 0;
                 self->visible    = false;
                 self->state      = BigSqueeze_StateBoss_DropSignPost;
-                foreach_active(FBZTrash, trash)
                 {
-                    if (trash->state != FBZTrash_State_LooseTrash) {
-                        CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), trash->position.x, trash->position.y)->drawGroup =
-                            Zone->objectDrawGroup[1];
-                        RSDK.PlaySfx(Explosion->sfxDestroy, false, 255);
-                        destroyEntity(trash);
+                    foreach_active(FBZTrash, trash)
+                    {
+                        if (trash->state != FBZTrash_State_LooseTrash) {
+                            CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), trash->position.x, trash->position.y)->drawGroup =
+                                Zone->objectDrawGroup[1];
+                            RSDK.PlaySfx(Explosion->sfxDestroy, false, 255);
+                            destroyEntity(trash);
+                        }
                     }
                 }
                 break;
@@ -564,29 +587,33 @@ void BigSqueeze_StateManager_HandleBoss(void)
 
     self->position.y = BigSqueeze->boundsB;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionPlatform(player, self, &self->hitbox)) {
-            if (abs(player->groundVel) > 0x20000 && !(Zone->timer & 7)) {
-                int32 x              = player->position.x + RSDK.Rand(-0x40000, 0x40000);
-                int32 y              = player->position.y + 0x40000 + RSDK.Rand(-0x40000, 0x40000);
-                EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, x, y);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionPlatform(player, self, &self->hitbox)) {
+                if (abs(player->groundVel) > 0x20000 && !(Zone->timer & 7)) {
+                    int32 x              = player->position.x + RSDK.Rand(-0x40000, 0x40000);
+                    int32 y              = player->position.y + 0x40000 + RSDK.Rand(-0x40000, 0x40000);
+                    EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, x, y);
 
-                RSDK.SetSpriteAnimation(FBZTrash->aniFrames, RSDK.Rand(0, 2) + 9, &debris->animator, false, 0);
-                debris->velocity.x      = RSDK.Rand(-0x20000, 0x20000);
-                debris->velocity.y      = -0x20000;
-                debris->gravityStrength = 0x3800;
-                debris->drawGroup       = Zone->objectDrawGroup[0];
-                debris->updateRange.x   = 0x200000;
-                debris->updateRange.y   = 0x200000;
+                    RSDK.SetSpriteAnimation(FBZTrash->aniFrames, RSDK.Rand(0, 2) + 9, &debris->animator, false, 0);
+                    debris->velocity.x      = RSDK.Rand(-0x20000, 0x20000);
+                    debris->velocity.y      = -0x20000;
+                    debris->gravityStrength = 0x3800;
+                    debris->drawGroup       = Zone->objectDrawGroup[0];
+                    debris->updateRange.x   = 0x200000;
+                    debris->updateRange.y   = 0x200000;
+                }
             }
         }
     }
 
-    foreach_active(FBZSinkTrash, sinkTrash)
     {
-        sinkTrash->position.y = BigSqueeze->boundsB + (sinkTrash->size.y >> 1);
-        sinkTrash->size.x     = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
+        foreach_active(FBZSinkTrash, sinkTrash)
+        {
+            sinkTrash->position.y = BigSqueeze->boundsB + (sinkTrash->size.y >> 1);
+            sinkTrash->size.x     = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
+        }
     }
 }
 

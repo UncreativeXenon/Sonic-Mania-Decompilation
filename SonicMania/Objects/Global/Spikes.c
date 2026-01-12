@@ -88,12 +88,13 @@ void Spikes_Update(void)
 
                     uint8 side = Player_CheckCollisionBox(player, self, &self->hitbox);
                     if (side) {
+                        bool32 shouldShatter;
                         if (Ice && player->shield == SHIELD_FIRE && player->invincibleTimer <= 0 && !Press && !self->shatterTimer) {
                             Ice_ShatterGenerator(8, 16, 16, 0, 0, false);
                             self->shatterTimer = 15;
                         }
 
-                        bool32 shouldShatter = false;
+                        shouldShatter = false;
                         if (side == C_BOTTOM) {
                             player->collisionFlagV |= 2;
                             shouldShatter = false;
@@ -326,11 +327,12 @@ void Spikes_Create(void *data)
         self->count = 2;
 
     if (!SceneInfo->inEditor) {
+        int32 dir;
         if (data)
             self->type = VOID_TO_INT(data);
 
         self->active  = ACTIVE_BOUNDS;
-        int32 dir     = self->type & 1;
+        dir     = self->type & 1;
         self->visible = true;
         self->type    = (self->type >> 1) & 1;
         if (self->planeFilter > 0 && ((uint8)self->planeFilter - 1) & 2)

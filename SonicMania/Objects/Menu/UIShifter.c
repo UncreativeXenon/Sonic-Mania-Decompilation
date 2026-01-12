@@ -59,6 +59,7 @@ void UIShifter_StageLoad(void) {}
 
 void UIShifter_HandleShift(void)
 {
+    int32 i;
     RSDK_THIS(UIShifter);
 
     int32 shiftX = -self->shift.x;
@@ -66,7 +67,7 @@ void UIShifter_HandleShift(void)
     int32 x      = self->startPos.x + (self->shiftOffset.x & 0xFFFF0000);
     int32 y      = self->startPos.y + (self->shiftOffset.y & 0xFFFF0000);
 
-    for (int32 i = 0; i < self->parent->buttonCount; ++i) {
+    for (i = 0; i < self->parent->buttonCount; ++i) {
         self->parent->buttons[i]->position.x = x;
         self->parent->buttons[i]->position.y = y;
         x += shiftX;

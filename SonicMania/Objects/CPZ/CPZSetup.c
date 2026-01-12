@@ -53,6 +53,7 @@ void CPZSetup_Create(void *data) {}
 
 void CPZSetup_StageLoad(void)
 {
+    int32 i;
     CPZSetup->aniTiles = RSDK.LoadSpriteSheet("CPZ/Objects.gif", SCOPE_STAGE);
 
     RSDK.SetDrawGroupProperties(0, 0, Water_DrawHook_ApplyWaterPalette);
@@ -64,14 +65,14 @@ void CPZSetup_StageLoad(void)
     CPZSetup->chemLiquidPalIndex3 = 2;
 
     CPZSetup->background = RSDK.GetTileLayer(0);
-    for (int32 i = 0; i < 0x400; ++i) {
+    for (i = 0; i < 0x400; ++i) {
         CPZSetup->background->deformationData[i] = CPZSetup->deformation[i & 0x3F];
     }
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreCPZ.act", 0b0000000011111111);
-        RSDK.LoadPalette(2, "EncoreCPZw.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreCPZ.act", 0x00FF);
+        RSDK.LoadPalette(2, "EncoreCPZw.act", 0x00FF);
         RSDK.CopyPalette(0, 128, 1, 0, 10);
     }
 #endif
@@ -80,6 +81,7 @@ void CPZSetup_StageLoad(void)
     Animals->animalTypes[1] = ANIMAL_POCKY;
 
     if (Zone->actID) {
+        bool32 setCPZ1BG;
         RSDK.SetPaletteMask(0x00F000);
         RSDK.SetPaletteEntry(0, 0xFF, 0x00F000);
 
@@ -91,7 +93,7 @@ void CPZSetup_StageLoad(void)
         BGSwitch->layerIDs[2] = CPZ_BG_CPZ1;
         BGSwitch->layerIDs[3] = CPZ_BG_CPZ1;
 
-        bool32 setCPZ1BG = false;
+        setCPZ1BG = false;
         if (!CutsceneRules_CheckStageReload() && CutsceneRules_CheckPlayerPos(TO_FIXED(172), TO_FIXED(6288), TO_FIXED(598), TO_FIXED(6528))) {
             setCPZ1BG = true;
 
@@ -117,6 +119,8 @@ void CPZSetup_StageLoad(void)
 
         BGSwitch->screenID = 0;
         if (setCPZ1BG) {
+            TileLayer *backgroundAct1;
+            int32 i;
             for (; BGSwitch->screenID < RSDK.GetVideoSetting(VIDEOSETTING_SCREENCOUNT); BGSwitch->screenID++) CPZSetup_BGSwitch_Act1BG();
 
             BGSwitch->layerIDs[0] = CPZ_BG_CPZ1;
@@ -124,10 +128,10 @@ void CPZSetup_StageLoad(void)
             BGSwitch->layerIDs[2] = CPZ_BG_CPZ1;
             BGSwitch->layerIDs[3] = CPZ_BG_CPZ1;
 
-            TileLayer *backgroundAct1 = RSDK.GetTileLayer(3);
+            backgroundAct1 = RSDK.GetTileLayer(3);
 
             backgroundAct1->scrollPos += -0x118000 * backgroundAct1->parallaxFactor;
-            for (int32 i = 0; i < backgroundAct1->scrollInfoCount; ++i)
+            for (i = 0; i < backgroundAct1->scrollInfoCount; ++i)
                 backgroundAct1->scrollInfo[i].scrollPos += TO_FIXED(71) * backgroundAct1->scrollInfo[i].parallaxFactor;
         }
         else {

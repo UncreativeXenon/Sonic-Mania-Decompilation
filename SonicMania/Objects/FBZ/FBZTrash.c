@@ -66,12 +66,13 @@ void FBZTrash_StageLoad(void) { FBZTrash->aniFrames = RSDK.LoadSpriteAnimation("
 
 void FBZTrash_SummonOrbinautOrbs(EntityFBZTrash *trashPtr, int32 angle)
 {
+    int32 size;
     EntityFBZTrash *trash = CREATE_ENTITY(FBZTrash, INT_TO_VOID(FBZTRASH_ORB), trashPtr->position.x, trashPtr->position.y);
 
     trash->position.x += RSDK.Cos1024(angle) << 10;
     trash->position.y += RSDK.Sin1024(angle) << 10;
     trash->targetPos  = trash->position;
-    int32 size        = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
+    size        = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
     trash->position.x = (RSDK.Rand(0, size >> 16) << 16) + BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
     trash->position.y = BigSqueeze->boundsB - 0x80000;
     trash->parent     = trashPtr;
@@ -85,12 +86,13 @@ void FBZTrash_SummonOrbinautOrbs(EntityFBZTrash *trashPtr, int32 angle)
 
 void FBZTrash_SummonOrbinaut(int32 x, int32 y)
 {
+    int32 size;
     EntityFBZTrash *trash = CREATE_ENTITY(FBZTrash, INT_TO_VOID(FBZTRASH_ORBINAUT), x, y);
     FBZTrash_SummonOrbinautOrbs(trash, 0);
     FBZTrash_SummonOrbinautOrbs(trash, 512);
 
     trash->targetPos  = trash->position;
-    int32 size        = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
+    size        = BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_R] - BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
     trash->position.x = (RSDK.Rand(0, size >> 16) << 16) + BigSqueeze->crusherX[BIGSQUEEZE_CRUSHER_L];
     trash->position.y = BigSqueeze->boundsB - 0x80000;
     trash->state      = FBZTrash_State_ReactMagnet;
@@ -139,39 +141,41 @@ void FBZTrash_State_LooseTrash(void)
     if (self->position.y < BigSqueeze->boundsB - 0xC0000)
         self->position.y = BigSqueeze->boundsB - 0xC0000;
 
-    foreach_active(BigSqueeze, boss)
     {
-        switch (boss->type) {
-            default: break;
+        foreach_active(BigSqueeze, boss)
+        {
+            switch (boss->type) {
+                default: break;
 
-            case BIGSQUEEZE_BOSS:
-                if (self->position.y > boss->position.y + 0xC00000) {
-                    self->position.y = boss->position.y + 0xC00000;
-                    self->velocity.y = -abs(self->velocity.y >> 1);
-                }
-                break;
-
-            case BIGSQUEEZE_CRUSHER_L:
-                if (self->position.x < boss->position.x + 0x180000) {
-                    self->position.x = boss->position.x + 0x180000;
-                    self->velocity.x = 5 * boss->velocity.x;
-                    if (self->onGround && BigSqueeze->isCrushing) {
-                        self->rumbleMove = 128;
-                        self->onGround   = false;
+                case BIGSQUEEZE_BOSS:
+                    if (self->position.y > boss->position.y + 0xC00000) {
+                        self->position.y = boss->position.y + 0xC00000;
+                        self->velocity.y = -abs(self->velocity.y >> 1);
                     }
-                }
-                break;
+                    break;
 
-            case BIGSQUEEZE_CRUSHER_R:
-                if (self->position.x > boss->position.x - 0x180000) {
-                    self->position.x = boss->position.x - 0x180000;
-                    self->velocity.x = 5 * boss->velocity.x;
-                    if (self->onGround && BigSqueeze->isCrushing) {
-                        self->rumbleMove = 128;
-                        self->onGround   = false;
+                case BIGSQUEEZE_CRUSHER_L:
+                    if (self->position.x < boss->position.x + 0x180000) {
+                        self->position.x = boss->position.x + 0x180000;
+                        self->velocity.x = 5 * boss->velocity.x;
+                        if (self->onGround && BigSqueeze->isCrushing) {
+                            self->rumbleMove = 128;
+                            self->onGround   = false;
+                        }
                     }
-                }
-                break;
+                    break;
+
+                case BIGSQUEEZE_CRUSHER_R:
+                    if (self->position.x > boss->position.x - 0x180000) {
+                        self->position.x = boss->position.x - 0x180000;
+                        self->velocity.x = 5 * boss->velocity.x;
+                        if (self->onGround && BigSqueeze->isCrushing) {
+                            self->rumbleMove = 128;
+                            self->onGround   = false;
+                        }
+                    }
+                    break;
+            }
         }
     }
 }
@@ -258,15 +262,17 @@ void FBZTrash_State_OrbinautMove(void)
     self->position.x -= self->velocity.x;
     self->position.y -= self->velocity.y;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox) && Player_CheckBadnikBreak(player, self, true)) {
-            foreach_all(Animals, animals) { destroyEntity(animals); }
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox) && Player_CheckBadnikBreak(player, self, true)) {
+                foreach_all(Animals, animals) { destroyEntity(animals); }
 
 #if MANIA_USE_PLUS
-            if (player->state != Player_State_MightyHammerDrop)
-                player->velocity.y = -0x40000;
+                if (player->state != Player_State_MightyHammerDrop)
+                    player->velocity.y = -0x40000;
 #endif
+            }
         }
     }
 }

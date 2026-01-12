@@ -11,6 +11,7 @@ ObjectJunctionWheel *JunctionWheel;
 
 void JunctionWheel_Update(void)
 {
+    int32 direction;
     RSDK_THIS(JunctionWheel);
 
     if (RSDK_GET_ENTITY((SceneInfo->entitySlot - 1), Button)->currentlyActive)
@@ -23,83 +24,52 @@ void JunctionWheel_Update(void)
 
     self->rotation &= 0x1FF;
 
-    int32 direction = ((self->rotation + 48) >> 6) & 7;
+    direction = ((self->rotation + 48) >> 6) & 7;
 
-    foreach_active(Player, player)
-    {
-        if (player->state == Player_State_Static) {
-            if (Player_CheckCollisionTouch(player, self, &JunctionWheel->hitboxWheelRange)) {
-                player->position.x = player->groundVel * RSDK.Cos512(self->rotation) + self->position.x;
-                player->position.y = player->groundVel * RSDK.Sin512(self->rotation) + self->position.y;
+{
+        foreach_active(Player, player)
+        {
+            if (player->state == Player_State_Static) {
+                if (Player_CheckCollisionTouch(player, self, &JunctionWheel->hitboxWheelRange)) {
+                    player->position.x = player->groundVel * RSDK.Cos512(self->rotation) + self->position.x;
+                    player->position.y = player->groundVel * RSDK.Sin512(self->rotation) + self->position.y;
 
-                if (player->groundVel < -0x1000)
-                    player->groundVel += 0x200;
+                    if (player->groundVel < -0x1000)
+                        player->groundVel += 0x200;
 
-                if (player->groundVel == -0x1000) {
-                    if (self->rotation == 0x180) {
-                        player->state          = Player_State_Air;
-                        player->tileCollisions = TILECOLLISION_DOWN;
-                        player->groundVel      = 0;
-                        player->velocity.x     = 0;
-                        player->velocity.y     = 0x80000;
-                        player->onGround       = false;
-                        RSDK.PlaySfx(Player->sfxRelease, false, 255);
-                    }
+                    if (player->groundVel == -0x1000) {
+                        if (self->rotation == 0x180) {
+                            player->state          = Player_State_Air;
+                            player->tileCollisions = TILECOLLISION_DOWN;
+                            player->groundVel      = 0;
+                            player->velocity.x     = 0;
+                            player->velocity.y     = 0x80000;
+                            player->onGround       = false;
+                            RSDK.PlaySfx(Player->sfxRelease, false, 255);
+                        }
 
-                    if (self->spinDir == 1 && self->rotation == 0x11C) {
-                        player->state          = Player_State_Air;
-                        player->tileCollisions = TILECOLLISION_DOWN;
-                        player->groundVel      = 0x80000;
-                        player->velocity.x     = 0x80000;
-                        player->velocity.y     = 0x40000;
-                        player->onGround       = false;
-                        RSDK.PlaySfx(Player->sfxRelease, false, 255);
+                        if (self->spinDir == 1 && self->rotation == 0x11C) {
+                            player->state          = Player_State_Air;
+                            player->tileCollisions = TILECOLLISION_DOWN;
+                            player->groundVel      = 0x80000;
+                            player->velocity.x     = 0x80000;
+                            player->velocity.y     = 0x40000;
+                            player->onGround       = false;
+                            RSDK.PlaySfx(Player->sfxRelease, false, 255);
+                        }
                     }
                 }
             }
-        }
-        else {
-            switch (direction) {
-                case 1:
-                    Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidR);
+            else {
+                switch (direction) {
+                    case 1:
+                        Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidR);
 
-                    if (Player_CheckCollisionTouch(player, self, &JunctionWheel->hitboxEntryR)) {
-                        player->state = Player_State_Static;
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                        player->onGround  = false;
-                        player->groundVel = -0x1C00;
-
-                        player->tileCollisions  = TILECOLLISION_NONE;
-                        player->nextAirState    = StateMachine_None;
-                        player->nextGroundState = StateMachine_None;
-                        player->velocity.x      = 0;
-                        player->velocity.y      = 0;
-                        RSDK.PlaySfx(Player->sfxRoll, false, 255);
-                    }
-                    break;
-
-                case 0:
-                case 2:
-                case 3:
-                case 4:
-                case 6:
-                case 7:
-                    if (player->position.y < self->position.y)
-                        Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidL);
-
-                    Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidR);
-                    break;
-
-                case 5:
-                    if (player->velocity.x <= 0) {
-                        Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidL);
-
-                        if (Player_CheckCollisionTouch(player, self, &JunctionWheel->hitboxEntryL)) {
+                        if (Player_CheckCollisionTouch(player, self, &JunctionWheel->hitboxEntryR)) {
                             player->state = Player_State_Static;
                             RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-
                             player->onGround  = false;
-                            player->groundVel = -0x1800;
+                            player->groundVel = -0x1C00;
 
                             player->tileCollisions  = TILECOLLISION_NONE;
                             player->nextAirState    = StateMachine_None;
@@ -108,12 +78,45 @@ void JunctionWheel_Update(void)
                             player->velocity.y      = 0;
                             RSDK.PlaySfx(Player->sfxRoll, false, 255);
                         }
-                    }
-                    break;
-            }
+                        break;
 
-            if (player->velocity.y < 0 || (player->onGround && player->collisionMode))
-                Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidB);
+                    case 0:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 6:
+                    case 7:
+                        if (player->position.y < self->position.y)
+                            Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidL);
+
+                        Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidR);
+                        break;
+
+                    case 5:
+                        if (player->velocity.x <= 0) {
+                            Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidL);
+
+                            if (Player_CheckCollisionTouch(player, self, &JunctionWheel->hitboxEntryL)) {
+                                player->state = Player_State_Static;
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+
+                                player->onGround  = false;
+                                player->groundVel = -0x1800;
+
+                                player->tileCollisions  = TILECOLLISION_NONE;
+                                player->nextAirState    = StateMachine_None;
+                                player->nextGroundState = StateMachine_None;
+                                player->velocity.x      = 0;
+                                player->velocity.y      = 0;
+                                RSDK.PlaySfx(Player->sfxRoll, false, 255);
+                            }
+                        }
+                        break;
+                }
+
+                if (player->velocity.y < 0 || (player->onGround && player->collisionMode))
+                    Player_CheckCollisionBox(player, self, &JunctionWheel->hitboxSolidB);
+            }
         }
     }
 }

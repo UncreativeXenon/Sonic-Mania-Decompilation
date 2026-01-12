@@ -22,6 +22,7 @@ void SpecialClear_StaticUpdate(void) {}
 
 void SpecialClear_Draw(void)
 {
+    int32 i;
     RSDK_THIS(SpecialClear);
 
     Vector2 vertPos[4];
@@ -31,7 +32,7 @@ void SpecialClear_Draw(void)
     drawPos.x     = centerX - 0x600000;
 
     // Draw Emeralds
-    for (int32 i = 0; i < 7; ++i) {
+    for (i = 0; i < 7; ++i) {
         int32 frame = 7;
         if (SaveGame_GetEmerald(i))
             frame = i;
@@ -221,6 +222,7 @@ void SpecialClear_Create(void *data)
     RSDK_THIS(SpecialClear);
 
     if (!SceneInfo->inEditor) {
+        int32 i;
         self->active    = ACTIVE_NORMAL;
         self->visible   = true;
         self->drawGroup = 14;
@@ -241,6 +243,7 @@ void SpecialClear_Create(void *data)
             self->messageType = SC_MSG_SPECIALCLEAR;
         }
         else {
+            SaveRAM *saveRAM;
             RSDK.CopyPalette(7, 0, 0, 0, 128);
 
             self->isBSS     = false;
@@ -250,7 +253,7 @@ void SpecialClear_Create(void *data)
             if (globals->gameMode < MODE_TIMEATTACK && self->machBonus + self->ringBonus >= 10000)
                 self->hasContinues = true;
 
-            SaveRAM *saveRAM = SaveGame_GetSaveRAM();
+            saveRAM = SaveGame_GetSaveRAM();
             self->score      = saveRAM->score;
             self->score1UP   = saveRAM->score1UP;
             self->lives      = saveRAM->lives;
@@ -285,7 +288,7 @@ void SpecialClear_Create(void *data)
 
         RSDK.CopyPalette(1, 0, 0, 128, 48);
 
-        for (int32 i = 0; i < 7; ++i) {
+        for (i = 0; i < 7; ++i) {
             self->emeraldPositions[i] = 0x1100000 + (i * 0x200000);
             self->emeraldSpeeds[i]    = -0xA0000 + (i * -0xA000);
         }
@@ -351,6 +354,7 @@ void SpecialClear_StageLoad(void)
 
 void SpecialClear_DrawNumbers(Vector2 *pos, int32 value)
 {
+    int32 digit;
     RSDK_THIS(SpecialClear);
 
     int32 cnt = value;
@@ -361,7 +365,7 @@ void SpecialClear_DrawNumbers(Vector2 *pos, int32 value)
         cnt /= 10;
     }
 
-    int32 digit = 1;
+    digit = 1;
     while (digitCount) {
         self->numbersAnimator.frameID = value / digit % 10;
         RSDK.DrawSprite(&self->numbersAnimator, pos, true);
@@ -461,11 +465,12 @@ void SpecialClear_State_AdjustText(void)
 
 void SpecialClear_HandleEmeraldAppear(void)
 {
+    int32 i;
     RSDK_THIS(SpecialClear);
 
     int32 stopPos = self->messageType == SC_MSG_SPECIALCLEAR ? 0x680000 : 0x700000;
 
-    for (int32 i = 0; i < 7; ++i) {
+    for (i = 0; i < 7; ++i) {
         self->emeraldSpeeds[i] += 0x4000;
         self->emeraldPositions[i] += self->emeraldSpeeds[i];
 
@@ -578,9 +583,10 @@ void SpecialClear_State_ShowTotalScore_Continues(void)
     }
 
     if (self->timer == 360) {
+        SaveRAM *saveRAM;
         self->timer = 0;
 
-        SaveRAM *saveRAM      = SaveGame_GetSaveRAM();
+        saveRAM      = SaveGame_GetSaveRAM();
         saveRAM->score        = self->score;
         globals->restartScore = self->score;
         saveRAM->score1UP     = self->score1UP;
@@ -610,8 +616,9 @@ void SpecialClear_State_ShowTotalScore_NoContinues(void)
     RSDK_THIS(SpecialClear);
 
     if (++self->timer == 120) {
+        SaveRAM *saveRAM;
         self->timer           = 0;
-        SaveRAM *saveRAM      = SaveGame_GetSaveRAM();
+        saveRAM      = SaveGame_GetSaveRAM();
         saveRAM->score        = self->score;
         globals->restartScore = self->score;
 

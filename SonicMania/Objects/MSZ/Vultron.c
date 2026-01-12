@@ -114,15 +114,17 @@ void Vultron_CheckPlayerCollisions(void)
     if (self->direction == FLIP_X)
         left = -left;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckBadnikTouch(player, self, hitbox)) {
-            self->position.x += left;
-            self->position.y += top;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, hitbox)) {
+                self->position.x += left;
+                self->position.y += top;
 
-            if (!Player_CheckBadnikBreak(player, self, true)) {
-                self->position.x -= left;
-                self->position.y -= top;
+                if (!Player_CheckBadnikBreak(player, self, true)) {
+                    self->position.x -= left;
+                    self->position.y -= top;
+                }
             }
         }
     }
@@ -288,14 +290,16 @@ void Vultron_State_PrepareDive(void)
 
 void Vultron_State_Targeting(void)
 {
+    int32 angle;
+    int32 rot;
     RSDK_THIS(Vultron);
 
     EntityPlayer *targetPlayer = Player_GetNearestPlayerX();
 
     RSDK.ProcessAnimation(&self->flameAnimator);
 
-    int32 angle = RSDK.ATan2((targetPlayer->position.x - self->position.x) >> 16, (targetPlayer->position.y - self->position.y) >> 16);
-    int32 rot   = (angle << 1) - self->rotation;
+    angle = RSDK.ATan2((targetPlayer->position.x - self->position.x) >> 16, (targetPlayer->position.y - self->position.y) >> 16);
+    rot   = (angle << 1) - self->rotation;
 
     if (abs(2 * angle - self->rotation) >= abs(rot - 0x200)) {
         if (abs(rot - 0x200) < abs(rot + 0x200))
@@ -314,10 +318,12 @@ void Vultron_State_Targeting(void)
     self->position.x += RSDK.Cos512(self->rotation) << 9;
     self->position.y += RSDK.Sin512(self->rotation) << 9;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckBadnikTouch(player, self, &self->hitboxBadnik))
-            Player_CheckBadnikBreak(player, self, true);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &self->hitboxBadnik))
+                Player_CheckBadnikBreak(player, self, true);
+        }
     }
 }
 

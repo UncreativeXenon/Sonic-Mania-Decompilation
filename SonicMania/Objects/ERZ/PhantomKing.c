@@ -141,10 +141,12 @@ void PhantomKing_Hit(void)
         self->velocity.y  = -0x10000;
         self->timer       = 0;
 
-        foreach_active(PKingAttack, attack)
         {
-            if (attack->state == PKingAttack_State_Orbiting)
-                destroyEntity(attack);
+            foreach_active(PKingAttack, attack)
+            {
+                if (attack->state == PKingAttack_State_Orbiting)
+                    destroyEntity(attack);
+            }
         }
 
         if (KleptoMobile->defeated)
@@ -176,6 +178,11 @@ void PhantomKing_Explode(void)
 
 void PhantomKing_HandleFrames(void)
 {
+    int32 negAng;
+    int32 x;
+    int32 y;
+    int32 angle;
+    int32 i;
     RSDK_THIS(PhantomKing);
 
     RSDK.ProcessAnimation(&self->bodyAnimator);
@@ -197,15 +204,15 @@ void PhantomKing_HandleFrames(void)
         }
     }
 
-    int32 negAng    = -self->rotation;
+    negAng    = -self->rotation;
     self->bodyAngle = (self->bodyAngle + 12) & 0x3FF;
 
-    int32 x = 0x1C00 * RSDK.Sin512(negAng) + self->position.x;
-    int32 y = 0x1C00 * RSDK.Cos512(negAng) + self->position.y;
+    x = 0x1C00 * RSDK.Sin512(negAng) + self->position.x;
+    y = 0x1C00 * RSDK.Cos512(negAng) + self->position.y;
 
-    int32 angle = self->bodyAngle;
+    angle = self->bodyAngle;
 
-    for (int32 i = 0; i < 10; i += 2) {
+    for (i = 0; i < 10; i += 2) {
         self->armPositions[i].x = x + 2 * RSDK.Cos512(self->rotation) * RSDK.Cos1024(angle);
         self->armPositions[i].y = y + 2 * RSDK.Sin512(self->rotation) * RSDK.Cos1024(angle);
         self->armAngles[i]      = angle & 0x3FF;
@@ -235,30 +242,36 @@ void PhantomKing_HandleFrames(void)
 
 void PhantomKing_HandleAttacks(void)
 {
+    EntityPlayer *player;
+    bool32 launchedAttack;
     RSDK_THIS(PhantomKing);
 
-    EntityPlayer *player  = Player_GetNearestPlayer();
-    bool32 launchedAttack = false;
+    player  = Player_GetNearestPlayer();
+    launchedAttack = false;
 
-    foreach_active(PKingAttack, attack)
     {
-        if (attack->state == PKingAttack_State_Orbiting) {
-            PhantomRuby_PlaySfx(RSDK.Rand(RUBYSFX_ATTACK1, RUBYSFX_REDCUBE));
-            attack->type = PKINGATTACK_LAUNCHED;
-            int32 angle  = RSDK.ATan2((player->position.x - attack->position.x) >> 16, (player->position.y - attack->position.y) >> 16);
+        foreach_active(PKingAttack, attack)
+        {
+            if (attack->state == PKingAttack_State_Orbiting) {
+                int32 angle;
+                PhantomRuby_PlaySfx(RSDK.Rand(RUBYSFX_ATTACK1, RUBYSFX_REDCUBE));
+                attack->type = PKINGATTACK_LAUNCHED;
+                angle        = RSDK.ATan2((player->position.x - attack->position.x) >> 16, (player->position.y - attack->position.y) >> 16);
 
-            attack->targetVelocity.x = 0x600 * RSDK.Cos256(angle);
-            attack->targetVelocity.y = 0x600 * RSDK.Sin256(angle);
-            attack->drawGroup        = Zone->objectDrawGroup[0];
-            attack->state            = PKingAttack_State_OrbitLaunched;
-            launchedAttack           = true;
-            foreach_break;
+                attack->targetVelocity.x = 0x600 * RSDK.Cos256(angle);
+                attack->targetVelocity.y = 0x600 * RSDK.Sin256(angle);
+                attack->drawGroup        = Zone->objectDrawGroup[0];
+                attack->state            = PKingAttack_State_OrbitLaunched;
+                launchedAttack           = true;
+                foreach_break;
+            }
         }
     }
 
     if (!launchedAttack) {
         // No More Attacks, lets make more
-        for (int32 i = 0; i < 0x3FC; i += 0xAA) {
+        int32 i;
+        for (i = 0; i < 0x3FC; i += 0xAA) {
             EntityPKingAttack *attackOrb = CREATE_ENTITY(PKingAttack, INT_TO_VOID(PKINGATTACK_ORBIT), self->position.x, self->position.y);
             attackOrb->angle             = i;
             attackOrb->target            = (Entity *)self;
@@ -294,22 +307,26 @@ void PhantomKing_SwitchToEggman(void)
         }
     }
 
-    foreach_active(KleptoMobile, eggmanArm)
     {
-        if (eggmanArm->type != KLEPTOMOBILE_EGGMAN) {
-            eggmanArm->position.x = eggmanPtr->position.x;
-            eggmanArm->position.y = eggmanPtr->position.y;
+        foreach_active(KleptoMobile, eggmanArm)
+        {
+            if (eggmanArm->type != KLEPTOMOBILE_EGGMAN) {
+                int32 i;
+                eggmanArm->position.x = eggmanPtr->position.x;
+                eggmanArm->position.y = eggmanPtr->position.y;
 
-            for (int32 i = 0; i < 10; ++i) eggmanArm->armPositions[i] = eggmanPtr->position;
+                for (i = 0; i < 10; ++i) eggmanArm->armPositions[i] = eggmanPtr->position;
 
-            eggmanArm->velocity.x = 0;
-            eggmanArm->velocity.y = 0;
+                eggmanArm->velocity.x = 0;
+                eggmanArm->velocity.y = 0;
+            }
         }
     }
 }
 
 void PhantomKing_SetupKing(EntityPhantomKing *king)
 {
+    int32 slot; 
     king->originPos  = king->position;
     king->velocity.x = 0;
     king->drawRuby   = true;
@@ -320,7 +337,7 @@ void PhantomKing_SetupKing(EntityPhantomKing *king)
     PhantomKing->boundsT = (Zone->cameraBoundsT[0] + 48) << 16;
     PhantomKing->boundsB = (Zone->cameraBoundsB[0] - 96) << 16;
 
-    int32 slot                                    = RSDK.GetEntitySlot(king);
+    slot = RSDK.GetEntitySlot(king);
     RSDK_GET_ENTITY(slot - 1, PhantomKing)->state = PhantomKing_StateArm_Idle;
     RSDK_GET_ENTITY(slot + 1, PhantomKing)->state = PhantomKing_StateArm_Idle;
     king->state                                   = PhantomKing_State_FlyAround;
@@ -328,6 +345,7 @@ void PhantomKing_SetupKing(EntityPhantomKing *king)
 
 void PhantomKing_Draw_Body(void)
 {
+    int32 i; 
     RSDK_THIS(PhantomKing);
 
     if (self->typeChangeTimer <= 0) {
@@ -342,7 +360,7 @@ void PhantomKing_Draw_Body(void)
     RSDK.DrawSprite(&self->headAnimator, NULL, false);
     RSDK.DrawSprite(&self->bodyAnimator, NULL, false);
 
-    for (int32 i = 0; i < 10; ++i) {
+    for (i = 0; i < 10; ++i) {
         if (self->armAngles[i] < 0x200) {
             self->particleAnimator.frameID = self->armAngles[i] / 42 % 6;
             RSDK.DrawSprite(&self->particleAnimator, &self->armPositions[i], false);
@@ -353,7 +371,7 @@ void PhantomKing_Draw_Body(void)
     RSDK.DrawSprite(&self->beltAnimator, NULL, false);
     self->drawFX = self->storeDrawFX | FX_ROTATE | FX_FLIP;
 
-    for (int32 i = 0; i < 10; ++i) {
+    for (i = 0; i < 10; ++i) {
         if (self->armAngles[i] >= 0x200) {
             self->particleAnimator.frameID = self->armAngles[i] / 42 % 6;
             RSDK.DrawSprite(&self->particleAnimator, &self->armPositions[i], false);
@@ -375,16 +393,18 @@ void PhantomKing_Draw_Body(void)
 
 void PhantomKing_Draw_Arm(void)
 {
+    EntityPhantomKing *parent;
+    int32 i;
     RSDK_THIS(PhantomKing);
 
-    EntityPhantomKing *parent = self->parent;
+    parent = self->parent;
 
     if (parent->typeChangeTimer > 0) {
         RSDK.SetLimitedFade(0, 1, 4, parent->typeChangeTimer, 0, 48);
         RSDK.SetLimitedFade(0, 1, 4, parent->typeChangeTimer, 128, 256);
     }
 
-    for (int32 i = 0; i < 6; ++i) RSDK.DrawSprite(&self->armAnimator, &self->armPositions[i], false);
+    for (i = 0; i < 6; ++i) RSDK.DrawSprite(&self->armAnimator, &self->armPositions[i], false);
 
     RSDK.DrawSprite(&self->cuffAnimator, &self->armPositions[6], false);
     RSDK.DrawSprite(&self->handAnimator, &self->armPositions[6], false);
@@ -414,6 +434,7 @@ void PhantomKing_State_SetupArms(void)
     self->direction = RSDK_GET_ENTITY(SLOT_PLAYER1, Player)->position.x < self->position.x;
 
     if (++self->timer == 30) {
+        EntityPhantomKing *armR;
         EntityPhantomKing *armL = RSDK_GET_ENTITY(SceneInfo->entitySlot - 1, PhantomKing);
         RSDK.ResetEntity(armL, PhantomKing->classID, INT_TO_VOID(PHANTOMKING_ARM_L));
         armL->position.x     = self->position.x;
@@ -423,7 +444,7 @@ void PhantomKing_State_SetupArms(void)
         armL->armAngle       = 96;
         armL->armAngleOffset = 32;
 
-        EntityPhantomKing *armR = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, PhantomKing);
+        armR = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, PhantomKing);
         RSDK.ResetEntity(armR, PhantomKing->classID, INT_TO_VOID(PHANTOMKING_ARM_R));
         armR->position.x     = self->position.x;
         armR->position.y     = self->position.y;
@@ -529,6 +550,11 @@ void PhantomKing_State_WrestleEggman(void)
 
 void PhantomKing_State_FlyAround(void)
 {
+    EntityPlayer *player1;
+    int32 angle;
+    int32 x;
+    int32 y;
+    int32 bottom;
     RSDK_THIS(PhantomKing);
 
     RSDK.ProcessAnimation(&self->beltAnimator);
@@ -537,11 +563,11 @@ void PhantomKing_State_FlyAround(void)
 
     PhantomKing_CheckPlayerCollisions();
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
-    int32 angle = RSDK.ATan2(self->position.x - player1->position.x, self->originPos.y - player1->position.y);
-    int32 x     = (RSDK.Cos256(angle) << 15) + player1->position.x;
-    int32 y     = (RSDK.Sin256(angle) << 15) + player1->position.y;
+    angle = RSDK.ATan2(self->position.x - player1->position.x, self->originPos.y - player1->position.y);
+    x     = (RSDK.Cos256(angle) << 15) + player1->position.x;
+    y     = (RSDK.Sin256(angle) << 15) + player1->position.y;
 
     if (x <= self->position.x) {
         if (self->velocity.x > -0x20000)
@@ -552,7 +578,7 @@ void PhantomKing_State_FlyAround(void)
             self->velocity.x += 0x800;
     }
 
-    int32 bottom = Zone->cameraBoundsB[0] << 16;
+    bottom = Zone->cameraBoundsB[0] << 16;
     if (y > bottom - 0x400000)
         y = bottom - 0x800000;
 
@@ -620,24 +646,36 @@ void PhantomKing_State_HitFall(void)
 
 void PhantomKing_StateArm_Idle(void)
 {
+    EntityPhantomKing *parent;
+    int32 parentX;
+    int32 parentY;
+    int32 moveX;
+    int32 moveY;
+    int32 negAngle;
+    int32 x;
+    int32 y;
+    int32 x2;
+    int32 y2;
+    int32 percent;
+    int32 i;
     RSDK_THIS(PhantomKing);
 
-    EntityPhantomKing *parent = self->parent;
+    parent = self->parent;
 
-    int32 parentX = parent->position.x;
-    int32 parentY = parent->position.y;
+    parentX = parent->position.x;
+    parentY = parent->position.y;
 
-    int32 moveX = 0;
-    int32 moveY = ((RSDK.Sin256(2 * (Zone->timer + (self->type << 6)) - 128) + 512) << 12) + parentY;
+    moveX = 0;
+    moveY = ((RSDK.Sin256(2 * (Zone->timer + (self->type << 6)) - 128) + 512) << 12) + parentY;
 
     self->direction = parent->direction;
-    int32 negAngle  = -parent->rotation;
+    negAngle  = -parent->rotation;
 
-    int32 x = 0;
-    int32 y = 0;
+    x = 0;
+    y = 0;
 
-    int32 x2 = 0;
-    int32 y2 = 0;
+    x2 = 0;
+    y2 = 0;
 
     if (self->direction) {
         moveX = parentX - 0x300000;
@@ -673,8 +711,8 @@ void PhantomKing_StateArm_Idle(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    int32 percent = 0x1800;
-    for (int32 i = 0; i < 7; ++i) {
+    percent = 0x1800;
+    for (i = 0; i < 7; ++i) {
         self->armPositions[i] = MathHelpers_GetBezierPoint(percent, x, y, x2, y2, x2, y2, self->position.x, self->position.y);
         percent += 0x2000;
     }
@@ -685,15 +723,21 @@ void PhantomKing_StateArm_Idle(void)
 
 void PhantomKing_StateArm_WrestleEggman(void)
 {
+    EntityPhantomKing *parent;
+    int32 negAngle;
+    int32 x;
+    int32 y;
+    int32 percent;
+    int32 i;
     RSDK_THIS(PhantomKing);
 
-    EntityPhantomKing *parent = self->parent;
+    parent = self->parent;
 
     self->direction = parent->direction;
-    int32 negAngle  = -parent->rotation;
+    negAngle  = -parent->rotation;
 
-    int32 x = 0;
-    int32 y = 0;
+    x = 0;
+    y = 0;
 
     if (self->direction) {
         x = parent->position.x + 0xD00 * RSDK.Cos512(negAngle) + 0x300 * RSDK.Sin512(negAngle);
@@ -714,8 +758,8 @@ void PhantomKing_StateArm_WrestleEggman(void)
         }
     }
 
-    int32 percent = 0x1800;
-    for (int32 i = 0; i < 7; ++i) {
+    percent = 0x1800;
+    for (i = 0; i < 7; ++i) {
         self->armPositions[i] = MathHelpers_GetBezierPoint(percent, x, y, self->armBezierPos.x, self->armBezierPos.y, self->armBezierPos.x,
                                                            self->armBezierPos.y, self->position.x, self->position.y);
         percent += 0x2000;
@@ -727,23 +771,36 @@ void PhantomKing_StateArm_WrestleEggman(void)
 
 void PhantomKing_HandleArmMovement(void)
 {
+    EntityPhantomKing *parent;
+    int32 negAngle;
+
+    int32 x;
+    int32 y;
+
+    int32 x2;
+    int32 y2;
+
+    int32 x3;
+    int32 y3;
+    int32 percent;
+    int32 i;
     RSDK_THIS(PhantomKing);
 
-    EntityPhantomKing *parent = self->parent;
+    parent = self->parent;
 
     RSDK.Sin256(2 * (Zone->timer + (self->type << 6)) - 128);
     ++self->timer;
     self->direction = parent->direction;
-    int32 negAngle  = -parent->rotation;
+    negAngle  = -parent->rotation;
 
-    int32 x = 0;
-    int32 y = 0;
+    x = 0;
+    y = 0;
 
-    int32 x2 = 0;
-    int32 y2 = 0;
+    x2 = 0;
+    y2 = 0;
 
-    int32 x3 = 0;
-    int32 y3 = 0;
+    x3 = 0;
+    y3 = 0;
 
     if (self->direction) {
         x = parent->position.x + 0xD00 * RSDK.Cos512(negAngle) + 0x300 * RSDK.Sin512(negAngle);
@@ -779,8 +836,8 @@ void PhantomKing_HandleArmMovement(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    int32 percent = 0x1800;
-    for (int32 i = 0; i < 7; ++i) {
+    percent = 0x1800;
+    for (i = 0; i < 7; ++i) {
         self->armPositions[i] = MathHelpers_GetBezierPoint(percent, x, y, x2, y2, x2, y2, x3, y3);
         percent += 0x2000;
     }
@@ -791,11 +848,12 @@ void PhantomKing_HandleArmMovement(void)
 
 void PhantomKing_StateArm_PullBack(void)
 {
+    uint8 armFinished;
     RSDK_THIS(PhantomKing);
 
     PhantomKing_HandleArmMovement();
 
-    uint8 armFinished = 0;
+    armFinished = 0;
 
     if (self->armAngle >= 0xC0)
         armFinished = 1;

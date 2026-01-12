@@ -120,7 +120,8 @@ void AIZEncoreTutorial_State_ExitTutorial(void)
 {
     RSDK_THIS(AIZEncoreTutorial);
     if (self->alpha <= 0) {
-        for (int32 i = 0; i < 8; ++i) {
+        int32 i;
+        for (i = 0; i < 8; ++i) {
             EntityDebris *debris =
                 CREATE_ENTITY(Debris, NULL, self->position.x + RSDK.Rand(-0x180000, 0x180000), self->position.y + RSDK.Rand(-0x100000, 0x100000));
             debris->state      = Debris_State_Move;
@@ -142,6 +143,7 @@ void AIZEncoreTutorial_State_ExitTutorial(void)
 
 void AIZEncoreTutorial_State_ReturnToCutscene(void)
 {
+    int32 i;
     EntityCutsceneSeq *cutsceneSeq = RSDK_GET_ENTITY(SLOT_CUTSCENESEQ, CutsceneSeq);
     EntityFXRuby *fxRuby           = CREATE_ENTITY(FXRuby, NULL, 0, 0);
     fxRuby->drawGroup              = Zone->playerDrawGroup[1] + 1;
@@ -150,7 +152,7 @@ void AIZEncoreTutorial_State_ReturnToCutscene(void)
     Music_FadeOut(0.012);
 
     cutsceneSeq->skipType = SKIPTYPE_DISABLED;
-    for (int32 i = 0; i < 64; ++i) {
+    for (i = 0; i < 64; ++i) {
         if (cutsceneSeq->cutsceneStates[i] == EncoreIntro_Cutscene_SkipAndFadeOut)
             CutsceneSeq_NewState(i, cutsceneSeq);
     }

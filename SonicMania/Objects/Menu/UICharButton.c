@@ -11,6 +11,9 @@ ObjectUICharButton *UICharButton;
 
 void UICharButton_Update(void)
 {
+    EntityUIControl *parent;
+    int32 id;
+    int32 i;
     RSDK_THIS(UICharButton);
 
     self->touchPosSizeS.x   = 0x600000;
@@ -53,9 +56,9 @@ void UICharButton_Update(void)
         }
     }
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
-    int32 id                = -1;
-    for (int32 i = 0; i < parent->buttonCount; ++i) {
+    parent = (EntityUIControl *)self->parent;
+    id                = -1;
+    for (i = 0; i < parent->buttonCount; ++i) {
         if (self == (EntityUICharButton *)parent->buttons[i]) {
             id = i;
             break;

@@ -11,54 +11,57 @@ ObjectSideBarrel *SideBarrel;
 
 void SideBarrel_Update(void)
 {
+    int32 playerID;
     RSDK_THIS(SideBarrel);
 
     self->barrelAnimator.speed = self->activePlayers <= 0 ? 0 : 128;
 
     RSDK.ProcessAnimation(&self->barrelAnimator);
 
-    int32 playerID = 0;
-    foreach_active(Player, player)
+    playerID = 0;
     {
-        if (globals->gameMode >= MODE_TIMEATTACK && self->timeAttackFreeze) {
-            self->hitboxBarrel.bottom = -8;
-            self->hitboxBarrel.top    = -24;
-            Player_CheckCollisionPlatform(player, self, &self->hitboxBarrel);
-        }
-        else {
-            if (player->state == Player_State_KnuxGlideDrop) {
-                self->playerTimer[playerID] = 0;
-                self->playerPos[playerID]   = 128;
-            }
-
-            if (self->playerTimer[playerID]) {
-                if (--self->playerTimer[playerID] <= 0)
-                    self->activePlayers &= ~(1 << playerID);
+        foreach_active(Player, player)
+        {
+            if (globals->gameMode >= MODE_TIMEATTACK && self->timeAttackFreeze) {
+                self->hitboxBarrel.bottom = -8;
+                self->hitboxBarrel.top    = -24;
+                Player_CheckCollisionPlatform(player, self, &self->hitboxBarrel);
             }
             else {
-                if ((1 << playerID) & self->activePlayers)
-                    self->playerPos[playerID] += 2;
-                else
-                    self->playerPos[playerID] = 128;
+                if (player->state == Player_State_KnuxGlideDrop) {
+                    self->playerTimer[playerID] = 0;
+                    self->playerPos[playerID]   = 128;
+                }
 
-                self->hitboxBarrel.top    = (RSDK.Cos256(self->playerPos[playerID]) >> 3) - 4;
-                self->hitboxBarrel.bottom = self->hitboxBarrel.top + 16;
-                if (Player_CheckCollisionPlatform(player, self, &self->hitboxBarrel)) {
-                    player->position.y += 0x40000;
-                    if (player->state != Player_State_KnuxGlideDrop) {
-                        if (self->playerPos[playerID] > 176) {
-                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 1);
-                            player->onGround            = false;
-                            player->state               = Player_State_Air;
-                            self->playerTimer[playerID] = 48;
-                            RSDK.PlaySfx(SideBarrel->sfxDrop, false, 0xFF);
-                        }
-
-                        self->activePlayers |= 1 << playerID;
-                    }
+                if (self->playerTimer[playerID]) {
+                    if (--self->playerTimer[playerID] <= 0)
+                        self->activePlayers &= ~(1 << playerID);
                 }
                 else {
-                    self->playerPos[playerID] = 128;
+                    if ((1 << playerID) & self->activePlayers)
+                        self->playerPos[playerID] += 2;
+                    else
+                        self->playerPos[playerID] = 128;
+
+                    self->hitboxBarrel.top    = (RSDK.Cos256(self->playerPos[playerID]) >> 3) - 4;
+                    self->hitboxBarrel.bottom = self->hitboxBarrel.top + 16;
+                    if (Player_CheckCollisionPlatform(player, self, &self->hitboxBarrel)) {
+                        player->position.y += 0x40000;
+                        if (player->state != Player_State_KnuxGlideDrop) {
+                            if (self->playerPos[playerID] > 176) {
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, false, 1);
+                                player->onGround            = false;
+                                player->state               = Player_State_Air;
+                                self->playerTimer[playerID] = 48;
+                                RSDK.PlaySfx(SideBarrel->sfxDrop, false, 0xFF);
+                            }
+
+                            self->activePlayers |= 1 << playerID;
+                        }
+                    }
+                    else {
+                        self->playerPos[playerID] = 128;
+                    }
                 }
             }
         }

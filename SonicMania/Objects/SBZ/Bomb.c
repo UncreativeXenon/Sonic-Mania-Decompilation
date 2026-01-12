@@ -205,8 +205,10 @@ void Bomb_State_Explode(void)
         Bomb_CheckOffScreen();
     }
     else {
+        EntityBomb *debris;
+        EntityExplosion *explosion;
         RSDK.PlaySfx(Bomb->sfxExplosion, false, 255);
-        EntityBomb *debris  = CREATE_ENTITY(Bomb, INT_TO_VOID(true), self->position.x, self->position.y);
+        debris  = CREATE_ENTITY(Bomb, INT_TO_VOID(true), self->position.x, self->position.y);
         debris->velocity.x  = -0x20000;
         debris->velocity.y  = -0x30000;
         debris->planeFilter = self->planeFilter;
@@ -230,7 +232,7 @@ void Bomb_State_Explode(void)
         debris->planeFilter = self->planeFilter;
         debris->drawGroup   = self->drawGroup;
 
-        EntityExplosion *explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y);
+        explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y);
         explosion->planeFilter     = self->planeFilter;
         explosion->drawGroup       = self->drawGroup + 1;
 
@@ -248,11 +250,13 @@ void Bomb_State_Shrapnel(void)
     if (RSDK.CheckOnScreen(self, &self->updateRange)) {
         RSDK.ProcessAnimation(&self->mainAnimator);
 
-        foreach_active(Player, player)
-        {
-            if (self->planeFilter <= 0 || player->collisionPlane == ((self->planeFilter - 1) & 1)) {
-                if (Player_CheckCollisionTouch(player, self, &Bomb->hitboxShrapnel)) {
-                    Player_ProjectileHurt(player, self);
+{
+            foreach_active(Player, player)
+            {
+                if (self->planeFilter <= 0 || player->collisionPlane == ((self->planeFilter - 1) & 1)) {
+                    if (Player_CheckCollisionTouch(player, self, &Bomb->hitboxShrapnel)) {
+                        Player_ProjectileHurt(player, self);
+                    }
                 }
             }
         }

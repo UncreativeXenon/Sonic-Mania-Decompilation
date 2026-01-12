@@ -163,13 +163,14 @@ void SchrodingersCapsule_State_Init(void)
 
 void SchrodingersCapsule_State_HandleBounds(void)
 {
+    int32 p = 0;
     RSDK_THIS(SchrodingersCapsule);
 
     RSDK.ProcessAnimation(&self->glassAnimator);
     RSDK.ProcessAnimation(&self->mightyAnimator);
     RSDK.ProcessAnimation(&self->rayAnimator);
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
         if (!player->sidekick) {
             if (abs(self->position.x - player->position.x) < 0x1000000) {
@@ -210,13 +211,18 @@ void SchrodingersCapsule_State_Explode(void)
     }
 
     if (++self->timer == 60) {
+        EntityPlayer *buddy1;
+        EntityPlayer *buddy2;
+        EntityPlayer *player;
+        EntityCamera *camera;
+        EntityFXFade *fade;
         self->timer                = 0;
         self->state                = StateMachine_None;
         self->mainAnimator.frameID = 1;
         RSDK.SetSpriteAnimation(-1, -1, &self->mightyAnimator, true, 0);
         RSDK.SetSpriteAnimation(-1, -1, &self->rayAnimator, true, 0);
 
-        EntityPlayer *buddy1 = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
+        buddy1 = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
         memset(buddy1, 0, sizeof(EntityBase)); // not in the original, clears the entity slot incase of something like a shield is still active
         buddy1->classID = Player->classID;
         Player_ChangeCharacter(buddy1, ID_MIGHTY);
@@ -239,7 +245,7 @@ void SchrodingersCapsule_State_Explode(void)
         buddy1->direction       = FLIP_X;
         RSDK.SetSpriteAnimation(buddy1->aniFrames, ANI_HURT, &buddy1->animator, true, 0);
 
-        EntityPlayer *buddy2 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
+        buddy2 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
         memset(buddy2, 0, sizeof(EntityBase)); // like above, but for safety :]
         buddy2->classID      = Player->classID;
         Player_ChangeCharacter(buddy2, ID_RAY);
@@ -264,7 +270,7 @@ void SchrodingersCapsule_State_Explode(void)
         Music_FadeOut(0.025);
         RSDK.PlaySfx(SchrodingersCapsule->sfxExplosion3, false, 0xFF);
 
-        EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         player->position.x   = self->position.x;
         Player_ChangeCharacter(player, player->characterID);
         RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, true, 0);
@@ -277,13 +283,13 @@ void SchrodingersCapsule_State_Explode(void)
         player->jumpPress  = false;
         player->jumpHold   = false;
 
-        EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         camera->position.x += 0x100000;
 
         self->timer = 0;
         self->state = SchrodingersCapsule_State_SetupActClear;
 
-        EntityFXFade *fade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xF0F0F0), self->position.x, self->position.y);
+        fade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xF0F0F0), self->position.x, self->position.y);
         fade->speedIn      = 256;
         fade->speedOut     = 32;
     }
@@ -293,14 +299,16 @@ void SchrodingersCapsule_State_SetupActClear(void)
 {
     RSDK_THIS(SchrodingersCapsule);
     if (++self->timer == 90) {
+        EntityPlayer *buddy1;
+        EntityPlayer *buddy2;
         self->timer = 0;
         self->state = StateMachine_None;
 
-        EntityPlayer *buddy1 = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
+        buddy1        = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
         buddy1->state        = Player_State_Victory;
         RSDK.SetSpriteAnimation(buddy1->aniFrames, ANI_VICTORY, &buddy1->animator, true, 0);
 
-        EntityPlayer *buddy2 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
+        buddy2 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
         buddy2->state        = Player_State_Victory;
         RSDK.SetSpriteAnimation(buddy2->aniFrames, ANI_VICTORY, &buddy2->animator, true, 0);
 

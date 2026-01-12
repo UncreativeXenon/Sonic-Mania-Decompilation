@@ -102,6 +102,12 @@ void Beanstalk_StageLoad(void)
 
 int32 Beanstalk_GetNextNodeDistance(void)
 {
+    int32 thisX;
+    int32 thisY;
+    uint8 angle;
+    int32 nextX;
+    int32 nextY;
+
     RSDK_THIS(Beanstalk);
 
     EntityBeanstalk *next = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) + 1, Beanstalk);
@@ -109,12 +115,12 @@ int32 Beanstalk_GetNextNodeDistance(void)
     if (self->forceEnd || next->classID != Beanstalk->classID)
         return 0;
 
-    int32 thisX = ((self->bezCtrlLength * RSDK.Cos256(self->bezCtrlAngle)) << 9) + self->position.x;
-    int32 thisY = ((self->bezCtrlLength * RSDK.Sin256(self->bezCtrlAngle)) << 9) + self->position.y;
+    thisX = ((self->bezCtrlLength * RSDK.Cos256(self->bezCtrlAngle)) << 9) + self->position.x;
+    thisY = ((self->bezCtrlLength * RSDK.Sin256(self->bezCtrlAngle)) << 9) + self->position.y;
 
-    uint8 angle = (next->bezCtrlAngle + 0x80);
-    int32 nextX = ((next->bezCtrlLength * RSDK.Cos256(angle)) << 9) + next->position.x;
-    int32 nextY = ((next->bezCtrlLength * RSDK.Sin256(angle)) << 9) + next->position.y;
+    angle = (next->bezCtrlAngle + 0x80);
+    nextX = ((next->bezCtrlLength * RSDK.Cos256(angle)) << 9) + next->position.x;
+    nextY = ((next->bezCtrlLength * RSDK.Sin256(angle)) << 9) + next->position.y;
     return MathHelpers_GetBezierCurveLength(self->position.x, self->position.y, thisX, thisY, nextX, nextY, next->position.x, next->position.y)
            / 0xA0000;
 }
@@ -125,16 +131,21 @@ int32 Beanstalk_GetRemainingDistance(void)
 
     int32 len = 0;
     while (self->type) {
+        int32 prevX;
+        int32 prevY;
+        uint8 angle;
+        int32 thisX;
+        int32 thisY;
         EntityBeanstalk *prev = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) - 1, Beanstalk);
         if (prev->classID != Beanstalk->classID)
             break;
 
-        int32 prevX = ((prev->bezCtrlLength * RSDK.Cos256(prev->bezCtrlAngle)) << 9) + prev->position.x;
-        int32 prevY = ((prev->bezCtrlLength * RSDK.Sin256(prev->bezCtrlAngle)) << 9) + prev->position.y;
+        prevX = ((prev->bezCtrlLength * RSDK.Cos256(prev->bezCtrlAngle)) << 9) + prev->position.x;
+        prevY = ((prev->bezCtrlLength * RSDK.Sin256(prev->bezCtrlAngle)) << 9) + prev->position.y;
 
-        uint8 angle = (self->bezCtrlAngle + 0x80);
-        int32 thisX = ((self->bezCtrlLength * RSDK.Cos256(angle)) << 9) + self->position.x;
-        int32 thisY = ((self->bezCtrlLength * RSDK.Sin256(angle)) << 9) + self->position.y;
+        angle = (self->bezCtrlAngle + 0x80);
+        thisX = ((self->bezCtrlLength * RSDK.Cos256(angle)) << 9) + self->position.x;
+        thisY = ((self->bezCtrlLength * RSDK.Sin256(angle)) << 9) + self->position.y;
         len += MathHelpers_GetBezierCurveLength(prev->position.x, prev->position.y, prevX, prevY, thisX, thisY, self->position.x, self->position.y);
 
         self = prev;
@@ -145,6 +156,11 @@ int32 Beanstalk_GetRemainingDistance(void)
 
 int32 Beanstalk_GetBezierInc(void)
 {
+    int32 thisX;
+    int32 thisY;
+    uint8 angle;
+    int32 nextX;
+    int32 nextY;
     RSDK_THIS(Beanstalk);
 
     EntityBeanstalk *next = RSDK_GET_ENTITY(RSDK.GetEntitySlot(self) + 1, Beanstalk);
@@ -152,12 +168,12 @@ int32 Beanstalk_GetBezierInc(void)
     if (self->forceEnd || next->classID != Beanstalk->classID)
         return 0;
 
-    int32 thisX = ((self->bezCtrlLength * RSDK.Cos256(self->bezCtrlAngle)) << 9) + self->position.x;
-    int32 thisY = ((self->bezCtrlLength * RSDK.Sin256(self->bezCtrlAngle)) << 9) + self->position.y;
+    thisX = ((self->bezCtrlLength * RSDK.Cos256(self->bezCtrlAngle)) << 9) + self->position.x;
+    thisY = ((self->bezCtrlLength * RSDK.Sin256(self->bezCtrlAngle)) << 9) + self->position.y;
 
-    uint8 angle = (next->bezCtrlAngle + 0x80);
-    int32 nextX = ((next->bezCtrlLength * RSDK.Cos256(angle)) << 9) + next->position.x;
-    int32 nextY = ((next->bezCtrlLength * RSDK.Sin256(angle)) << 9) + next->position.y;
+    angle = (next->bezCtrlAngle + 0x80);
+    nextX = ((next->bezCtrlLength * RSDK.Cos256(angle)) << 9) + next->position.x;
+    nextY = ((next->bezCtrlLength * RSDK.Sin256(angle)) << 9) + next->position.y;
     return 0x10000
            / (MathHelpers_GetBezierCurveLength(self->position.x, self->position.y, thisX, thisY, nextX, nextY, next->position.x, next->position.y)
               / 0x32000);
@@ -180,6 +196,14 @@ void Beanstalk_DrawNodes(void)
                 self->curBezierPos = Beanstalk_GetNextNodeDistance();
 
             if (self->curBezierPos) {
+                int32 thisX;
+                int32 thisY;
+                int32 nextX;
+                int32 nextY;
+                int32 bezInc;
+                int32 bezPos;
+                int32 nodeID;
+                int32 decorID;
                 if (!self->setupDecorNodeID || SceneInfo->inEditor) {
                     int32 distance         = Beanstalk_GetRemainingDistance();
                     self->setupDecorNodeID = true;
@@ -187,31 +211,33 @@ void Beanstalk_DrawNodes(void)
                     self->curNodeID        = 3 * ((distance / 0xA0000 / 3) + 1) - distance / 0xA0000;
                 }
 
-                int32 thisX = self->position.x + ((self->bezCtrlLength * RSDK.Cos256(self->bezCtrlAngle + 0x00)) << 9);
-                int32 thisY = self->position.y + ((self->bezCtrlLength * RSDK.Sin256(self->bezCtrlAngle + 0x00)) << 9);
-                int32 nextX = next->position.x + ((next->bezCtrlLength * RSDK.Cos256(next->bezCtrlAngle + 0x80)) << 9);
-                int32 nextY = next->position.y + ((next->bezCtrlLength * RSDK.Sin256(next->bezCtrlAngle + 0x80)) << 9);
+                thisX = self->position.x + ((self->bezCtrlLength * RSDK.Cos256(self->bezCtrlAngle + 0x00)) << 9);
+                thisY = self->position.y + ((self->bezCtrlLength * RSDK.Sin256(self->bezCtrlAngle + 0x00)) << 9);
+                nextX = next->position.x + ((next->bezCtrlLength * RSDK.Cos256(next->bezCtrlAngle + 0x80)) << 9);
+                nextY = next->position.y + ((next->bezCtrlLength * RSDK.Sin256(next->bezCtrlAngle + 0x80)) << 9);
 
-                int32 bezInc = 0x10000 / self->curBezierPos;
+                bezInc = 0x10000 / self->curBezierPos;
 
                 RSDK.SetSpriteAnimation(Beanstalk->aniFrames, 1, &self->fillerAnimator, true, 0);
-                for (int32 bezPos = (0x10000 / self->curBezierPos) >> 1; bezPos <= 0x10000; bezPos += bezInc) {
+                for (bezPos = (0x10000 / self->curBezierPos) >> 1; bezPos <= 0x10000; bezPos += bezInc) {
+                    Vector2 drawPos;
                     if (bezPos >= self->bezierPos)
                         break;
 
-                    Vector2 drawPos = MathHelpers_GetBezierPoint(bezPos, self->position.x, self->position.y, thisX, thisY, nextX, nextY,
+                    drawPos = MathHelpers_GetBezierPoint(bezPos, self->position.x, self->position.y, thisX, thisY, nextX, nextY,
                                                                  next->position.x, next->position.y);
 
                     RSDK.DrawSprite(&self->fillerAnimator, &drawPos, false);
                 }
 
-                int32 nodeID  = self->curNodeID;
-                int32 decorID = self->curDecorID;
-                for (int32 bezPos = (0x10000 / self->curBezierPos) >> 1; bezPos <= 0x10000; ++nodeID) {
+                nodeID  = self->curNodeID;
+                decorID = self->curDecorID;
+                for (bezPos = (0x10000 / self->curBezierPos) >> 1; bezPos <= 0x10000; ++nodeID) {
+                    Vector2 drawPos;
                     if (bezPos >= self->bezierPos)
                         break;
 
-                    Vector2 drawPos = MathHelpers_GetBezierPoint(bezPos, self->position.x, self->position.y, thisX, thisY, nextX, nextY,
+                    drawPos = MathHelpers_GetBezierPoint(bezPos, self->position.x, self->position.y, thisX, thisY, nextX, nextY,
                                                                  next->position.x, next->position.y);
 
                     if (!(nodeID % 3)) {
@@ -326,18 +352,20 @@ void Beanstalk_CheckPlayerCollisions_Platform(void)
     }
 
     self->activePlayers = 0;
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        if (Player_CheckCollisionPlatform(player, self, &Beanstalk->hitboxPlatform)) {
-            player->position.x += self->position.x - storeX;
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
+            if (Player_CheckCollisionPlatform(player, self, &Beanstalk->hitboxPlatform)) {
+                player->position.x += self->position.x - storeX;
 
-            if (self->position.y - storeY > 0)
-                player->position.y += self->position.y - storeY;
+                if (self->position.y - storeY > 0)
+                    player->position.y += self->position.y - storeY;
 
-            player->position.y += 0x10000;
-            player->position.y &= 0xFFFF0000;
-            self->activePlayers |= 1 << playerID;
+                player->position.y += 0x10000;
+                player->position.y &= 0xFFFF0000;
+                self->activePlayers |= 1 << playerID;
+            }
         }
     }
 
@@ -370,22 +398,24 @@ void Beanstalk_CheckPlayerCollisions_Chomper(void)
     else
         self->position.x += mult * 16;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &Beanstalk->hitboxPlant)) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Beanstalk->hitboxPlant)) {
 #if MANIA_USE_PLUS
-            if (player->state == Player_State_MightyHammerDrop) {
-                CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
-                RSDK.PlaySfx(Explosion->sfxDestroy, false, 255);
-                self->state = Beanstalk_State_Node;
-                RSDK.SetSpriteAnimation(Beanstalk->aniFrames, 0, &self->plantAnimator, true, 0);
-            }
-            else if (!Player_CheckMightyUnspin(player, 0x400, 2, &player->uncurlTimer)) {
+                if (player->state == Player_State_MightyHammerDrop) {
+                    CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1];
+                    RSDK.PlaySfx(Explosion->sfxDestroy, false, 255);
+                    self->state = Beanstalk_State_Node;
+                    RSDK.SetSpriteAnimation(Beanstalk->aniFrames, 0, &self->plantAnimator, true, 0);
+                }
+                else if (!Player_CheckMightyUnspin(player, 0x400, 2, &player->uncurlTimer)) {
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
 #if MANIA_USE_PLUS
-            }
+                }
 #endif
+            }
         }
     }
 }

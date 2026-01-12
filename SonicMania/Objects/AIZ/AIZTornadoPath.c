@@ -28,8 +28,9 @@ void AIZTornadoPath_Create(void *data)
         switch (self->type) {
             case AIZTORNADOPATH_START:
                 if (!StarPost->postIDs[0]) {
+                    EntityCamera *camera;
                     self->active         = ACTIVE_NORMAL;
-                    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+                    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
                     if (camera) {
                         camera->state          = StateMachine_None;
                         camera->position.x     = self->position.x;
@@ -37,9 +38,13 @@ void AIZTornadoPath_Create(void *data)
                         AIZTornadoPath->camera = camera;
                     }
 
-                    foreach_all(Player, player) { player->camera = NULL; }
+                    {
+                        foreach_all(Player, player) { player->camera = NULL; }
+                    }
 
-                    foreach_all(AIZTornado, tornado) { AIZTornadoPath->tornado = tornado; }
+                    {
+                        foreach_all(AIZTornado, tornado) { AIZTornadoPath->tornado = tornado; }
+                    }
                     ScreenInfo->position.y = FROM_FIXED(self->position.y) - ScreenInfo->center.y;
                     self->speed            = self->targetSpeed;
                     self->state            = AIZTornadoPath_State_SetTornadoSpeed;
@@ -96,6 +101,12 @@ void AIZTornadoPath_StageLoad(void)
 
 void AIZTornadoPath_HandleMoveSpeed(void)
 {
+    EntityAIZTornadoPath *node;
+    int32 xDist;
+    int32 yDist;
+    int32 newPosX;
+    int32 newPosY;
+    int32 spd;
     RSDK_THIS(AIZTornadoPath);
     bool32 usingCamPos        = false;
     EntityCamera *camera      = AIZTornadoPath->camera;
@@ -112,18 +123,18 @@ void AIZTornadoPath_HandleMoveSpeed(void)
         y = tornado->newPos.y;
     }
 
-    EntityAIZTornadoPath *node = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, AIZTornadoPath);
-    int32 xDist                = (x - node->position.x) >> 16;
-    int32 yDist                = (y - node->position.y) >> 16;
+    node = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, AIZTornadoPath);
+    xDist                = (x - node->position.x) >> 16;
+    yDist                = (y - node->position.y) >> 16;
     self->angle                = RSDK.ATan2(xDist, yDist);
-    int32 newPosX              = x - self->speed * RSDK.Cos256(self->angle);
-    int32 newPosY              = y - self->speed * RSDK.Sin256(self->angle);
+    newPosX              = x - self->speed * RSDK.Cos256(self->angle);
+    newPosY              = y - self->speed * RSDK.Sin256(self->angle);
     if (usingCamPos) {
         camera->position.x = newPosX;
         camera->position.y = newPosY;
     }
 
-    int32 spd = self->speed >> 3;
+    spd = self->speed >> 3;
     if (xDist * xDist + yDist * yDist < spd) {
         self->active = ACTIVE_NEVER;
         node->active = ACTIVE_NORMAL;
@@ -180,7 +191,9 @@ void AIZTornadoPath_State_DisablePlayerInteractions(void)
     player->collisionPlane = 1;
     player->interaction    = false;
 
-    foreach_active(Player, playerPtr) { playerPtr->drawGroup = Zone->playerDrawGroup[1]; }
+    {
+        foreach_active(Player, playerPtr) { playerPtr->drawGroup = Zone->playerDrawGroup[1]; }
+    }
 
     AIZTornadoPath_HandleMoveSpeed();
     self->state = AIZTornadoPath_State_SetTornadoSpeed;
@@ -249,14 +262,17 @@ void AIZTornadoPath_State_CatchPlayer(void)
     }
 
     if (self->timer == 90) {
+        int32 velX;
         self->timer        = 0;
         player->stateInput = Player_Input_P1;
-        int32 velX         = 0;
-        foreach_all(AIZTornadoPath, node)
+        velX         = 0;
         {
-            if (node->type == AIZTORNADOPATH_TARGETNODE) {
-                velX         = node->position.x - player->position.x;
-                node->active = ACTIVE_NORMAL;
+            foreach_all(AIZTornadoPath, node)
+            {
+                if (node->type == AIZTORNADOPATH_TARGETNODE) {
+                    velX         = node->position.x - player->position.x;
+                    node->active = ACTIVE_NORMAL;
+                }
             }
         }
 
@@ -268,10 +284,12 @@ void AIZTornadoPath_State_CatchPlayer(void)
             player->camera         = NULL;
         }
 
-        foreach_active(AIZTornado, tornado)
         {
-            tornado->position.x += velX;
-            tornado->offsetX = 0x80000;
+            foreach_active(AIZTornado, tornado)
+            {
+                tornado->position.x += velX;
+                tornado->offsetX = 0x80000;
+            }
         }
     }
 }

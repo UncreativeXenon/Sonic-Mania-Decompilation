@@ -159,15 +159,18 @@ bool32 Buggernaut_HandleTileCollisionsY(void)
 
 void Buggernaut_State_Init(void)
 {
+    int32 x;
+    int32 y;
+    EntityBuggernaut *child;
     RSDK_THIS(Buggernaut);
 
     self->active     = ACTIVE_NORMAL;
-    int32 x          = self->position.x;
-    int32 y          = self->position.y;
+    x          = self->position.x;
+    y          = self->position.y;
     self->velocity.x = 0;
     self->velocity.y = 0;
 
-    EntityBuggernaut *child = CREATE_ENTITY(Buggernaut, INT_TO_VOID(true), x, y);
+    child = CREATE_ENTITY(Buggernaut, INT_TO_VOID(true), x, y);
     RSDK.SetSpriteAnimation(Buggernaut->aniFrames, 1, &child->bodyAnimator, true, 0);
     RSDK.SetSpriteAnimation(Buggernaut->aniFrames, 3, &child->wingAnimator, true, 0);
     child->active      = ACTIVE_NORMAL;
@@ -211,12 +214,13 @@ void Buggernaut_State_Idle(void)
 
 void Buggernaut_State_FlyTowardTarget(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Buggernaut);
 
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    EntityPlayer *player = Player_GetNearestPlayer();
+    player = Player_GetNearestPlayer();
     if (player) {
         if (player->position.x >= self->position.x) {
             self->velocity.x += 0x1000;

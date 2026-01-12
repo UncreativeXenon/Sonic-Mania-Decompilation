@@ -49,6 +49,7 @@ void MagPlatform_StageLoad(void) { MagPlatform->sfxChain = RSDK.GetSfx("Stage/Ch
 
 void MagPlatform_Collide_SolidAllHazardBottom(void)
 {
+    int32 playerID;
     RSDK_THIS(MagPlatform);
 
     Hitbox *hitbox     = RSDK.GetHitbox(&self->animator, 1);
@@ -56,60 +57,62 @@ void MagPlatform_Collide_SolidAllHazardBottom(void)
     self->pushPlayersL = 0;
     self->pushPlayersR = 0;
 
-    int32 playerID = 0;
-    foreach_active(Player, player)
+    playerID = 0;
     {
-        bool32 groundStore = player->onGround;
-        switch (Player_CheckCollisionBox(player, self, hitbox)) {
-            case C_TOP:
-                if (!groundStore) {
-                    self->stood = true;
-                    if (self->state == Platform_State_Fall && !self->timer)
-                        self->timer = 30;
-                    self->stoodPlayers |= 1 << playerID;
-                    player->position.x += self->collisionOffset.x;
-                    player->position.y += self->collisionOffset.y;
-                    player->position.y &= 0xFFFF0000;
-                }
-                break;
-
-            case C_LEFT:
-                if (player->onGround && player->right)
-                    self->pushPlayersL |= 1 << playerID;
-                break;
-
-            case C_RIGHT:
-                if (player->onGround && player->left)
-                    self->pushPlayersR |= 1 << playerID;
-                break;
-
-            case C_BOTTOM:
-                if (!player->onGround) {
-#if MANIA_USE_PLUS
-                    if (!Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
-#endif
-                        Player_Hurt(player, self);
-                }
-                else if (player->collisionMode) {
-                    if (self->velocity.y > 0) {
-                        Player_Hurt(player, self);
+        foreach_active(Player, player)
+        {
+            bool32 groundStore = player->onGround;
+            switch (Player_CheckCollisionBox(player, self, hitbox)) {
+                case C_TOP:
+                    if (!groundStore) {
+                        self->stood = true;
+                        if (self->state == Platform_State_Fall && !self->timer)
+                            self->timer = 30;
+                        self->stoodPlayers |= 1 << playerID;
+                        player->position.x += self->collisionOffset.x;
+                        player->position.y += self->collisionOffset.y;
+                        player->position.y &= 0xFFFF0000;
                     }
-                    else {
+                    break;
+
+                case C_LEFT:
+                    if (player->onGround && player->right)
+                        self->pushPlayersL |= 1 << playerID;
+                    break;
+
+                case C_RIGHT:
+                    if (player->onGround && player->left)
+                        self->pushPlayersR |= 1 << playerID;
+                    break;
+
+                case C_BOTTOM:
+                    if (!player->onGround) {
 #if MANIA_USE_PLUS
-                        if (!Player_CheckMightyUnspin(player, 0x300, true, &player->uncurlTimer))
+                        if (!Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
 #endif
                             Player_Hurt(player, self);
                     }
-                }
-                else {
-                    player->deathType = PLAYER_DEATH_DIE_USESFX;
-                }
-                break;
+                    else if (player->collisionMode) {
+                        if (self->velocity.y > 0) {
+                            Player_Hurt(player, self);
+                        }
+                        else {
+#if MANIA_USE_PLUS
+                            if (!Player_CheckMightyUnspin(player, 0x300, true, &player->uncurlTimer))
+#endif
+                                Player_Hurt(player, self);
+                        }
+                    }
+                    else {
+                        player->deathType = PLAYER_DEATH_DIE_USESFX;
+                    }
+                    break;
 
-            default: break;
+                default: break;
+            }
+
+            playerID++;
         }
-
-        playerID++;
     }
 }
 
@@ -117,10 +120,11 @@ void MagPlatform_State_Idle(void) {}
 
 void MagPlatform_State_Rise(void)
 {
+    int32 posY; 
     RSDK_THIS(MagPlatform);
 
     self->drawPos.y += self->velocity.y;
-    int32 posY = self->position.y;
+    posY = self->position.y;
 
     self->position.y = self->drawPos.y;
     self->velocity.y -= 0x3800;

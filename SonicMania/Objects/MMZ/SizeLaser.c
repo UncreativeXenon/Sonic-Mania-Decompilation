@@ -478,17 +478,34 @@ void SizeLaser_CheckPlayerCollisions(void)
             break;
     }
 
-    foreach_active(Player, player)
-    {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        if (MathHelpers_CheckPositionOverlap(SizeLaser->playerPositions[playerID].x, SizeLaser->playerPositions[playerID].y, player->position.x,
-                                             player->position.y, extendX1[0], extendY1[0], extendX2[0], extendY2[0])
-            || MathHelpers_CheckPositionOverlap(SizeLaser->playerPositions[playerID].x, SizeLaser->playerPositions[playerID].y, player->position.x,
-                                                player->position.y, extendX1[1], extendY1[1], extendX2[1], extendY2[1])) {
+{
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
+            if (MathHelpers_CheckPositionOverlap(SizeLaser->playerPositions[playerID].x, SizeLaser->playerPositions[playerID].y, player->position.x,
+                                                 player->position.y, extendX1[0], extendY1[0], extendX2[0], extendY2[0])
+                || MathHelpers_CheckPositionOverlap(SizeLaser->playerPositions[playerID].x, SizeLaser->playerPositions[playerID].y,
+                                                    player->position.x, player->position.y, extendX1[1], extendY1[1], extendX2[1], extendY2[1])) {
 
-            if (self->type) {
-                if (player->state == SizeLaser_PlayerState_ShrinkChibi || player->state == SizeLaser_PlayerState_GrowNormal || !player->isChibi) {
-                    if (player->state != SizeLaser_PlayerState_GrowGiant && player->scale.x > 0x400) {
+                if (self->type) {
+                    if (player->state == SizeLaser_PlayerState_ShrinkChibi || player->state == SizeLaser_PlayerState_GrowNormal || !player->isChibi) {
+                        if (player->state != SizeLaser_PlayerState_GrowGiant && player->scale.x > 0x400) {
+                            player->onGround        = false;
+                            player->interaction     = false;
+                            player->velocity.y      = -0x40000;
+                            player->nextAirState    = StateMachine_None;
+                            player->nextGroundState = StateMachine_None;
+                            player->velocity.x      = player->direction ? 0x20000 : -0x20000;
+                            player->drawFX |= FX_SCALE;
+                            player->scale.x        = 0x200;
+                            player->scale.y        = 0x200;
+                            player->tileCollisions = TILECOLLISION_DOWN;
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, false, 0);
+                            player->abilityPtrs[0] = Player_State_Hurt;
+                            player->state          = SizeLaser_PlayerState_GrowGiant;
+                        }
+                    }
+                    else {
                         player->onGround        = false;
                         player->interaction     = false;
                         player->velocity.y      = -0x40000;
@@ -496,15 +513,50 @@ void SizeLaser_CheckPlayerCollisions(void)
                         player->nextGroundState = StateMachine_None;
                         player->velocity.x      = player->direction ? 0x20000 : -0x20000;
                         player->drawFX |= FX_SCALE;
-                        player->scale.x        = 0x200;
-                        player->scale.y        = 0x200;
-                        player->tileCollisions = TILECOLLISION_DOWN;
+                        player->scale.x = 0x140;
+                        player->scale.y = 0x140;
+                        switch (player->characterID) {
+                            default:
+                            case ID_SONIC:
+                                if (player->superState == SUPERSTATE_SUPER)
+                                    player->aniFrames = Player->superFrames;
+                                else
+                                    player->aniFrames = Player->sonicFrames;
+                                player->tailFrames = -1;
+                                break;
+
+                            case ID_TAILS:
+                                player->aniFrames  = Player->tailsFrames;
+                                player->tailFrames = Player->tailsTailsFrames;
+                                break;
+
+                            case ID_KNUCKLES:
+                                player->aniFrames  = Player->knuxFrames;
+                                player->tailFrames = -1;
+                                break;
+
+#if MANIA_USE_PLUS
+                            case ID_MIGHTY:
+                                player->aniFrames  = Player->mightyFrames;
+                                player->tailFrames = -1;
+                                break;
+
+                            case ID_RAY:
+                                player->aniFrames  = Player->rayFrames;
+                                player->tailFrames = -1;
+                                break;
+#endif
+                        }
+
                         RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, false, 0);
+                        RSDK.PlaySfx(SizeLaser->sfxGrow2, false, 255);
+                        player->tileCollisions = TILECOLLISION_DOWN;
                         player->abilityPtrs[0] = Player_State_Hurt;
-                        player->state          = SizeLaser_PlayerState_GrowGiant;
+                        player->state          = SizeLaser_PlayerState_GrowNormal;
                     }
                 }
-                else {
+                else if (player->state != SizeLaser_PlayerState_ShrinkChibi && player->state != SizeLaser_PlayerState_GrowNormal
+                         && !player->isChibi) {
                     player->onGround        = false;
                     player->interaction     = false;
                     player->velocity.y      = -0x40000;
@@ -512,63 +564,14 @@ void SizeLaser_CheckPlayerCollisions(void)
                     player->nextGroundState = StateMachine_None;
                     player->velocity.x      = player->direction ? 0x20000 : -0x20000;
                     player->drawFX |= FX_SCALE;
-                    player->scale.x = 0x140;
-                    player->scale.y = 0x140;
-                    switch (player->characterID) {
-                        default:
-                        case ID_SONIC:
-                            if (player->superState == SUPERSTATE_SUPER)
-                                player->aniFrames = Player->superFrames;
-                            else
-                                player->aniFrames = Player->sonicFrames;
-                            player->tailFrames = -1;
-                            break;
-
-                        case ID_TAILS:
-                            player->aniFrames  = Player->tailsFrames;
-                            player->tailFrames = Player->tailsTailsFrames;
-                            break;
-
-                        case ID_KNUCKLES:
-                            player->aniFrames  = Player->knuxFrames;
-                            player->tailFrames = -1;
-                            break;
-
-#if MANIA_USE_PLUS
-                        case ID_MIGHTY:
-                            player->aniFrames  = Player->mightyFrames;
-                            player->tailFrames = -1;
-                            break;
-
-                        case ID_RAY:
-                            player->aniFrames  = Player->rayFrames;
-                            player->tailFrames = -1;
-                            break;
-#endif
-                    }
-
+                    player->scale.x = 0x200;
+                    player->scale.y = 0x200;
                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, false, 0);
-                    RSDK.PlaySfx(SizeLaser->sfxGrow2, false, 255);
+                    RSDK.PlaySfx(SizeLaser->sfxShrink2, false, 0xFF);
                     player->tileCollisions = TILECOLLISION_DOWN;
                     player->abilityPtrs[0] = Player_State_Hurt;
-                    player->state          = SizeLaser_PlayerState_GrowNormal;
+                    player->state          = SizeLaser_PlayerState_ShrinkChibi;
                 }
-            }
-            else if (player->state != SizeLaser_PlayerState_ShrinkChibi && player->state != SizeLaser_PlayerState_GrowNormal && !player->isChibi) {
-                player->onGround        = false;
-                player->interaction     = false;
-                player->velocity.y      = -0x40000;
-                player->nextAirState    = StateMachine_None;
-                player->nextGroundState = StateMachine_None;
-                player->velocity.x      = player->direction ? 0x20000 : -0x20000;
-                player->drawFX |= FX_SCALE;
-                player->scale.x = 0x200;
-                player->scale.y = 0x200;
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, false, 0);
-                RSDK.PlaySfx(SizeLaser->sfxShrink2, false, 0xFF);
-                player->tileCollisions = TILECOLLISION_DOWN;
-                player->abilityPtrs[0] = Player_State_Hurt;
-                player->state          = SizeLaser_PlayerState_ShrinkChibi;
             }
         }
     }
@@ -587,12 +590,13 @@ void SizeLaser_State_Emitter(void)
 
 void SizeLaser_State_Laser(void)
 {
+    bool32 collided;
     RSDK_THIS(SizeLaser);
 
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    bool32 collided = false;
+    collided = false;
     switch (self->orientation) {
         case SIZELASER_ORIENTATION_DOWN: collided = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0x40000, false); break;
         case SIZELASER_ORIENTATION_RIGHT: collided = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_LWALL, 0, 0x40000, 0, false); break;

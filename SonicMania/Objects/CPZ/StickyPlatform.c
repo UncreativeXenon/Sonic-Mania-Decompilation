@@ -11,6 +11,7 @@ ObjectStickyPlatform *StickyPlatform;
 
 void StickyPlatform_Update(void)
 {
+    int32 anim;
     RSDK_THIS(StickyPlatform);
 
     self->active = ACTIVE_NORMAL;
@@ -23,7 +24,7 @@ void StickyPlatform_Update(void)
 
     RSDK.ProcessAnimation(&self->animator);
 
-    int32 anim = self->animator.animationID % 3;
+    anim = self->animator.animationID % 3;
     if (anim) {
         if (anim == 2 && self->animator.frameID == self->animator.frameCount - 1) {
             RSDK.SetSpriteAnimation(StickyPlatform->aniFrames, 3 * (self->type >> 1), &self->animator, false, 0);
@@ -138,7 +139,8 @@ void StickyPlatform_Interact(void)
     RSDK_THIS(StickyPlatform);
 
     if (Player->playerCount > 0) {
-        for (int32 i = 0; i < Player->playerCount; i++) {
+        int32 i;
+        for (i = 0; i < Player->playerCount; i++) {
             EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
 
             if (Player_CheckValidState(player) && player->interaction) {
@@ -280,10 +282,11 @@ void StickyPlatform_EditorDraw(void)
     StickyPlatform_Draw();
 
     if (showGizmos()) {
+        Vector2 amplitude;
+        Vector2 drawPos;
         RSDK_DRAWING_OVERLAY(true);
 
         self->centerPos = self->position;
-        Vector2 amplitude;
         amplitude.x = self->amplitude.x >> 10;
         amplitude.y = self->amplitude.y >> 10;
 
@@ -297,7 +300,7 @@ void StickyPlatform_EditorDraw(void)
         // right max
         self->position.x = amplitude.x * RSDK.Cos1024(0x000) + self->centerPos.x;
         self->position.y = amplitude.y * RSDK.Cos1024(0x000) + self->centerPos.y;
-        Vector2 drawPos  = self->position;
+        drawPos  = self->position;
         StickyPlatform_Draw();
 
         // left max

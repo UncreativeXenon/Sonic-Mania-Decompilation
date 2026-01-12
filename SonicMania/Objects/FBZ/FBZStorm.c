@@ -11,28 +11,34 @@ ObjectFBZStorm *FBZStorm;
 
 void FBZStorm_Update(void)
 {
+    int32 p;
     RSDK_THIS(FBZStorm);
 
     StateMachine_Run(self->state);
 
     self->velocity.x = -0x40000;
-    foreach_active(Current, current)
     {
-        int32 strength = -0x10000 * current->strength;
-        if (strength < self->velocity.x)
-            self->velocity.x = strength;
+        foreach_active(Current, current)
+        {
+            int32 strength = -0x10000 * current->strength;
+            if (strength < self->velocity.x)
+                self->velocity.x = strength;
+        }
     }
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         if (!RSDK_GET_ENTITY(p, Player)->sidekick) {
+            Vector2 *pos;
+            int32 velX;
+            int32 i;
             self->screenPosX[p] = ScreenInfo[p].position.x;
 
-            int32 velX          = ((self->screenPosX[p] << 14) - (ScreenInfo[p].position.x << 14)) + self->velocity.x;
+            velX          = ((self->screenPosX[p] << 14) - (ScreenInfo[p].position.x << 14)) + self->velocity.x;
             self->stormAngle[p] = RSDK.ATan2(self->velocity.y, -velX) << 1;
 
-            Vector2 *pos = &FBZStorm->raindropPositions[0x40 * p];
+            pos = &FBZStorm->raindropPositions[0x40 * p];
 
-            for (int32 i = 0; i < 0x40; ++i) {
+            for (i = 0; i < 0x40; ++i) {
                 pos->x += velX;
                 pos->y += self->velocity.y;
 
@@ -91,6 +97,8 @@ void FBZStorm_StaticUpdate(void)
 
 void FBZStorm_Draw(void)
 {
+    Vector2 *raindropPos;
+    int32 i;
     RSDK_THIS(FBZStorm);
     RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
 
@@ -98,8 +106,8 @@ void FBZStorm_Draw(void)
     int32 centerY  = screen->center.y << 16;
     self->rotation = self->stormAngle[SceneInfo->currentScreenID];
 
-    Vector2 *raindropPos = &FBZStorm->raindropPositions[0x40 * SceneInfo->currentScreenID];
-    for (int32 i = 0; i < 0x40; ++i) {
+    raindropPos = &FBZStorm->raindropPositions[0x40 * SceneInfo->currentScreenID];
+    for (i = 0; i < 0x40; ++i) {
         Vector2 drawPos;
         drawPos.x = centerX + raindropPos->x;
         drawPos.y = centerY + raindropPos->y;
@@ -113,6 +121,7 @@ void FBZStorm_Create(void *data)
     RSDK_THIS(FBZStorm);
 
     if (!SceneInfo->inEditor) {
+        int32 p;
         self->active     = ACTIVE_NORMAL;
         self->drawGroup  = Zone->objectDrawGroup[1];
         self->drawFX     = FX_ROTATE;
@@ -121,8 +130,9 @@ void FBZStorm_Create(void *data)
         self->velocity.y = 0xC0000;
         self->state      = FBZStorm_State_WaitForActive;
 
-        for (int32 p = 0; p < Player->playerCount; ++p) {
-            for (int32 i = 0; i < 0x40; ++i) {
+        for (p = 0; p < Player->playerCount; ++p) {
+            int32 i;
+            for (i = 0; i < 0x40; ++i) {
                 FBZStorm->raindropPositions[i].x = RSDK.Rand(-0x1000000, 0x1000000);
                 FBZStorm->raindropPositions[i].y = RSDK.Rand(-0x800000, 0x800000);
             }
@@ -154,6 +164,7 @@ void FBZStorm_State_WaitForActive(void)
 
 void FBZStorm_State_StormStart(void)
 {
+    bool32 enabled;
     RSDK_THIS(FBZStorm);
 
     self->visible = true;
@@ -166,11 +177,13 @@ void FBZStorm_State_StormStart(void)
         self->alpha += 4;
     }
 
-    bool32 enabled = false;
-    foreach_all(FBZStorm, storm)
+    enabled = false;
     {
-        if (storm->enabled)
-            enabled = true;
+        foreach_all(FBZStorm, storm)
+        {
+            if (storm->enabled)
+                enabled = true;
+        }
     }
 
     if (FBZStorm->playingRainSfx) {

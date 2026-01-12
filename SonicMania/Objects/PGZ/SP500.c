@@ -22,6 +22,8 @@ void SP500_StaticUpdate(void) {}
 
 void SP500_Draw(void)
 {
+    int32 pos;
+    int32 l;
     RSDK_THIS(SP500);
 
     Vector2 drawPos;
@@ -34,8 +36,8 @@ void SP500_Draw(void)
 
     // Rails
     self->animator.frameID = 3;
-    int32 pos              = drawPos.x;
-    for (int32 l = 0; l < self->len; ++l) {
+    pos              = drawPos.x;
+    for (l = 0; l < self->len; ++l) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         pos = drawPos.x + 0x100000;
         drawPos.x += 0x100000;
@@ -140,54 +142,60 @@ void SP500_StageLoad(void)
 
 void SP500_CheckPlayerCollisions(void)
 {
+    int32 offsetX;
+    int32 offsetY;
+    Vector2 storePos;
+    int32 p; 
     RSDK_THIS(SP500);
 
     self->position.x += self->rowPrintPos;
 
-    int32 offsetX = (self->position.x & 0xFFFF0000) - (self->targetPos.x & 0xFFFF0000);
-    int32 offsetY = (self->position.y & 0xFFFF0000) - (self->targetPos.y & 0xFFFF0000);
+    offsetX = (self->position.x & 0xFFFF0000) - (self->targetPos.x & 0xFFFF0000);
+    offsetY = (self->position.y & 0xFFFF0000) - (self->targetPos.y & 0xFFFF0000);
 
     // this was a weird one where apparently it used targetPos directly which is very much undefined behavior lol
     // so much so that it breaks as of v5U :]
-    Vector2 storePos = self->position;
+    storePos = self->position;
     self->position   = self->targetPos;
 
-    foreach_active(Player, player)
-    {
-        int32 playerID = RSDK.GetEntitySlot(player);
+{
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (self->playerTimers[playerID]) {
-            self->playerTimers[playerID]--;
-        }
-        else if (Player_CheckCollisionBox(player, self, &SP500->hitboxSideL) == C_TOP
-                 || Player_CheckCollisionBox(player, self, &SP500->hitboxSideR) == C_TOP) {
-            player->position.x += offsetX;
-            player->position.y += offsetY;
-        }
-        else if (Player_CheckCollisionBox(player, self, &SP500->hitboxBottom) == C_TOP) {
-            if (self->state == SP500_State_WaitForEntry && !player->sidekick) {
-                if (!((1 << playerID) & self->activePlayers)) {
-                    self->activePlayers |= (1 << playerID);
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
-                    player->interaction     = false;
-                    player->tileCollisions  = TILECOLLISION_NONE;
-                    player->groundVel       = 0;
-                    player->velocity.x      = 0;
-                    player->velocity.y      = 0;
-                    player->nextAirState    = StateMachine_None;
-                    player->nextGroundState = StateMachine_None;
-                    player->state           = Player_State_Static;
+            if (self->playerTimers[playerID]) {
+                self->playerTimers[playerID]--;
+            }
+            else if (Player_CheckCollisionBox(player, self, &SP500->hitboxSideL) == C_TOP
+                     || Player_CheckCollisionBox(player, self, &SP500->hitboxSideR) == C_TOP) {
+                player->position.x += offsetX;
+                player->position.y += offsetY;
+            }
+            else if (Player_CheckCollisionBox(player, self, &SP500->hitboxBottom) == C_TOP) {
+                if (self->state == SP500_State_WaitForEntry && !player->sidekick) {
+                    if (!((1 << playerID) & self->activePlayers)) {
+                        self->activePlayers |= (1 << playerID);
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                        player->interaction     = false;
+                        player->tileCollisions  = TILECOLLISION_NONE;
+                        player->groundVel       = 0;
+                        player->velocity.x      = 0;
+                        player->velocity.y      = 0;
+                        player->nextAirState    = StateMachine_None;
+                        player->nextGroundState = StateMachine_None;
+                        player->state           = Player_State_Static;
+                    }
                 }
             }
-        }
-        else {
-            self->activePlayers &= ~(1 << playerID);
+            else {
+                self->activePlayers &= ~(1 << playerID);
+            }
         }
     }
 
     self->position = storePos;
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         if ((1 << p) & self->activePlayers) {
             EntityPlayer *playerPtr = RSDK_GET_ENTITY(p, Player);
             playerPtr->position.x   = self->position.x;
@@ -236,6 +244,8 @@ void SP500_State_Activate(void)
         self->timer = 0;
 
         if (Ink && Ink->playerColors[0]) {
+            EntitySP500 *controller;
+            EntityCamera *camera;
             self->inkColor = Ink->playerColors[0] - 1;
             RSDK.PlaySfx(SP500->sfxBeep4, false, 255);
 
@@ -243,14 +253,14 @@ void SP500_State_Activate(void)
             self->active         = ACTIVE_NORMAL;
             self->state          = SP500_State_PrintDelay;
 
-            EntitySP500 *controller = CREATE_ENTITY(SP500, INT_TO_VOID(true), self->position.x, self->position.y);
+            controller = CREATE_ENTITY(SP500, INT_TO_VOID(true), self->position.x, self->position.y);
             controller->targetPos.x = self->position.x + ((self->len - 3) << 19);
             if (self->printDir)
                 controller->targetPos.y = self->position.y + (self->height << 19);
             else
                 controller->targetPos.y = self->position.y - (self->height << 19);
 
-            EntityCamera *camera = RSDK_GET_ENTITY(SLOT_PLAYER1, Player)->camera;
+            camera = RSDK_GET_ENTITY(SLOT_PLAYER1, Player)->camera;
             camera->target       = (Entity *)controller;
 
             controller->storedEntity = (Entity *)RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
@@ -271,12 +281,14 @@ void SP500_State_PrintFailed(void)
     SP500_CheckPlayerCollisions();
 
     if (++self->timer >= 30) {
+        int32 p;
         self->timer = 0;
 
-        for (int32 p = 0; p < Player->playerCount; ++p) {
+        for (p = 0; p < Player->playerCount; ++p) {
             if ((1 << p) & self->activePlayers) {
+                EntityPlayer *player;
                 RSDK.PlaySfx(Player->sfxRelease, false, 255);
-                EntityPlayer *player     = RSDK_GET_ENTITY(p, Player);
+                player     = RSDK_GET_ENTITY(p, Player);
                 player->visible          = true;
                 player->interaction      = true;
                 player->tileCollisions   = TILECOLLISION_DOWN;
@@ -308,6 +320,7 @@ void SP500_State_PrintDelay(void)
 
 void SP500_State_Printing(void)
 {
+    uint16 tile;
     RSDK_THIS(SP500);
 
     if (self->curPrintDir == self->startDir) {
@@ -327,7 +340,7 @@ void SP500_State_Printing(void)
         }
     }
 
-    uint16 tile = (uint16)-1;
+    tile = (uint16)-1;
     switch (self->inkColor) {
         default: break;
         case INK_C: tile = RSDK.GetTile(SP500->printLayerID, self->srcC.x + (self->rowPrintPos >> 20), self->srcC.y + self->printRowID); break;
@@ -336,11 +349,12 @@ void SP500_State_Printing(void)
     }
 
     if (tile != (uint16)-1) {
+        int32 posY;
         self->position.y += 0x100000;
         self->showGreenLight = (Zone->timer >> 1) & 1;
         RSDK.SetTile(Zone->fgLayer[0], (self->position.x + self->rowPrintPos) >> 20, self->position.y >> 20, tile);
 
-        int32 posY = self->position.y;
+        posY = self->position.y;
         if (self->position.y >= 0x1800000) {
             if (self->position.y > 0x8800000) {
                 posY -= 0xA000000;
@@ -400,10 +414,13 @@ void SP500_State_PrintFinished(void)
 
     self->timer++;
     switch (self->timer) {
+        int32 i;
+        EntityPlayer *player1;
+        EntitySP500 *machine;
         case 30: RSDK.PlaySfx(SP500->sfxBeep4, false, 0xFF); break;
 
         case 60: {
-            for (int32 i = 0; i < Player->playerCount; i += 2) {
+            for (i = 0; i < Player->playerCount; i += 2) {
                 EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
 
                 switch (player->characterID) {
@@ -423,10 +440,10 @@ void SP500_State_PrintFinished(void)
                 }
                 Ink->playerColors[i] = 0;
             }
-            EntityPlayer *player1   = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+            player1   = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
             player1->camera->target = (Entity *)player1;
 
-            EntitySP500 *machine  = (EntitySP500 *)self->storedEntity;
+            machine  = (EntitySP500 *)self->storedEntity;
             machine->targetPos.x  = player1->position.x;
             machine->targetPos.y  = player1->position.y;
             machine->state        = SP500_State_MoveToTarget;
@@ -436,10 +453,11 @@ void SP500_State_PrintFinished(void)
         }
 
         case 90:
-            for (int32 i = SLOT_PLAYER1; i < Player->playerCount; ++i) {
+            for (i = SLOT_PLAYER1; i < Player->playerCount; ++i) {
                 if ((1 << i) & self->activePlayers) {
+                    EntityPlayer *player;
                     RSDK.PlaySfx(Player->sfxRelease, false, 0xFF);
-                    EntityPlayer *player     = RSDK_GET_ENTITY(i, Player);
+                    player     = RSDK_GET_ENTITY(i, Player);
                     player->visible          = true;
                     player->interaction      = true;
                     player->tileCollisions   = TILECOLLISION_DOWN;

@@ -18,13 +18,15 @@ void BurningLog_Update(void)
     if (RSDK.CheckOnScreen(self, &self->updateRange)) {
         self->position.y += self->velocity.y;
         self->velocity.y += 0x3800;
-        foreach_active(Player, player)
         {
-            if (self->velocity.y < 0x380000)
-                Player_CheckCollisionPlatform(player, self, &BurningLog->hitboxPlatform);
+            foreach_active(Player, player)
+            {
+                if (self->velocity.y < 0x380000)
+                    Player_CheckCollisionPlatform(player, self, &BurningLog->hitboxPlatform);
 
-            if (Player_CheckCollisionTouch(player, self, &BurningLog->hitboxFlame)) {
-                Player_ElementHurt(player, self, SHIELD_FIRE);
+                if (Player_CheckCollisionTouch(player, self, &BurningLog->hitboxFlame)) {
+                    Player_ElementHurt(player, self, SHIELD_FIRE);
+                }
             }
         }
     }

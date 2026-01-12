@@ -11,6 +11,9 @@ ObjectUISlider *UISlider;
 
 void UISlider_Update(void)
 {
+    EntityUIControl *control;
+    int32 id;
+    int32 i;
     RSDK_THIS(UISlider);
 
     if (self->textFrames != UIWidgets->textFrames) {
@@ -23,10 +26,10 @@ void UISlider_Update(void)
 
     StateMachine_Run(self->state);
 
-    EntityUIControl *control = (EntityUIControl *)self->parent;
+    control = (EntityUIControl *)self->parent;
 
-    int32 id = -1;
-    for (int32 i = 0; i < control->buttonCount; ++i) {
+    id = -1;
+    for (i = 0; i < control->buttonCount; ++i) {
         if (self == (EntityUISlider *)control->buttons[i]) {
             id = i;
             break;
@@ -142,6 +145,9 @@ void UISlider_DrawSlider(void)
 
 void UISlider_ButtonPressCB(void)
 {
+    int32 columnID;
+    bool32 moveV;
+    bool32 valueChanged;
     RSDK_THIS(UISlider);
 
     EntityUIControl *parent = (EntityUIControl *)self->parent;
@@ -150,11 +156,11 @@ void UISlider_ButtonPressCB(void)
     if (parent->rowCount && parent->columnCount)
         rowID = parent->buttonID / parent->columnCount;
 
-    int32 columnID = 0;
+    columnID = 0;
     if (parent->columnCount)
         columnID = parent->buttonID % parent->columnCount;
 
-    bool32 moveV = false;
+    moveV = false;
     if (parent->rowCount > 1) {
         if (UIControl->anyUpPress) {
             --rowID;
@@ -167,7 +173,7 @@ void UISlider_ButtonPressCB(void)
         }
     }
 
-    bool32 valueChanged = false;
+    valueChanged = false;
     if (UIControl->anyLeftPress && self->sliderPos > UISLIDER_MIN) {
         self->sliderPos = (self->sliderPos & -UISLIDER_INCREMENT) - UISLIDER_INCREMENT;
         valueChanged    = true;
@@ -184,13 +190,14 @@ void UISlider_ButtonPressCB(void)
     }
 
     if (moveV) {
+        int32 max;
         if (rowID < 0)
             rowID += parent->rowCount;
 
         if (rowID >= parent->rowCount)
             rowID -= parent->rowCount;
 
-        int32 max = parent->buttonCount - 1;
+        max = parent->buttonCount - 1;
         if (rowID * parent->columnCount + columnID < max)
             max = rowID * parent->columnCount + columnID;
 
@@ -205,8 +212,9 @@ void UISlider_ButtonPressCB(void)
         }
     }
     else {
+        int32 i;
         int32 id = -1;
-        for (int32 i = 0; i < parent->buttonCount; ++i) {
+        for (i = 0; i < parent->buttonCount; ++i) {
             if (self == (EntityUISlider *)parent->buttons[i]) {
                 id = i;
                 break;
@@ -225,10 +233,11 @@ bool32 UISlider_TouchCB(void)
     bool32 touchPressed = false;
     if (TouchInfo->count) {
         if (!UISlider->activeEntity || UISlider->activeEntity == (Entity *)self) {
+            int32 i;
             int32 sizeX = self->touchPosSizeS.x >> 1;
             int32 sizeY = self->touchPosSizeS.y >> 1;
 
-            for (int32 i = 0; i < TouchInfo->count; ++i) {
+            for (i = 0; i < TouchInfo->count; ++i) {
                 int32 x = (ScreenInfo->position.x << 16) - ((TouchInfo->x[i] * ScreenInfo->size.x) * -65536.0f);
                 int32 y = (ScreenInfo->position.y << 16) - ((TouchInfo->y[i] * ScreenInfo->size.y) * -65536.0f);
 
@@ -240,6 +249,7 @@ bool32 UISlider_TouchCB(void)
                 }
 
                 if (self->isTouchSelected) {
+                    int32 sliderPos;
                     touchPressed           = true;
                     UISlider->activeEntity = (Entity *)self;
 
@@ -247,7 +257,7 @@ bool32 UISlider_TouchCB(void)
                     if (self->touchPosSizeS.x - 0x70000 < self->sliderPosTouch)
                         self->sliderPosTouch = self->touchPosSizeS.x - 0x70000;
 
-                    int32 sliderPos = 16
+                    sliderPos = 16
                                       * (MIN(((self->sliderPosTouch - 0x70000) >> 4 << 10) / (self->touchPosSizeS.x - 0xE0000) + 2, UISLIDER_MAX)
                                          & -(UISLIDER_INCREMENT / 0x10));
                     if (sliderPos != self->sliderPos) {

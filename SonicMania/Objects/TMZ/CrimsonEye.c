@@ -207,10 +207,13 @@ void CrimsonEye_Explode(void)
     RSDK_THIS(CrimsonEye);
 
     if (!(Zone->timer & 3)) {
+        int32 x;
+        int32 y;
+        EntityExplosion *explosion;
         RSDK.PlaySfx(CrimsonEye->sfxExplosion, false, 255);
 
-        int32 x = self->position.x;
-        int32 y = self->position.y;
+        x = self->position.x;
+        y = self->position.y;
 
         if (CrimsonEye->health) {
             x += RSDK.Rand(-32, 33) << 16;
@@ -221,7 +224,7 @@ void CrimsonEye_Explode(void)
             y += RSDK.Rand(-24, 25) << 16;
         }
 
-        EntityExplosion *explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(((RSDK.Rand(0, 256) > 192) + EXPLOSION_BOSS)), x, y);
+        explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(((RSDK.Rand(0, 256) > 192) + EXPLOSION_BOSS)), x, y);
         explosion->drawGroup       = Zone->objectDrawGroup[1] + 2;
     }
 }
@@ -247,10 +250,13 @@ void CrimsonEye_Hit(void)
         }
     }
     else {
+        EntityDebris *debris;
+        int32 velX;
+        int32 velY;
         RSDK.PlaySfx(CrimsonEye->sfxExplosion, false, 0xFF);
         self->timer = 120;
 
-        EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
+        debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
         RSDK.SetSpriteAnimation(CrimsonEye->aniFrames, 1, &debris->animator, true, 14);
         debris->velocity.x      = -0x30000;
         debris->velocity.y      = -0x40000;
@@ -330,8 +336,8 @@ void CrimsonEye_Hit(void)
         debris->updateRange.x   = 0x400000;
         debris->updateRange.y   = 0x400000;
 
-        int32 velX = RSDK.Rand(-6, 6) << 15;
-        int32 velY = RSDK.Rand(-10, -6) << 15;
+        velX = RSDK.Rand(-6, 6) << 15;
+        velY = RSDK.Rand(-10, -6) << 15;
 
         debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, CrimsonEye->eyePositions[0].x, CrimsonEye->eyePositions[0].y);
         RSDK.SetSpriteAnimation(CrimsonEye->aniFrames, 1, &debris->animator, true, 1);
@@ -372,17 +378,21 @@ void CrimsonEye_Hit(void)
 
 void CrimsonEye_SetupBG2Layer(void)
 {
-    for (int32 y = 0; y < 48; ++y) {
+    int32 y;
+    TileLayer *bg2Layer;
+    int32 i;
+    for (y = 0; y < 48; ++y) {
+        int32 x;
         uint16 tile = RSDK.GetTile(1, 0, y + 24 * (2 - y / 24));
 
         RSDK.SetTile(1, 0, y, tile);
         RSDK.SetTile(1, 31, y, tile);
 
-        for (int32 x = 1; x < 31; ++x) RSDK.SetTile(1, x, y, -1);
+        for (x = 1; x < 31; ++x) RSDK.SetTile(1, x, y, -1);
     }
 
-    TileLayer *bg2Layer = RSDK.GetTileLayer(1);
-    for (int32 i = 0; i < bg2Layer->scrollInfoCount; ++i) {
+    bg2Layer = RSDK.GetTileLayer(1);
+    for (i = 0; i < bg2Layer->scrollInfoCount; ++i) {
         bg2Layer->scrollInfo[i].parallaxFactor = 0x200;
         bg2Layer->scrollInfo[i].scrollPos      = -0x1C0000;
     }
@@ -413,6 +423,7 @@ void CrimsonEye_StateContainer_SetupArena(void)
     RSDK_THIS(CrimsonEye);
 
     if (++self->timer >= 2) {
+        int32 i;
         self->timer = 0;
 
         Zone->playerBoundActiveR[0] = true;
@@ -425,7 +436,7 @@ void CrimsonEye_StateContainer_SetupArena(void)
         CREATE_ENTITY(TMZ1Setup, NULL, 0, 0);
 
         RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, CrimsonEye)->active = ACTIVE_NORMAL;
-        for (int32 i = 2; i < 14; ++i) {
+        for (i = 2; i < 14; ++i) {
             EntityCrimsonEye *child = RSDK_GET_ENTITY(SceneInfo->entitySlot + i, CrimsonEye);
             child->active           = ACTIVE_NORMAL;
             if (i < 10)
@@ -438,6 +449,7 @@ void CrimsonEye_StateContainer_SetupArena(void)
 
 void CrimsonEye_StateContainer_AwaitPlayer(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(CrimsonEye);
 
     CrimsonEye->ballSpinAngleX += 4;
@@ -445,7 +457,7 @@ void CrimsonEye_StateContainer_AwaitPlayer(void)
     Zone->playerBoundActiveL[0] = true;
     Zone->cameraBoundsL[0]      = ScreenInfo->position.x;
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
     if (!self->timer && ScreenInfo->position.x + ScreenInfo->center.x > (self->position.x >> 16) - 256) {
         CrimsonEye_SetupBG2Layer();
@@ -453,13 +465,14 @@ void CrimsonEye_StateContainer_AwaitPlayer(void)
     }
 
     if (player1->position.x > self->position.x - 0x500000) {
+        EntityCamera *camera;
         Zone->playerBoundActiveL[0] = true;
         Zone->cameraBoundsL[0]      = (self->position.x >> 16) - ScreenInfo->center.x - 80;
 
         Music_TransitionTrack(TRACK_MINIBOSS, 0.0125);
         RSDK.PlaySfx(CrimsonEye->sfxElevator, false, 255);
 
-        EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         if (!camera->shakePos.y)
             camera->shakePos.y = 4;
 
@@ -482,6 +495,8 @@ void CrimsonEye_StateContainer_StartFight(void)
 
 void CrimsonEye_StateContainer_CoreActive(void)
 {
+    int32 i;
+    TileLayer *elevatorLayer;
     RSDK_THIS(CrimsonEye);
 
     StateMachine_Run(self->stateEye);
@@ -505,6 +520,7 @@ void CrimsonEye_StateContainer_CoreActive(void)
         }
 
         if (self->timer <= 0) {
+            EntityCrimsonEye *child;
             RSDK.PlaySfx(CrimsonEye->sfxElevator, false, 255);
 
             Camera_ShakeScreen(0, 4, 8);
@@ -514,7 +530,7 @@ void CrimsonEye_StateContainer_CoreActive(void)
             self->timer                     = RSDK.Rand(120, 180);
             CrimsonEye->targetElevatorSpeed = CrimsonEye->nextTargetElevatorSpeed;
 
-            EntityCrimsonEye *child = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, CrimsonEye);
+            child = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, CrimsonEye);
 
             if (CrimsonEye->targetElevatorSpeed != -0x80000) {
                 if (!CrimsonEye->targetElevatorSpeed) {
@@ -547,7 +563,7 @@ void CrimsonEye_StateContainer_CoreActive(void)
         }
     }
 
-    for (int32 i = 0; i < PLAYER_COUNT; ++i) {
+    for (i = 0; i < PLAYER_COUNT; ++i) {
         EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
         // NOTE:
         // according to IDA, the original code is
@@ -557,9 +573,9 @@ void CrimsonEye_StateContainer_CoreActive(void)
             player->gravityStrength = 0x3800 - CrimsonEye->elevatorSpeed / 0x30;
     }
 
-    TileLayer *elevatorLayer = CrimsonEye->liftBackground;
+    elevatorLayer = CrimsonEye->liftBackground;
     elevatorLayer->scrollPos = -0x800000;
-    for (int32 i = 0; i < elevatorLayer->scrollInfoCount; ++i) {
+    for (i = 0; i < elevatorLayer->scrollInfoCount; ++i) {
         elevatorLayer->scrollInfo[i].scrollSpeed = elevatorLayer->scrollInfo[i].parallaxFactor * (CrimsonEye->elevatorSpeed / 24);
     }
 
@@ -570,11 +586,12 @@ void CrimsonEye_StateContainer_CoreActive(void)
         self->stateEye = StateMachine_None;
 
     if (CrimsonEye->health == 8 && !self->animator.frameID) {
+        EntityDebris *debris;
         self->animator.frameID = 1;
         self->drawGroup        = Zone->objectDrawGroup[0];
 
         // Destroy Container
-        EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
+        debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
         RSDK.SetSpriteAnimation(CrimsonEye->aniFrames, 0, &debris->animator, true, 2);
         debris->velocity.x      = -0x20000;
         debris->velocity.y      = -0x20000;
@@ -608,16 +625,20 @@ void CrimsonEye_StateContainer_CoreActive(void)
         self->timer                     = 0;
         self->state                     = CrimsonEye_StateContainer_HandleElevator;
 
-        foreach_active(CrimsonEye, part)
-        {
-            if (part->stateDraw == CrimsonEye_Draw_Arrow)
-                part->type = CE_ARROW_OFF;
+{
+            foreach_active(CrimsonEye, part)
+            {
+                if (part->stateDraw == CrimsonEye_Draw_Arrow)
+                    part->type = CE_ARROW_OFF;
+            }
         }
     }
 }
 
 void CrimsonEye_StateContainer_HandleElevator(void)
 {
+    int32 i;
+    TileLayer *elevatorLayer;
     if (CrimsonEye->elevatorSpeed != CrimsonEye->targetElevatorSpeed) {
         if (CrimsonEye->elevatorSpeed >= CrimsonEye->targetElevatorSpeed) {
             CrimsonEye->elevatorSpeed -= 0x800;
@@ -633,7 +654,7 @@ void CrimsonEye_StateContainer_HandleElevator(void)
         }
     }
 
-    for (int32 i = 0; i < PLAYER_COUNT; ++i) {
+    for (i = 0; i < PLAYER_COUNT; ++i) {
         EntityPlayer *player = RSDK_GET_ENTITY(i, Player);
         // NOTE:
         // according to IDA, the original code is
@@ -643,9 +664,9 @@ void CrimsonEye_StateContainer_HandleElevator(void)
             player->gravityStrength = 0x3800 - CrimsonEye->elevatorSpeed / 0x30;
     }
 
-    TileLayer *elevatorLayer = CrimsonEye->liftBackground;
+    elevatorLayer = CrimsonEye->liftBackground;
     elevatorLayer->scrollPos = -0x800000;
-    for (int32 i = 0; i < elevatorLayer->scrollInfoCount; ++i) {
+    for (i = 0; i < elevatorLayer->scrollInfoCount; ++i) {
         elevatorLayer->scrollInfo[i].scrollSpeed = elevatorLayer->scrollInfo[i].parallaxFactor * (CrimsonEye->elevatorSpeed / 24);
     }
 
@@ -658,11 +679,14 @@ void CrimsonEye_StateContainer_Explode(void)
 
     if (self->timer < 48) {
         if (!(Zone->timer & 3)) {
+            int32 x;
+            int32 y;
+            EntityExplosion *explosion;
             RSDK.PlaySfx(ItemBox->sfxDestroy, false, 255);
 
-            int32 x                    = self->position.x + RSDK.Rand(-0x200000, 0x200000);
-            int32 y                    = self->position.y + RSDK.Rand(-0x800000, 0x800000);
-            EntityExplosion *explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), x, y);
+            x                    = self->position.x + RSDK.Rand(-0x200000, 0x200000);
+            y                    = self->position.y + RSDK.Rand(-0x800000, 0x800000);
+            explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), x, y);
 
             explosion->drawGroup = Zone->objectDrawGroup[1] + 2;
         }
@@ -678,6 +702,9 @@ void CrimsonEye_StateContainer_Explode(void)
 
 void CrimsonEye_StateContainer_MoveElevatorToTMZ2Entry(void)
 {
+    TileLayer *liftLayer;
+    int32 i;
+    TileLayer *moveLayer;
     if (CrimsonEye->elevatorSpeed != CrimsonEye->targetElevatorSpeed) {
         if (CrimsonEye->elevatorSpeed >= CrimsonEye->targetElevatorSpeed) {
             CrimsonEye->elevatorSpeed -= 0x800;
@@ -693,15 +720,15 @@ void CrimsonEye_StateContainer_MoveElevatorToTMZ2Entry(void)
         }
     }
 
-    TileLayer *liftLayer = CrimsonEye->liftBackground;
+    liftLayer = CrimsonEye->liftBackground;
     liftLayer->scrollPos = -0x800000;
-    for (int32 i = 0; i < liftLayer->scrollInfoCount; ++i) {
+    for (i = 0; i < liftLayer->scrollInfoCount; ++i) {
         liftLayer->scrollInfo[i].scrollSpeed = liftLayer->scrollInfo[i].parallaxFactor * (CrimsonEye->elevatorSpeed / 24);
     }
 
     CrimsonEye->bg2Layer->scrollSpeed = 6 * CrimsonEye->elevatorSpeed;
 
-    TileLayer *moveLayer   = RSDK.GetTileLayer(Zone->moveLayer);
+    moveLayer   = RSDK.GetTileLayer(Zone->moveLayer);
     moveLayer->scrollSpeed = (CrimsonEye->elevatorSpeed / 24) << 6;
 }
 
@@ -946,6 +973,7 @@ void CrimsonEye_StateCore_BrokenOut(void)
 
 void CrimsonEye_StateCore_Hovering(void)
 {
+    int32 storeY;
     RSDK_THIS(CrimsonEye);
 
     self->position.x += self->velocity.x;
@@ -972,37 +1000,39 @@ void CrimsonEye_StateCore_Hovering(void)
         self->velocity.x = -self->velocity.x;
     }
 
-    int32 storeY     = self->position.y;
+    storeY     = self->position.y;
     self->position.y = self->originPos.y;
 
-    foreach_active(InvisibleBlock, block)
-    {
-        int32 side = RSDK.CheckObjectCollisionBox(block, &block->hitbox, self, &CrimsonEye->hitboxBlock, true);
-        if (side == C_TOP) {
-            if (self->velocity.y < 0)
-                self->velocity.y = 0;
+{
+        foreach_active(InvisibleBlock, block)
+        {
+            int32 side = RSDK.CheckObjectCollisionBox(block, &block->hitbox, self, &CrimsonEye->hitboxBlock, true);
+            if (side == C_TOP) {
+                if (self->velocity.y < 0)
+                    self->velocity.y = 0;
 
-            self->rotation             = 0x40;
-            CrimsonEye->shotsRemaining = 8;
-            CrimsonEye->shotTimer      = 15;
+                self->rotation             = 0x40;
+                CrimsonEye->shotsRemaining = 8;
+                CrimsonEye->shotTimer      = 15;
 
-            self->state = CrimsonEye_StateCore_ImpactLift;
+                self->state = CrimsonEye_StateCore_ImpactLift;
 
-            RSDK.PlaySfx(CrimsonEye->sfxButton, false, 0xFF);
-            RSDK.PlaySfx(CrimsonEye->sfxImpact, false, 0xFF);
-        }
-        else if (side == C_BOTTOM) {
-            if (self->velocity.y > 0)
-                self->velocity.y = 0;
+                RSDK.PlaySfx(CrimsonEye->sfxButton, false, 0xFF);
+                RSDK.PlaySfx(CrimsonEye->sfxImpact, false, 0xFF);
+            }
+            else if (side == C_BOTTOM) {
+                if (self->velocity.y > 0)
+                    self->velocity.y = 0;
 
-            self->rotation             = 0x1C0;
-            CrimsonEye->shotsRemaining = 8;
-            CrimsonEye->shotTimer      = 15;
+                self->rotation             = 0x1C0;
+                CrimsonEye->shotsRemaining = 8;
+                CrimsonEye->shotTimer      = 15;
 
-            self->state = CrimsonEye_StateCore_ImpactLift;
+                self->state = CrimsonEye_StateCore_ImpactLift;
 
-            RSDK.PlaySfx(CrimsonEye->sfxButton, false, 0xFF);
-            RSDK.PlaySfx(CrimsonEye->sfxImpact, false, 0xFF);
+                RSDK.PlaySfx(CrimsonEye->sfxButton, false, 0xFF);
+                RSDK.PlaySfx(CrimsonEye->sfxImpact, false, 0xFF);
+            }
         }
     }
 
@@ -1070,6 +1100,7 @@ void CrimsonEye_Draw_Core(void)
         RSDK.SetPaletteEntry(0, 128, 0xE0E0E0);
 
     if (self->state != CrimsonEye_StateCore_ContainerActive && self->state != CrimsonEye_StateCore_BreakOut) {
+        Vector2 drawPos;
         self->animator.frameID = 12;
         RSDK.DrawSprite(&self->animator, NULL, false);
 
@@ -1077,7 +1108,7 @@ void CrimsonEye_Draw_Core(void)
         RSDK.DrawSprite(&self->animator, NULL, false);
 
         self->drawFX |= FX_ROTATE;
-        Vector2 drawPos        = self->position;
+        drawPos        = self->position;
         drawPos.x              = self->position.x - 0x160000;
         self->animator.frameID = 4;
         RSDK.DrawSprite(&self->animator, &drawPos, false);
@@ -1157,11 +1188,13 @@ void CrimsonEye_StateBall_Destroyed(void)
     CrimsonEye_CheckPlayerCollisions_Ball();
 
     if (--self->timer <= 0) {
+        int32 angle;
+        int32 i;
         RSDK.PlaySfx(CrimsonEye->sfxExplosion, false, 255);
         CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSS), self->position.x, self->position.y)->drawGroup = Zone->objectDrawGroup[1] + 2;
 
-        int32 angle = 0;
-        for (int32 i = 0; i < 8; ++i) {
+        angle = 0;
+        for (i = 0; i < 8; ++i) {
             EntityCrimsonEye *spike = CREATE_ENTITY(CrimsonEye, INT_TO_VOID(CRIMSONEYE_SPIKE), self->position.x, self->position.y);
             spike->animator.frameID = i + 2;
             spike->velocity.x       = RSDK.Cos256(angle) << 9;
@@ -1187,13 +1220,15 @@ void CrimsonEye_StateSpike_Harmful(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &CrimsonEye->hitboxOrb)) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &CrimsonEye->hitboxOrb)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x600, 2, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x600, 2, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 
@@ -1224,10 +1259,12 @@ void CrimsonEye_State_Shot(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &CrimsonEye->hitboxElecOrb)) {
-            Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &CrimsonEye->hitboxElecOrb)) {
+                Player_ElementHurt(player, self, SHIELD_LIGHTNING);
+            }
         }
     }
 

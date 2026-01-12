@@ -112,6 +112,8 @@ void PBL_TargetBumper_HandlePlayerInteractions(void)
         Vector2 originVel = { 0, 0 };
         foreach_active(PBL_Player, player)
         {
+            int32 velX;
+            int32 velY;
             int32 posX      = player->position.x;
             int32 posY      = player->position.y;
             int32 velStoreX = player->velocity.x;
@@ -121,8 +123,8 @@ void PBL_TargetBumper_HandlePlayerInteractions(void)
             Zone_RotateOnPivot(&player->position, &self->position, angle);
             Zone_RotateOnPivot(&player->velocity, &originVel, angle);
 
-            int32 velX = player->velocity.x;
-            int32 velY = player->velocity.y;
+            velX = player->velocity.x;
+            velY = player->velocity.y;
             switch (RSDK.CheckObjectCollisionBox(self, &PBL_TargetBumper->hitbox, player, &PBL_Player->outerBox, true)) {
                 case C_NONE:
                     player->position.x = posX;

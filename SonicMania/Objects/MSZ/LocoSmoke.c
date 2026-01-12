@@ -16,7 +16,8 @@ void LocoSmoke_Update(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (++self->timer == 26) {
-        for (int32 i = 0; i < 8; ++i) {
+        int32 i;
+        for (i = 0; i < 8; ++i) {
             int32 x              = self->position.x + RSDK.Rand(-0x280000, 0x180000);
             int32 y              = self->position.y + RSDK.Rand(-0x480000, -0x180000);
             EntityDebris *debris = CREATE_ENTITY(Debris, NULL, x, y);

@@ -12,6 +12,11 @@ ObjectEncoreRoute *EncoreRoute;
 
 void EncoreRoute_Update(void)
 {
+    int32 srcX;
+    int32 srcY;
+    int32 dstX;
+    int32 dstY;
+    int32 y;
     RSDK_THIS(EncoreRoute);
 
     uint8 layerSrc  = -1;
@@ -33,13 +38,14 @@ void EncoreRoute_Update(void)
         default: break;
     }
 
-    int32 srcX = self->offset.x >> 16;
-    int32 srcY = self->offset.y >> 16;
-    int32 dstX = self->position.x >> 20;
-    int32 dstY = self->position.y >> 20;
+    srcX = self->offset.x >> 16;
+    srcY = self->offset.y >> 16;
+    dstX = self->position.x >> 20;
+    dstY = self->position.y >> 20;
 
-    for (int32 y = 0; y < (self->size.y >> 16); ++y) {
-        for (int32 x = 0; x < (self->size.x >> 16); ++x) {
+    for (y = 0; y < (self->size.y >> 16); ++y) {
+        int32 x;
+        for (x = 0; x < (self->size.x >> 16); ++x) {
             uint16 tile = RSDK.GetTile(layerSrc, srcX + x, srcY + y);
             RSDK.SetTile(layerDest, dstX + x, dstY + y, tile);
         }

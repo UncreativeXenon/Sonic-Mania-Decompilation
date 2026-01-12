@@ -77,13 +77,15 @@ void LRZSpikeBall_StageLoad(void)
 
 int32 LRZSpikeBall_GetBaseFrameID(void)
 {
+    int32 time, inc, nextInc;
+    bool32 useOnFrames;
     RSDK_THIS(LRZSpikeBall);
 
     if (self->timer <= 0)
         return 0;
 
-    int32 time = 0, inc = 0, nextInc = 14;
-    bool32 useOnFrames = false;
+    time = 0, inc = 0, nextInc = 14;
+    useOnFrames = false;
 
     for (; time < self->timer; time += inc) {
         inc = nextInc;
@@ -121,13 +123,15 @@ void LRZSpikeBall_CheckPlayerBallCollisions(void)
     self->position.x += self->ballOffset.x;
     self->position.y += self->ballOffset.y;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &self->hitboxBall)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitboxBall)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 

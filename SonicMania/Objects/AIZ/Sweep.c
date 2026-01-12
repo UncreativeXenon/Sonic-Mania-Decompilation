@@ -58,22 +58,24 @@ void Sweep_Create(void *data)
             self->updateRange.y = 0x800000;
             RSDK.SetSpriteAnimation(Sweep->aniFrames, 0, &self->animator, true, 0);
 
-            foreach_all(Water, water)
             {
-                Hitbox hitboxWater;
-                Hitbox hitbox;
+                foreach_all(Water, water)
+                {
+                    Hitbox hitboxWater;
+                    Hitbox hitbox;
 
-                hitboxWater.right  = water->size.x >> 17;
-                hitboxWater.left   = -(water->size.x >> 17);
-                hitboxWater.bottom = water->size.y >> 17;
-                hitboxWater.top    = -(water->size.y >> 17);
+                    hitboxWater.right  = water->size.x >> 17;
+                    hitboxWater.left   = -(water->size.x >> 17);
+                    hitboxWater.bottom = water->size.y >> 17;
+                    hitboxWater.top    = -(water->size.y >> 17);
 
-                hitbox.left   = 1;
-                hitbox.top    = 64;
-                hitbox.right  = 1;
-                hitbox.bottom = 64;
-                if (water->type == WATER_POOL && RSDK.CheckObjectCollisionTouchBox(water, &hitboxWater, self, &hitbox)) {
-                    self->water = water;
+                    hitbox.left   = 1;
+                    hitbox.top    = 64;
+                    hitbox.right  = 1;
+                    hitbox.bottom = 64;
+                    if (water->type == WATER_POOL && RSDK.CheckObjectCollisionTouchBox(water, &hitboxWater, self, &hitbox)) {
+                        self->water = water;
+                    }
                 }
             }
             self->state = Sweep_State_Init;
@@ -143,10 +145,12 @@ void Sweep_CheckPlayerCollisions(void)
     foreach_active(Player, player)
     {
         Hitbox hitbox;
+        EntityShield *shield;
         Hitbox *playerHitbox = Player_GetHitbox(player);
+        int32 side; 
         RSDK.GetHitbox(&player->animator, 0);
 
-        EntityShield *shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
+        shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
         if (shield->classID == Shield->classID && shield->state == Shield_State_Insta) {
             hitbox.left   = 2 * playerHitbox->left - (playerHitbox->left >> 1);
             hitbox.top    = 2 * playerHitbox->top - (playerHitbox->top >> 1);
@@ -155,7 +159,7 @@ void Sweep_CheckPlayerCollisions(void)
             playerHitbox  = &hitbox;
         }
 
-        int32 side = MathHelpers_CheckBoxCollision(self, &Sweep->hitboxBadnik, player, playerHitbox);
+        side = MathHelpers_CheckBoxCollision(self, &Sweep->hitboxBadnik, player, playerHitbox);
         if (side) {
             if (self->state != Sweep_State_Turn
                 && ((self->direction == FLIP_NONE && side == C_LEFT) || (self->direction == FLIP_X && side == C_RIGHT)))
@@ -174,8 +178,9 @@ void Sweep_CheckShoot(void)
         foreach_active(Player, player)
         {
             if (Player_CheckCollisionTouch(player, self, &Sweep->hitboxRange)) {
+                EntitySweep *projectile;
                 RSDK.SetSpriteAnimation(Sweep->aniFrames, 3, &self->animator, true, 0);
-                EntitySweep *projectile = CREATE_ENTITY(Sweep, INT_TO_VOID(true), self->position.x, self->position.y);
+                projectile = CREATE_ENTITY(Sweep, INT_TO_VOID(true), self->position.x, self->position.y);
                 if (!self->direction)
                     projectile->velocity.x = -0x30000;
                 else
@@ -327,11 +332,12 @@ void Sweep_State_Projectile(void)
 
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->animator);
-
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Sweep->hitboxProjectile)) {
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Sweep->hitboxProjectile)) {
+                    Player_ProjectileHurt(player, self);
+                }
             }
         }
     }

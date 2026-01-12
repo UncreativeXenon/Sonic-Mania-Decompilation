@@ -34,7 +34,9 @@ void LRZ3Outro_Create(void *data)
         self->background1 = RSDK.GetTileLayer(1);
         self->background2 = RSDK.GetTileLayer(2);
 
-        foreach_active(ParallaxSprite, sprite) { self->littlePlanet = sprite; }
+{
+            foreach_active(ParallaxSprite, sprite) { self->littlePlanet = sprite; }
+        }
 
         self->state = LRZ3Outro_State_BlastOff;
     }
@@ -87,6 +89,8 @@ void LRZ3Outro_State_BlastOff(void)
 
 void LRZ3Outro_State_RocketLaunch(void)
 {
+    TileLayer *background1;
+    TileLayer *background2;
     RSDK_THIS(LRZ3Outro);
 
     ++self->timer;
@@ -121,7 +125,7 @@ void LRZ3Outro_State_RocketLaunch(void)
         RSDK.StopChannel(self->blastoffChannel);
     }
 
-    TileLayer *background1 = self->background1;
+    background1 = self->background1;
     if (background1->scrollPos <= -0xE00000) {
         background1->scrollSpeed >>= 1;
     }
@@ -130,7 +134,7 @@ void LRZ3Outro_State_RocketLaunch(void)
             background1->scrollSpeed -= 0x80;
     }
 
-    TileLayer *background2 = self->background2;
+    background2 = self->background2;
     if (background2->scrollPos <= -0xE00000) {
         background2->scrollSpeed >>= 1;
     }
@@ -145,12 +149,13 @@ void LRZ3Outro_State_RocketLaunch(void)
 
 void LRZ3Outro_State_EnterLittlePlanet(void)
 {
+    EntityParallaxSprite *littlePlanet;
     RSDK_THIS(LRZ3Outro);
 
     if (self->background2->scrollSpeed < 0)
         self->background2->scrollSpeed += 0x80;
 
-    EntityParallaxSprite *littlePlanet = self->littlePlanet;
+    littlePlanet = self->littlePlanet;
     if (littlePlanet->scrollSpeed.y > -0x1000) {
         littlePlanet->scrollSpeed.y -= 0x80;
     }

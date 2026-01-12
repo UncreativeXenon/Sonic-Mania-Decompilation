@@ -83,10 +83,11 @@ void TryAgain_State_Init(void)
 
 void TryAgain_State_EnterEggman(void)
 {
+    int32 targetPos;
     RSDK_THIS(TryAgain);
 
     self->eggmanVelocityY += 0x3800;
-    int32 targetPos = self->position.y - 0x340000;
+    targetPos = self->position.y - 0x340000;
     self->eggmanPos.y += self->eggmanVelocityY;
 
     if (self->eggmanPos.y <= targetPos || self->eggmanVelocityY <= 0) {
@@ -151,14 +152,15 @@ void TryAgain_State_Stinger(void)
         self->timer = 600;
 
     if (self->timer == 600) {
+        EntityFXFade *fxFade;
 #if MANIA_USE_PLUS
         PhantomRuby_PlaySfx(RUBYSFX_ATTACK4);
-        EntityFXFade *fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xFFFFFF), self->position.x, self->position.y);
+        fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xFFFFFF), self->position.x, self->position.y);
         fxFade->speedIn      = 24;
         fxFade->speedOut     = 24;
         fxFade->fadeOutBlack = true;
 #else
-        EntityFXFade *fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0x000000), self->position.x, self->position.y);
+        fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0x000000), self->position.x, self->position.y);
         fxFade->speedIn      = 12;
         fxFade->wait         = 240;
 #endif

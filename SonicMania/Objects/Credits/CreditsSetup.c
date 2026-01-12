@@ -16,9 +16,11 @@ void CreditsSetup_LateUpdate(void) {}
 void CreditsSetup_StaticUpdate(void)
 {
     if (CreditsSetup->started) {
+        EntityFXFade *fade;
+        int32 scrollSpeed;
         CreditsSetup->scrollPos += 0x1000;
 
-        EntityFXFade *fade = CreditsSetup->fxFade;
+        fade = CreditsSetup->fxFade;
 
         if (!CreditsSetup->skipped) {
             // Check if we should play the next track
@@ -45,7 +47,7 @@ void CreditsSetup_StaticUpdate(void)
                 if (param->creditsReturnToMenu) {
                     RSDK.SetScene("Presentation", "Menu");
                 }
-                else if (SaveGame_GetSaveRAM()->collectedEmeralds < 0b01111111) {
+                else if (SaveGame_GetSaveRAM()->collectedEmeralds < 0x7F) {
                     globals->gameMode == MODE_ENCORE ? RSDK.SetScene("Cutscenes", "Try Again Encore") : RSDK.SetScene("Cutscenes", "Try Again");
                 }
                 else if (globals->gameMode == MODE_ENCORE) {
@@ -57,7 +59,7 @@ void CreditsSetup_StaticUpdate(void)
 #else
                 if (param->creditsReturnToMenu)
                     RSDK.SetScene("Presentation", "Menu");
-                else if (SaveGame_GetSaveRAM()->collectedEmeralds < 0b01111111)
+                else if (SaveGame_GetSaveRAM()->collectedEmeralds < 0x7F)
                     RSDK.SetScene("Cutscenes", "Try Again");
                 else
                     RSDK.SetScene("Presentation", "Menu");
@@ -67,21 +69,27 @@ void CreditsSetup_StaticUpdate(void)
             }
         }
 
-        int32 scrollSpeed = 0x10000;
+        scrollSpeed = 0x10000;
         if (ControllerInfo->keyA.down || ControllerInfo->keyB.down || ControllerInfo->keyC.down)
             scrollSpeed = 0x80000;
 
-        foreach_all(UICreditsText, text)
         {
-            text->drawGroup = Zone->playerDrawGroup[1];
-            text->position.y -= scrollSpeed;
+            foreach_all(UICreditsText, text)
+            {
+                text->drawGroup = Zone->playerDrawGroup[1];
+                text->position.y -= scrollSpeed;
+            }
         }
 
         CreditsSetup->creditsPos += scrollSpeed;
     }
     else {
-        foreach_all(Player, player) { destroyEntity(player); }
-        foreach_all(Camera, camera) { destroyEntity(camera); }
+        {
+            foreach_all(Player, player) { destroyEntity(player); }
+        }
+        {
+            foreach_all(Camera, camera) { destroyEntity(camera); }
+        }
 
         CreditsSetup->creditsSize = 0;
         CreditsSetup->creditsPos  = 0;
@@ -98,39 +106,46 @@ void CreditsSetup_StageLoad(void)
 {
     CreditsSetup->started = false;
 
-    foreach_all(FXFade, fxFade) { CreditsSetup->fxFade = fxFade; }
+    {
+        foreach_all(FXFade, fxFade) { CreditsSetup->fxFade = fxFade; }
+    }
 }
 
 void CreditsSetup_LoadCreditsStrings(void)
 {
     String string;
     String stringList;
+    int32 offset;
+    int32 i;
 
     INIT_STRING(stringList);
     INIT_STRING(string);
     RSDK.LoadStringList(&stringList, "Credits.txt", 8);
     RSDK.InitString(&string, "", 0x80);
 
-    int32 offset = (ScreenInfo->size.y + 128) << 16;
-    for (int32 i = 0; RSDK.SplitStringList(&string, &stringList, i, 1); ++i) {
+    offset = (ScreenInfo->size.y + 128) << 16;
+    for (i = 0; RSDK.SplitStringList(&string, &stringList, i, 1); ++i) {
         if (string.length <= 4) {
             offset += 0x200000;
         }
         else {
+            int32 c;
+            EntityUICreditsText *text;
+            SpriteFrame *frame;
             int32 type      = string.chars[1] - '0';
             bool32 hasShape = string.chars[2] == 'U';
 
             string.length -= 3;
-            for (int32 c = 0; c < string.length; ++c) string.chars[c] = string.chars[c + 3];
+            for (c = 0; c < string.length; ++c) string.chars[c] = string.chars[c + 3];
 
-            EntityUICreditsText *text = RSDK_GET_ENTITY(i + 0x100, UICreditsText);
+            text = RSDK_GET_ENTITY(i + 0x100, UICreditsText);
             RSDK.ResetEntity(text, UICreditsText->classID, 0);
             text->hasShape   = hasShape;
             text->position.x = 0x1000000;
             text->position.y = offset;
             UICreditsText_SetText(type, text, &string);
 
-            SpriteFrame *frame = RSDK.GetFrame(UICreditsText->aniFrames, type, 0);
+            frame = RSDK.GetFrame(UICreditsText->aniFrames, type, 0);
             if (frame)
                 offset += (frame->height + 8) << 16;
             if (type == 7)

@@ -80,15 +80,17 @@ void Stalactite_State_Falling(void)
     self->position.y += self->velocity.y;
     self->velocity.y += 0x1800;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Stalactite->hitboxStalactite)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Stalactite->hitboxStalactite)) {
 #if MANIA_USE_PLUS
-            if (Player_CheckMightyShellHit(player, self, -0x300, -0x400))
-                self->state = Stalactite_State_Debris;
-            else
+                if (Player_CheckMightyShellHit(player, self, -0x300, -0x400))
+                    self->state = Stalactite_State_Debris;
+                else
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 
@@ -116,15 +118,17 @@ void Stalactite_State_Falling_Boss(void)
     self->position.y += self->velocity.y;
     self->velocity.y += 0x1800;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Stalactite->hitboxStalactite)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Stalactite->hitboxStalactite)) {
 #if MANIA_USE_PLUS
-            if (Player_CheckMightyShellHit(player, self, -0x300, -0x400))
-                self->state = Stalactite_State_Debris;
-            else
+                if (Player_CheckMightyShellHit(player, self, -0x300, -0x400))
+                    self->state = Stalactite_State_Debris;
+                else
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 

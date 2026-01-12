@@ -11,6 +11,15 @@ ObjectUIKeyBinder *UIKeyBinder;
 
 void UIKeyBinder_Update(void)
 {
+    EntityUIControl *parent;
+    int32 inputID;
+    int32 keyMap;
+    String string;
+    bool32 keyMapChanged;
+    int32 frameID;
+    int32 buttonID;
+    int32 id;
+    int32 i;
     RSDK_THIS(UIKeyBinder);
 
     self->touchPosSizeS.x   = self->size.x;
@@ -24,15 +33,14 @@ void UIKeyBinder_Update(void)
         self->textFrames = UIWidgets->textFrames;
     }
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
-    int32 inputID           = self->inputID + 1;
-    int32 keyMap            = UIKeyBinder_GetMappings(inputID, self->type);
+    parent = (EntityUIControl *)self->parent;
+    inputID           = self->inputID + 1;
+    keyMap            = UIKeyBinder_GetMappings(inputID, self->type);
 
-    String string;
     INIT_STRING(string);
-    bool32 keyMapChanged = true;
+    keyMapChanged = true;
 
-    int32 frameID = -1;
+    frameID = -1;
     if (self->lasyKeyMap == keyMap) {
         keyMapChanged = false;
     }
@@ -45,19 +53,21 @@ void UIKeyBinder_Update(void)
         frameID = UIButtonPrompt_MappingsToFrame(keyMap);
     }
 
-    for (int32 buttonID = 0; buttonID <= 8 && keyMapChanged; ++buttonID) {
-        for (int32 inputSlot = 1; inputSlot <= 2 && keyMapChanged; ++inputSlot) {
+    for (buttonID = 0; buttonID <= 8 && keyMapChanged; ++buttonID) {
+        int32 inputSlot;
+        for (inputSlot = 1; inputSlot <= 2 && keyMapChanged; ++inputSlot) {
             if ((buttonID != self->type || inputSlot != inputID) && keyMap) {
                 if (UIKeyBinder_GetMappings(inputSlot, buttonID) != keyMap)
                     continue;
 
                 if (self->state == UIKeyBinder_State_Selected) {
+                    int32 str;
 #if GAME_VERSION != VER_100
                     // Handle Key clashes
                     UIKeyBinder->activeInputID  = inputSlot;
                     UIKeyBinder->activeButtonID = buttonID;
 
-                    int32 str = -1;
+                    str = -1;
                     if (inputSlot == inputID)
                         str = STR_KEYALREADYBOUND;
                     else if (inputSlot == CONT_P1)
@@ -110,11 +120,12 @@ void UIKeyBinder_Update(void)
             }
         }
         else {
+            int32 frame;
 #if GAME_VERSION != VER_100
             LogHelpers_Print("bind = %d 0x%02x", keyMap, keyMap);
 #endif
 
-            int32 frame = UIButtonPrompt_MappingsToFrame(self->lasyKeyMap);
+            frame = UIButtonPrompt_MappingsToFrame(self->lasyKeyMap);
             RSDK.SetSpriteAnimation(UIKeyBinder->aniFrames, UIKeyBinder_GetButtonListID(), &self->keyAnimator, true, frame);
             UIKeyBinder_SetMappings(inputID, self->type, KEYMAP_AUTO_MAPPING);
 
@@ -124,8 +135,8 @@ void UIKeyBinder_Update(void)
 
     StateMachine_Run(self->state);
 
-    int32 id = -1;
-    for (int32 i = 0; i < parent->buttonCount; ++i) {
+    id = -1;
+    for (i = 0; i < parent->buttonCount; ++i) {
         if (self == (EntityUIKeyBinder *)parent->buttons[i]) {
             id = i;
             break;
@@ -323,9 +334,10 @@ void UIKeyBinder_SelectedCB(void)
 
 #if GAME_VERSION != VER_100
     if (!UIKeyBinder->isSelected) {
+        EntityUIControl *parent;
         UIKeyBinder->isSelected = true;
 
-        EntityUIControl *parent   = (EntityUIControl *)self->parent;
+        parent   = (EntityUIControl *)self->parent;
         parent->childHasFocus     = true;
         parent->selectionDisabled = true;
 
@@ -432,6 +444,7 @@ void UIKeyBinder_MoveKeyToActionCB_Yes(void)
     EntityUIKeyBinder *binder = UIKeyBinder->activeBinder;
 
     if (binder->state == UIKeyBinder_State_Selected) {
+        EntityUIControl *parent;
         // Store the keyMap from the other button
         int32 keyMap = UIKeyBinder_GetMappings(UIKeyBinder->activeInputID, UIKeyBinder->activeButtonID);
 
@@ -441,7 +454,7 @@ void UIKeyBinder_MoveKeyToActionCB_Yes(void)
         // Give the keyMap to the new button
         UIKeyBinder_SetMappings(binder->inputID + 1, binder->type, keyMap);
 
-        EntityUIControl *parent   = (EntityUIControl *)binder->parent;
+        parent   = (EntityUIControl *)binder->parent;
         parent->selectionDisabled = false;
         parent->childHasFocus     = false;
 

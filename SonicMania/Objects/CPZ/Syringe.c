@@ -27,25 +27,28 @@ void Syringe_Update(void)
         self->offsetY = 0;
     }
 
-    foreach_active(Player, player)
     {
-        Player_CheckCollisionPlatform(player, self, &Syringe->hitboxBody);
-        self->position.y += self->offsetY;
+        foreach_active(Player, player)
+        {
+            EntityCamera *camera;
+            Player_CheckCollisionPlatform(player, self, &Syringe->hitboxBody);
+            self->position.y += self->offsetY;
 
-        if (Player_CheckCollisionPlatform(player, self, &Syringe->hitboxHandle)) {
-            self->activated = true;
-            player->position.y += 0x10000;
+            if (Player_CheckCollisionPlatform(player, self, &Syringe->hitboxHandle)) {
+                self->activated = true;
+                player->position.y += 0x10000;
 
-            EntityCamera *camera = player->camera;
-            if (camera) {
-                if (camera->lookPos.y < 96) {
-                    camera->lookPos.y += 8;
-                    camera->lookPos.y = MIN(camera->lookPos.y, 80);
+                camera = player->camera;
+                if (camera) {
+                    if (camera->lookPos.y < 96) {
+                        camera->lookPos.y += 8;
+                        camera->lookPos.y = MIN(camera->lookPos.y, 80);
+                    }
                 }
             }
-        }
 
-        self->position.y -= self->offsetY;
+            self->position.y -= self->offsetY;
+        }
     }
 }
 

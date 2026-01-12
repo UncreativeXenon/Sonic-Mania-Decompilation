@@ -31,6 +31,7 @@ void PrintBlock_Update(void)
                 }
             }
             else {
+                Vector2 pos;
                 self->active = ACTIVE_NORMAL;
                 self->timer  = timer;
                 if (self->timer > 12) {
@@ -42,7 +43,6 @@ void PrintBlock_Update(void)
                     self->animator.frameID = self->timer / 3 + 1;
                 }
 
-                Vector2 pos;
                 pos.x = 0x200000;
                 pos.y = 0x200000;
                 if (RSDK.CheckOnScreen(self, &pos)) {

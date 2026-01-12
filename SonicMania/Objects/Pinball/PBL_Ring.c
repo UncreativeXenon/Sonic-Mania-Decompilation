@@ -39,9 +39,9 @@ void PBL_Ring_Draw(void)
     RSDK_THIS(PBL_Ring);
 
     if (self->zdepth >= 0x100) {
+        Vector2 drawPos;
         self->direction = self->animator.frameID > 8;
 
-        Vector2 drawPos;
         drawPos.x = (ScreenInfo->center.x + (self->worldX << 8) / self->zdepth) << 16;
         drawPos.y = (ScreenInfo->center.y - (self->worldY << 8) / self->zdepth) << 16;
 

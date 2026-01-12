@@ -31,6 +31,9 @@ uint16 ColorHelpers_PackRGB(uint8 r, uint8 g, uint8 b) { return (b >> 3) | ((g >
 
 void ColorHelpers_RGBToHSL(uint32 r, uint32 g, uint32 b, uint32 *hue, uint32 *saturation, uint32 *luminance)
 {
+    uint8 min;
+    uint8 max;
+    int32 chroma;
     if (!r && !g && !b) {
         if (hue)
             *hue = 0;
@@ -40,10 +43,10 @@ void ColorHelpers_RGBToHSL(uint32 r, uint32 g, uint32 b, uint32 *hue, uint32 *sa
             *luminance = 0;
     }
 
-    uint8 min = MIN(MIN(r, g), b);
-    uint8 max = MAX(MAX(r, g), b);
+    min = MIN(MIN(r, g), b);
+    max = MAX(MAX(r, g), b);
 
-    int32 chroma = max - min;
+    chroma = max - min;
     if (max) {
         if (max == min) {
             if (hue)

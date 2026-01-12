@@ -221,10 +221,12 @@ void Redz_Flame_State(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Redz->hitboxFlame)) {
-            Player_ElementHurt(player, self, SHIELD_FIRE);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Redz->hitboxFlame)) {
+                Player_ElementHurt(player, self, SHIELD_FIRE);
+            }
         }
     }
 

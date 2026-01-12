@@ -15,6 +15,10 @@ void TimeTravelSetup_LateUpdate(void) {}
 
 void TimeTravelSetup_StaticUpdate(void)
 {
+    int32 id;
+    TileLayer *background1;
+    TileLayer *background2;
+    int32 i;
     if (!(Zone->timer % 5)) {
         foreach_all(Player, player)
         {
@@ -28,7 +32,7 @@ void TimeTravelSetup_StaticUpdate(void)
         }
     }
 
-    int32 id = (TimeTravelSetup->timer >> 8) + 1;
+    id = (TimeTravelSetup->timer >> 8) + 1;
     if (id > 2)
         id = (TimeTravelSetup->timer >> 8) - 2;
 
@@ -37,19 +41,19 @@ void TimeTravelSetup_StaticUpdate(void)
     TimeTravelSetup->timer += 4;
     TimeTravelSetup->timer %= 768;
 
-    TileLayer *background1 = RSDK.GetTileLayer(0);
+    background1 = RSDK.GetTileLayer(0);
     background1->deformationOffset += 2;
 
-    for (int32 i = 0; i < 0x200; ++i) {
+    for (i = 0; i < 0x200; ++i) {
         int32 deform                            = (2 * RSDK.Sin256(i << 6) >> 8) + (2 * RSDK.Sin256(8 * i) >> 7);
         background1->deformationData[i + 0x000] = deform;
         background1->deformationData[i + 0x200] = deform;
     }
 
-    TileLayer *background2 = RSDK.GetTileLayer(1);
+    background2 = RSDK.GetTileLayer(1);
     background2->deformationOffset += 2;
 
-    for (int32 i = 0; i < 0x200; ++i) {
+    for (i = 0; i < 0x200; ++i) {
         int32 deform = (2 * RSDK.Sin256(2 * i) >> 7) + (2 * (RSDK.Sin256(2 * i)) >> 7);
 
         background2->deformationData[i + 0x000] = deform;
@@ -63,11 +67,12 @@ void TimeTravelSetup_Create(void *data) {}
 
 void TimeTravelSetup_StageLoad(void)
 {
+    TileLayer *background2;
     TileLayer *background1    = RSDK.GetTileLayer(0);
     background1->drawGroup[0] = 0;
     background1->scrollSpeed  = -0x60000;
 
-    TileLayer *background2    = RSDK.GetTileLayer(1);
+    background2    = RSDK.GetTileLayer(1);
     background2->drawGroup[0] = 0;
     background2->scrollSpeed  = -0xA0000;
 

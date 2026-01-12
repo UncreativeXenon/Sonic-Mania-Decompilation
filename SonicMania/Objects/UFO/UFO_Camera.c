@@ -33,10 +33,12 @@ void UFO_Camera_Create(void *data)
     self->height = 0x300000;
     self->radius = 0x2800;
 
-    foreach_all(UFO_Player, player)
-    {
-        player->camera = self;
-        self->target   = (Entity *)player;
+{
+        foreach_all(UFO_Player, player)
+        {
+            player->camera = self;
+            self->target   = (Entity *)player;
+        }
     }
 }
 
@@ -49,6 +51,7 @@ void UFO_Camera_StageLoad(void)
 
 void UFO_Camera_HandleCamPos(void)
 {
+    int32 offset;
     RSDK_THIS(UFO_Camera);
 
     int32 cos = MAX(RSDK.Cos1024(-self->angleX) << 12, 0x3C0000);
@@ -63,7 +66,7 @@ void UFO_Camera_HandleCamPos(void)
     else
         ScreenInfo->position.x -= 2 * angle;
 
-    int32 offset           = ((RSDK.Sin1024(-self->angleX) << 12) << 8) / cos;
+    offset           = ((RSDK.Sin1024(-self->angleX) << 12) << 8) / cos;
     ScreenInfo->position.y = offset - ScreenInfo->center.y + 512;
     self->prevAngle        = self->angle;
 
@@ -95,8 +98,9 @@ void UFO_Camera_State_Normal(void)
 
         self->angle &= 0x3FF;
         if (target->state == UFO_Player_State_Springboard) {
+            int32 rad;
             self->angleX = -(target->height >> 18);
-            int32 rad    = self->radius * RSDK.Cos1024(self->angleX) >> 10;
+            rad    = self->radius * RSDK.Cos1024(self->angleX) >> 10;
 
             self->position.x = target->position.x - rad * RSDK.Sin1024(self->angle);
             self->position.y = target->position.y - rad * RSDK.Cos1024(self->angle);

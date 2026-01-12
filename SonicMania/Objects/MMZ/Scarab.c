@@ -173,10 +173,12 @@ void Scarab_CheckPlayerCollisions(void)
 
 void Scarab_HandleChildMove(void)
 {
+    int32 slot;
+    int32 c;
     RSDK_THIS(Scarab);
 
-    int32 slot = SceneInfo->entitySlot + 1;
-    for (int32 c = 0; c < self->childCount; ++c) {
+    slot = SceneInfo->entitySlot + 1;
+    for (c = 0; c < self->childCount; ++c) {
         EntityItemBox *child = RSDK_GET_ENTITY(slot + c, ItemBox);
         child->position.x += self->moveOffset.x;
         child->position.y += self->moveOffset.y;
@@ -265,6 +267,8 @@ void Scarab_State_Init(void)
 
 void Scarab_State_Move(void)
 {
+    int32 x;
+    int32 y;
     RSDK_THIS(Scarab);
 
     if (self->frontLegAnimator.frameID == self->frontLegAnimator.frameCount - 1)
@@ -278,8 +282,8 @@ void Scarab_State_Move(void)
         self->state = Scarab_State_Wait;
     }
 
-    int32 x = self->position.x + 0x6000 * self->moveDir;
-    int32 y = self->position.y;
+    x = self->position.x + 0x6000 * self->moveDir;
+    y = self->position.y;
 
     self->position.x = x;
     if (abs(x - self->startPos.x) < (self->amplitude << 16) && RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0x60000, 2)) {

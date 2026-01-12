@@ -299,6 +299,7 @@ void BreakableWall_CheckBreak_Wall(void)
     foreach_active(Player, player)
     {
 #if MANIA_USE_PLUS
+        bool32 canBreak;
         if (self->onlyMighty) {
             if (player->characterID != ID_MIGHTY && (!self->onlyKnux || player->characterID != ID_KNUCKLES)) {
                 Player_CheckCollisionBox(player, self, &self->hitbox);
@@ -318,7 +319,7 @@ void BreakableWall_CheckBreak_Wall(void)
         }
 #endif
 
-        bool32 canBreak = abs(player->groundVel) >= 0x48000 && player->onGround && player->animator.animationID == ANI_JUMP;
+        canBreak = abs(player->groundVel) >= 0x48000 && player->onGround && player->animator.animationID == ANI_JUMP;
 
         if (player->shield == SHIELD_FIRE) {
             EntityShield *shield = RSDK_GET_ENTITY(Player->playerCount + RSDK.GetEntitySlot(player), Shield);
@@ -375,6 +376,7 @@ void BreakableWall_CheckBreak_Floor(void)
 #endif
 
         if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_TOP) {
+            bool32 canBreak;
 #if MANIA_USE_PLUS
             if (self->onlyMighty) {
                 if ((player->characterID != ID_MIGHTY || player->animator.animationID != ANI_HAMMERDROP)
@@ -396,7 +398,7 @@ void BreakableWall_CheckBreak_Floor(void)
             }
 #endif
 
-            bool32 canBreak = player->animator.animationID == ANI_JUMP;
+            canBreak = player->animator.animationID == ANI_JUMP;
 
             switch (player->characterID) {
                 default: break;
@@ -456,6 +458,7 @@ void BreakableWall_CheckBreak_BurrowFloor(void)
 
         if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_TOP && !player->sidekick
             && ((player->collisionPlane == 1 && self->type == BREAKWALL_TYPE_BURROWFLOOR_B) || self->type == BREAKWALL_TYPE_BURROWFLOOR)) {
+            bool32 canBreak;
 #if MANIA_USE_PLUS
             if (self->onlyMighty) {
                 if ((player->characterID != ID_MIGHTY || player->animator.animationID != ANI_HAMMERDROP)
@@ -471,7 +474,7 @@ void BreakableWall_CheckBreak_BurrowFloor(void)
                 continue;
 #endif
 
-            bool32 canBreak = player->animator.animationID == ANI_JUMP;
+            canBreak = player->animator.animationID == ANI_JUMP;
 
             switch (player->characterID) {
                 default: break;
@@ -493,12 +496,16 @@ void BreakableWall_CheckBreak_BurrowFloor(void)
                 canBreak = false;
 
             if (canBreak && !player->sidekick) {
+                int32 sizeX;
+                int32 sizeY;
+                int32 posX;
+                int32 posY;
                 player->onGround = false;
 
-                int32 sizeX = self->size.x;
-                int32 sizeY = self->size.y;
-                int32 posX  = self->position.x;
-                int32 posY  = self->position.y;
+                sizeX = self->size.x;
+                sizeY = self->size.y;
+                posX  = self->position.x;
+                posY  = self->position.y;
 
                 self->size.y = 1;
                 self->position.y += 0x80000 - (sizeY << 19);
@@ -627,6 +634,8 @@ void BreakableWall_CheckBreak_Ceiling(void)
 }
 void BreakableWall_Break(EntityBreakableWall *self, uint8 direction)
 {
+    int32 curY;
+    int32 y;
     int32 startX = self->position.x;
     int32 startY = self->position.y;
     int32 endX   = self->position.x - (self->size.x << 19) + TO_FIXED(8);
@@ -640,13 +649,14 @@ void BreakableWall_Break(EntityBreakableWall *self, uint8 direction)
         default: break;
     }
 
-    int32 curY = endY - startY;
-    for (int32 y = 0; y < self->size.y; ++y) {
+    curY = endY - startY;
+    for (y = 0; y < self->size.y; ++y) {
+        int32 x;
         int32 curX   = endX - startX;
         int32 tileY  = (curY + startY) >> 20;
         int32 angleX = 2 * (endX - startX);
 
-        for (int32 x = 0; x < self->size.x; ++x) {
+        for (x = 0; x < self->size.x; ++x) {
             int32 tileX               = (curX + startX) >> 20;
             EntityBreakableWall *tile = CREATE_ENTITY(BreakableWall, INT_TO_VOID(BREAKWALL_TILE_FIXED), curX + startX, curY + startY);
             tile->tileInfo            = RSDK.GetTile(self->priority, tileX, tileY);
@@ -737,6 +747,7 @@ void BreakableWall_GiveScoreBonus(EntityPlayer *player)
 #if GAME_INCLUDE_EDITOR
 void BreakableWall_EditorDraw(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(BreakableWall);
 
     int32 sizeX = self->size.x;
@@ -781,7 +792,6 @@ void BreakableWall_EditorDraw(void)
     sizeX <<= 4;
     sizeY <<= 4;
 
-    Vector2 drawPos;
     drawPos.x = self->position.x - sizeX;
     drawPos.y = self->position.y - sizeY;
 

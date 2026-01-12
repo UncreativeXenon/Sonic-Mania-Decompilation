@@ -17,6 +17,7 @@ void GymBar_StaticUpdate(void) {}
 
 void GymBar_Draw(void)
 {
+    int32 i;
     RSDK_THIS(GymBar);
 
     Vector2 drawPos = self->position;
@@ -26,7 +27,7 @@ void GymBar_Draw(void)
         RSDK.DrawSprite(&self->animator, &drawPos, false);
 
         self->animator.frameID = 1;
-        for (int32 i = 0; i < self->size; ++i) {
+        for (i = 0; i < self->size; ++i) {
             RSDK.DrawSprite(&self->animator, &drawPos, false);
             drawPos.y += 0x80000;
         }
@@ -37,7 +38,7 @@ void GymBar_Draw(void)
         RSDK.DrawSprite(&self->animator, &drawPos, false);
 
         self->animator.frameID = 1;
-        for (int32 i = 0; i < self->size; ++i) {
+        for (i = 0; i < self->size; ++i) {
             RSDK.DrawSprite(&self->animator, &drawPos, false);
             drawPos.x += 0x80000;
         }
@@ -204,12 +205,13 @@ void GymBar_HandleSwingJump(void)
 
 void GymBar_PlayerState_SwingV(void)
 {
+    int32 frame;
     RSDK_THIS(Player);
 
     if (self->jumpPress)
         GymBar_HandleSwingJump();
 
-    int32 frame = self->abilityValues[2] <= 0 ? 4 : 11;
+    frame = self->abilityValues[2] <= 0 ? 4 : 11;
 
     if (self->animator.frameID == frame && self->abilityValues[1] != frame)
         ++self->abilityValues[0];
@@ -261,12 +263,13 @@ void GymBar_PlayerState_Hang(void)
 
 void GymBar_PlayerState_SwingH(void)
 {
+    int32 frame;
     RSDK_THIS(Player);
 
     if (self->jumpPress)
         GymBar_HandleSwingJump();
 
-    int32 frame = self->abilityValues[2] <= 0 ? 4 : 11;
+    frame = self->abilityValues[2] <= 0 ? 4 : 11;
 
     if (self->animator.frameID == frame && self->abilityValues[1] != frame)
         ++self->abilityValues[0];

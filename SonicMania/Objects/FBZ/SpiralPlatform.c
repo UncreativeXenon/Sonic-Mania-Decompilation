@@ -16,11 +16,13 @@ void SpiralPlatform_Update(void)
     self->collision = PLATFORM_C_TILED;
     Platform_Update();
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionBox(player, self, &SpiralPlatform->hitboxPlatform) == C_BOTTOM) {
-            if (player->onGround && !player->collisionMode)
-                player->deathType = PLAYER_DEATH_DIE_USESFX;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionBox(player, self, &SpiralPlatform->hitboxPlatform) == C_BOTTOM) {
+                if (player->onGround && !player->collisionMode)
+                    player->deathType = PLAYER_DEATH_DIE_USESFX;
+            }
         }
     }
 }

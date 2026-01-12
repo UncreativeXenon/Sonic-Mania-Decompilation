@@ -91,16 +91,18 @@ void FlameSpring_State_Spring(void)
     RSDK_THIS(FlameSpring);
 
     self->spittingFire = false;
-    foreach_active(Player, playerPtr)
     {
-        if (Player_CheckCollisionBox(playerPtr, self, &FlameSpring->hitboxSpring) == C_TOP && playerPtr->velocity.y >= 0) {
-            if (!self->mainAnimator.frameID) {
-                self->timer                = 0;
-                self->mainAnimator.frameID = 1;
-            }
+        foreach_active(Player, playerPtr)
+        {
+            if (Player_CheckCollisionBox(playerPtr, self, &FlameSpring->hitboxSpring) == C_TOP && playerPtr->velocity.y >= 0) {
+                if (!self->mainAnimator.frameID) {
+                    self->timer                = 0;
+                    self->mainAnimator.frameID = 1;
+                }
 
-            if (self->mainAnimator.frameID <= 1)
-                self->spittingFire = true;
+                if (self->mainAnimator.frameID <= 1)
+                    self->spittingFire = true;
+            }
         }
     }
 
@@ -136,10 +138,11 @@ void FlameSpring_State_Spring(void)
         }
     }
     else {
+        int32 timer; 
         if (!(Zone->timer & 7))
             RSDK.PlaySfx(FlameSpring->sfxFlame, false, 255);
 
-        int32 timer = Zone->timer + self->offset;
+        timer = Zone->timer + self->offset;
         if (!self->type) {
             self->flamePosL.x = self->position.x - 0x300 * RSDK.Sin1024(((4 * timer) & 0x1FF) + 0x100);
             self->flamePosR.x = 0x300 * RSDK.Sin1024(((4 * timer) & 0x1FF) + 0x100) + self->position.x;
@@ -184,10 +187,12 @@ void FlameSpring_State_Flame(void)
     RSDK_THIS(FlameSpring);
 
     self->position.x += self->velocity.x;
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &FlameSpring->hitboxFlame)) {
-            Player_ElementHurt(player, self, SHIELD_FIRE);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &FlameSpring->hitboxFlame)) {
+                Player_ElementHurt(player, self, SHIELD_FIRE);
+            }
         }
     }
 

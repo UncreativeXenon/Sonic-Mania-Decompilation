@@ -87,15 +87,17 @@ void Reagent_State_CheckPoolCollisions(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    foreach_all(ChemicalPool, chemPool)
     {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &Reagent->hitbox, chemPool, &chemPool->hitbox)) {
-            self->velocity.y >>= 2;
-            self->originPos.x = self->position.x;
-            self->state       = Reagent_State_ChangingPoolType;
-            chemPool->active  = ACTIVE_NORMAL;
-            ChemicalPool_ChangeState(chemPool, self->type, self->r, self->g, self->b);
-            RSDK.PlaySfx(Reagent->sfxLand, false, 255);
+        foreach_all(ChemicalPool, chemPool)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &Reagent->hitbox, chemPool, &chemPool->hitbox)) {
+                self->velocity.y >>= 2;
+                self->originPos.x = self->position.x;
+                self->state       = Reagent_State_ChangingPoolType;
+                chemPool->active  = ACTIVE_NORMAL;
+                ChemicalPool_ChangeState(chemPool, self->type, self->r, self->g, self->b);
+                RSDK.PlaySfx(Reagent->sfxLand, false, 255);
+            }
         }
     }
 

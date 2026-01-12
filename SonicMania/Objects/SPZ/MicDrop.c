@@ -115,13 +115,15 @@ void MicDrop_CheckPlayerCollisions(void)
     self->position.x = (((self->radius + 25) * RSDK.Cos512(self->angle + 128)) << 7) + self->startPos.x;
     self->position.y = (((self->radius + 25) * RSDK.Sin512(self->angle + 128)) << 7) + self->startPos.y;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckBadnikTouch(player, self, &MicDrop->hitboxBadnik)) {
-            if (self->bodyAnimator.animationID != 3 || player->shield == SHIELD_LIGHTNING || player->invincibleTimer || player->blinkTimer)
-                Player_CheckBadnikBreak(player, self, true);
-            else
-                Player_Hurt(player, self);
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &MicDrop->hitboxBadnik)) {
+                if (self->bodyAnimator.animationID != 3 || player->shield == SHIELD_LIGHTNING || player->invincibleTimer || player->blinkTimer)
+                    Player_CheckBadnikBreak(player, self, true);
+                else
+                    Player_Hurt(player, self);
+            }
         }
     }
 

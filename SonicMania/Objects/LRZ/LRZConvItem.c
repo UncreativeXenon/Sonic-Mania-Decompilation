@@ -84,10 +84,19 @@ Vector2 LRZConvItem_HandleLRZConvPhys(void *e)
     moveOffset.x = 0;
     moveOffset.y = 0;
     if (RSDK.CheckSceneFolder("LRZ2")) {
+        bool32 conveyorCollided;
         int32 storeX = entity->position.x;
         int32 storeY = entity->position.y;
 
         Hitbox hitbox;
+        int32 prevY;
+        bool32 tileCollided;
+        bool32 prevOnGround;
+        int32 tileInfo;
+        uint8 behaviour;
+        bool32 lavaCollided;
+        bool32 tileConveyorCollided;
+        bool32 wallCollided;
         hitbox.left   = 0;
         hitbox.top    = 0;
         hitbox.right  = 0;
@@ -101,7 +110,7 @@ Vector2 LRZConvItem_HandleLRZConvPhys(void *e)
             hitbox = Iwamodoki->hitboxBadnik;
 
         // Handle Object-Based Conveyor interactions
-        bool32 conveyorCollided = false;
+        conveyorCollided = false;
         if (LRZConveyor) {
             foreach_active(LRZConveyor, conveyor)
             {
@@ -121,8 +130,8 @@ Vector2 LRZConvItem_HandleLRZConvPhys(void *e)
         }
 
         // Try to collide with the floor
-        int32 prevY         = entity->position.y;
-        bool32 tileCollided = RSDK.ObjectTileGrip(entity, Zone->collisionLayers, CMODE_FLOOR, 0, 0, hitbox.bottom << 16, 4);
+        prevY         = entity->position.y;
+        tileCollided = RSDK.ObjectTileGrip(entity, Zone->collisionLayers, CMODE_FLOOR, 0, 0, hitbox.bottom << 16, 4);
         if (!tileCollided) {
             if (!RSDK.ObjectTileGrip(entity, Zone->collisionLayers, CMODE_FLOOR, 0, (hitbox.right << 16) - 0x10000, hitbox.bottom << 16, 4)
                 || !RSDK.ObjectTileGrip(entity, Zone->collisionLayers, CMODE_FLOOR, 0, (hitbox.right << 16) - 0x10000, hitbox.bottom << 16, 4)) {
@@ -133,13 +142,13 @@ Vector2 LRZConvItem_HandleLRZConvPhys(void *e)
             }
         }
 
-        bool32 prevOnGround = entity->onGround;
+        prevOnGround = entity->onGround;
         entity->onGround    = false;
         if (tileCollided || conveyorCollided)
             entity->onGround = true;
 
-        int32 tileInfo  = 0;
-        uint8 behaviour = LRZ2_TFLAGS_NORMAL;
+        tileInfo  = 0;
+        behaviour = LRZ2_TFLAGS_NORMAL;
 
         // try to grab tile info & behaviour for tile-based conveyor interactions
         LRZ2Setup_GetTileInfo(entity->position.x, entity->position.y + (hitbox.bottom << 16), 0, 0, entity->collisionPlane, &tileInfo, &behaviour);
@@ -156,8 +165,8 @@ Vector2 LRZConvItem_HandleLRZConvPhys(void *e)
                                   &behaviour);
         }
 
-        bool32 lavaCollided         = false;
-        bool32 tileConveyorCollided = false;
+        lavaCollided         = false;
+        tileConveyorCollided = false;
         switch (behaviour) {
             case LRZ2_TFLAGS_NORMAL: break;
 
@@ -206,7 +215,7 @@ Vector2 LRZConvItem_HandleLRZConvPhys(void *e)
         else
             entity->velocity.y += 0x3800;
 
-        bool32 wallCollided = false;
+        wallCollided = false;
         if (entity->velocity.x < 0)
             wallCollided = RSDK.ObjectTileCollision(entity, Zone->collisionLayers, CMODE_FLOOR, 0, hitbox.left << 16, hitbox.top << 16, false);
         else if (entity->velocity.x > 0)
@@ -257,25 +266,27 @@ void LRZConvItem_State_Rock(void)
     self->position.x = x;
     self->position.y = y;
 
-    foreach_active(Player, player)
     {
-        switch (Player_CheckCollisionBox(player, self, &LRZConvItem->hitboxRock)) {
-            case C_TOP:
-                player->position.x += moveOffset.x;
-                player->position.y += moveOffset.y;
-                if (moveOffset.y <= 0)
-                    player->collisionFlagV |= 1;
-                break;
+        foreach_active(Player, player)
+        {
+            switch (Player_CheckCollisionBox(player, self, &LRZConvItem->hitboxRock)) {
+                case C_TOP:
+                    player->position.x += moveOffset.x;
+                    player->position.y += moveOffset.y;
+                    if (moveOffset.y <= 0)
+                        player->collisionFlagV |= 1;
+                    break;
 
-            case C_LEFT: player->collisionFlagH |= 1; break;
-            case C_RIGHT: player->collisionFlagH |= 2; break;
+                case C_LEFT: player->collisionFlagH |= 1; break;
+                case C_RIGHT: player->collisionFlagH |= 2; break;
 
-            case C_BOTTOM:
-                if (moveOffset.y >= 0)
-                    player->collisionFlagV |= 2;
-                break;
+                case C_BOTTOM:
+                    if (moveOffset.y >= 0)
+                        player->collisionFlagV |= 2;
+                    break;
 
-            default: break;
+                default: break;
+            }
         }
     }
 
@@ -289,13 +300,15 @@ void LRZConvItem_State_SpikeBall(void)
 
     LRZConvItem_HandleLRZConvPhys(self);
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &LRZConvItem->hitboxSpikeball)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &LRZConvItem->hitboxSpikeball)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x400, true, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 }

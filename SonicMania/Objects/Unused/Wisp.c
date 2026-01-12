@@ -146,12 +146,13 @@ void Wisp_State_Idle(void)
 
 void Wisp_State_FlyTowardTarget(void)
 {
+    EntityPlayer *target;
     RSDK_THIS(Wisp);
 
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    EntityPlayer *target = self->target;
+    target = self->target;
     if (target) {
         if (target->position.x >= self->position.x) {
             self->velocity.x += 0x1000;

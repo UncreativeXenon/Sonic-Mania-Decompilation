@@ -93,46 +93,49 @@ void EscapeCar_StageLoad(void)
 
 void EscapeCar_StateMania_AwaitPlayer(void)
 {
+    bool32 allAboard;
     RSDK_THIS(EscapeCar);
 
     RSDK.ProcessAnimation(&self->driverAnimator);
 
     // Why does this func have encore checks??? Encore has its own states..
 
-    bool32 allAboard = true;
-    foreach_active(Player, player)
+    allAboard = true;
     {
-        if (player->state != Player_State_Static && player->position.x > self->position.x - 0x400000 && player->sidekick) {
-            player->velocity.x -= 0x1000;
-        }
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static && player->position.x > self->position.x - 0x400000 && player->sidekick) {
+                player->velocity.x -= 0x1000;
+            }
 #if MANIA_USE_PLUS
-        if (globals->gameMode != MODE_ENCORE && player->position.x > self->position.x - 0x400000)
+            if (globals->gameMode != MODE_ENCORE && player->position.x > self->position.x - 0x400000)
 #else
-        if (player->position.x > self->position.x - 0x400000)
+            if (player->position.x > self->position.x - 0x400000)
 #endif
-            RSDK.SetSpriteAnimation(EscapeCar->aniFrames, 3 + self->driver, &self->driverAnimator, true, 0);
+                RSDK.SetSpriteAnimation(EscapeCar->aniFrames, 3 + self->driver, &self->driverAnimator, true, 0);
 
-        if (Player_CheckCollisionTouch(player, self, &EscapeCar->hitbox)) {
-            player->state      = Player_State_Static;
-            player->velocity.x = 0;
-            player->velocity.y = 0;
-            player->position.x = self->position.x;
-            player->position.y = self->position.y;
+            if (Player_CheckCollisionTouch(player, self, &EscapeCar->hitbox)) {
+                player->state      = Player_State_Static;
+                player->velocity.x = 0;
+                player->velocity.y = 0;
+                player->position.x = self->position.x;
+                player->position.y = self->position.y;
 
-            if (player->sidekick) {
-                player->position.x -= 0x140000;
-                player->position.y -= 0x140000;
+                if (player->sidekick) {
+                    player->position.x -= 0x140000;
+                    player->position.y -= 0x140000;
+                }
+                else {
+                    player->position.x -= 0xC0000;
+                    player->position.y -= 0x80000;
+                }
+
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_RIDE, &player->animator, false, 0);
+                player->animator.speed = 0;
             }
             else {
-                player->position.x -= 0xC0000;
-                player->position.y -= 0x80000;
+                allAboard = false;
             }
-
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_RIDE, &player->animator, false, 0);
-            player->animator.speed = 0;
-        }
-        else {
-            allAboard = false;
         }
     }
 
@@ -182,21 +185,23 @@ void EscapeCar_StateMania_Ride(void)
 
     self->position.x += self->velocity.x;
 
-    foreach_active(Player, player)
-    {
-        player->state      = Player_State_Static;
-        player->velocity.x = 0;
-        player->velocity.y = 0;
-        player->position.x = self->position.x;
-        player->position.y = self->position.y;
+{
+        foreach_active(Player, player)
+        {
+            player->state      = Player_State_Static;
+            player->velocity.x = 0;
+            player->velocity.y = 0;
+            player->position.x = self->position.x;
+            player->position.y = self->position.y;
 
-        if (player->sidekick) {
-            player->position.x -= 0x140000;
-            player->position.y -= 0x140000;
-        }
-        else {
-            player->position.x -= 0xC0000;
-            player->position.y -= 0x80000;
+            if (player->sidekick) {
+                player->position.x -= 0x140000;
+                player->position.y -= 0x140000;
+            }
+            else {
+                player->position.x -= 0xC0000;
+                player->position.y -= 0x80000;
+            }
         }
     }
 }
@@ -232,6 +237,7 @@ void EscapeCar_StateEncore_BadEnd(void)
 
 void EscapeCar_StateEncore_GoodEnd(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(EscapeCar);
 
     RSDK.ProcessAnimation(&self->driverAnimator);
@@ -242,7 +248,7 @@ void EscapeCar_StateEncore_GoodEnd(void)
 
     self->position.x += self->velocity.x;
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (abs(player1->position.x - self->position.x) < 0x100000) {
         EntityDebris *debris    = CREATE_ENTITY(Debris, NULL, self->position.x, self->position.y);
         debris->state           = Debris_State_Fall;

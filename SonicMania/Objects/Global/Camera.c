@@ -92,7 +92,8 @@ void Camera_StageLoad(void)
     // I don't think this object is in the final credits right...?
     // Likely a holdover from the earlier credits revision
     if (!RSDK.CheckSceneFolder("Credits")) {
-        for (int32 i = 0; i < RSDK.GetVideoSetting(VIDEOSETTING_SCREENCOUNT); ++i)
+        int32 i; 
+        for (i = 0; i < RSDK.GetVideoSetting(VIDEOSETTING_SCREENCOUNT); ++i)
             RSDK.ResetEntitySlot(SLOT_CAMERA1 + i, Camera->classID, INT_TO_VOID(i));
 
         Camera->centerBounds.x = TO_FIXED(16);
@@ -276,6 +277,7 @@ void Camera_SetupLerp(int32 type, int32 screen, int32 x, int32 y, int32 speed)
 // States
 void Camera_State_MapView(void)
 {
+    RSDKScreenInfo *screen;
     RSDK_THIS(Camera);
 
     int32 speed = TO_FIXED(4);
@@ -293,7 +295,7 @@ void Camera_State_MapView(void)
 
     self->position.x       = FROM_FIXED(self->position.x);
     self->position.y       = FROM_FIXED(self->position.y);
-    RSDKScreenInfo *screen = &ScreenInfo[self->screenID];
+    screen = &ScreenInfo[self->screenID];
 
     if (self->position.x >= screen->center.x) {
         if (self->position.x > Zone->cameraBoundsR[self->screenID] - screen->center.x)
@@ -319,10 +321,12 @@ void Camera_State_FollowXY(void)
     RSDK_THIS(Camera);
 
     if (self->target) {
+        Entity *target;
+        int32 adjust;
         Camera_HandleHBounds();
         Camera_HandleVBounds();
 
-        Entity *target = self->target;
+        target = self->target;
         target->position.x += self->targetMoveVel.x;
 
         if (target->position.x <= self->position.x + self->offset.x) {
@@ -345,7 +349,7 @@ void Camera_State_FollowXY(void)
 
         target->position.y += self->targetMoveVel.y;
 
-        int32 adjust = target->position.y - self->adjustY;
+        adjust = target->position.y - self->adjustY;
         if (adjust <= self->position.y + self->offset.y) {
             if (adjust < self->position.y - self->offset.y) {
                 int32 pos = target->position.y + self->offset.y - self->position.y - self->adjustY;
@@ -370,9 +374,10 @@ void Camera_State_FollowX(void)
     RSDK_THIS(Camera);
 
     if (self->target) {
+        Entity *target;
         Camera_HandleHBounds();
 
-        Entity *target = self->target;
+        target = self->target;
         target->position.x += self->targetMoveVel.x;
 
         if (target->position.x <= self->position.x + self->offset.x) {
@@ -398,12 +403,14 @@ void Camera_State_FollowY(void)
     RSDK_THIS(Camera);
 
     if (self->target) {
+        Entity *target;
+        int32 adjust;
         Camera_HandleVBounds();
 
-        Entity *target = self->target;
+        target = self->target;
         target->position.y += self->targetMoveVel.y;
 
-        int32 adjust = target->position.y - self->adjustY;
+        adjust = target->position.y - self->adjustY;
         if (adjust <= self->position.y + self->offset.y) {
             if (adjust < self->position.y - self->offset.y) {
                 int32 pos = target->position.y + self->offset.y - self->position.y - self->adjustY;

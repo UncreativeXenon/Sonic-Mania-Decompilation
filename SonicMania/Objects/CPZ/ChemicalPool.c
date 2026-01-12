@@ -27,6 +27,8 @@ void ChemicalPool_StaticUpdate(void) {}
 
 void ChemicalPool_Draw(void)
 {
+    int32 i;
+    color *surfaceColors;
     RSDK_THIS(ChemicalPool);
 
     RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
@@ -36,7 +38,7 @@ void ChemicalPool_Draw(void)
 
     Vector2 verts[4];
     Vector2 *vertices = self->vertices;
-    for (int32 i = 0; i < self->tileSizeX; ++i) {
+    for (i = 0; i < self->tileSizeX; ++i) {
         verts[0].x = vertices[0].x + screenX;
         verts[0].y = vertices[0].y - screenY;
         verts[1].x = vertices[2].x + screenX;
@@ -46,7 +48,7 @@ void ChemicalPool_Draw(void)
         verts[3].x = vertices[1].x + screenX;
         verts[3].y = vertices[1].y - screenY;
 
-        color *surfaceColors = NULL;
+        surfaceColors = NULL;
         if (self->timer >= 1)
             surfaceColors = ChemicalPool->surfaceColorsFlash;
         else
@@ -68,14 +70,15 @@ void ChemicalPool_Draw(void)
     }
 
     if (self->type > CHEMICALPOOL_BLUE) { // da reflection
+        Vector2 drawPos;
+        int32 offset;
         int32 x = ((self->position.x - self->updateRange.x) >> 16) - screen->position.x;
         int32 y = ((self->position.y - self->updateRange.y) >> 16) - screen->position.y;
         RSDK.SetClipBounds(SceneInfo->currentScreenID, x, y, x + (self->size.x >> 16), y + (self->size.y >> 16));
 
-        Vector2 drawPos;
         drawPos.x = self->position.x - ((self->position.x - (screen->position.x << 16) - (ScreenInfo->center.x << 16)) >> 1);
 
-        int32 offset = CLAMP(0x800000 - self->size.y, 0, 0x400000);
+        offset = CLAMP(0x800000 - self->size.y, 0, 0x400000);
         drawPos.y = offset + self->position.y + self->maxDeform - ((self->position.y - (screen->center.y << 16) - (screen->position.y << 16)) >> 4);
         RSDK.DrawSprite(&self->animator, &drawPos, false);
 
@@ -88,6 +91,8 @@ void ChemicalPool_Create(void *data)
     RSDK_THIS(ChemicalPool);
 
     if (!SceneInfo->inEditor) {
+        int32 i;
+        Vector2 *vertices;
         self->inkEffect     = INK_ADD;
         self->visible       = true;
         self->alpha         = 0xFF;
@@ -97,13 +102,14 @@ void ChemicalPool_Create(void *data)
         self->updateRange.y = self->size.y >> 1;
         self->tileSizeX     = self->size.x >> 20;
 
-        Vector2 *vertices = self->vertices;
-        for (int32 i = 0; i < 0x2100000; i += 0x100000) {
+        vertices = self->vertices;
+        for (i = 0; i < 0x2100000; i += 0x100000) {
+            int32 y;
             int32 x       = i - (self->size.x >> 1);
             vertices[0].x = x;
             vertices[1].x = x;
 
-            int32 y       = self->position.y - (self->size.y >> 1);
+            y       = self->position.y - (self->size.y >> 1);
             vertices[0].y = y;
             vertices[1].y = y + 0x80000;
 
@@ -142,13 +148,14 @@ void ChemicalPool_StageLoad(void)
 
 void ChemicalPool_ChangeState(EntityChemicalPool *chemPool, int32 newType, int32 newR, int32 newG, int32 newB)
 {
+    uint32 change;
     chemPool->r                = chemPool->r + ((newR - chemPool->r) >> 2);
     chemPool->b                = chemPool->b + ((newB - chemPool->b) >> 2);
     chemPool->g                = chemPool->g + ((newG - chemPool->g) >> 2);
     chemPool->surfaceColors[2] = (chemPool->r << 16) | (chemPool->g << 8) | chemPool->b;
     chemPool->surfaceColors[3] = (chemPool->r << 16) | (chemPool->g << 8) | chemPool->b;
 
-    uint32 change = abs(newR - chemPool->r) + abs(newG - chemPool->g) + abs(newB - chemPool->b) - 1;
+    change = abs(newR - chemPool->r) + abs(newG - chemPool->g) + abs(newB - chemPool->b) - 1;
     if (change < 0x1F && chemPool->state != ChemicalPool_State_Changing) {
         chemPool->type  = newType;
         chemPool->timer = 4;
@@ -159,15 +166,18 @@ void ChemicalPool_ChangeState(EntityChemicalPool *chemPool, int32 newType, int32
 
 void ChemicalPool_ProcessDeformations(void)
 {
+    int32 i;
+    int32 id;
+    Vector2 *vertices;
     RSDK_THIS(ChemicalPool);
 
-    for (int32 i = self->leftEdge; i < self->rightEdge; ++i) {
+    for (i = self->leftEdge; i < self->rightEdge; ++i) {
         int32 deform = ChemicalPool->surfaceDeformation[i];
         ChemicalPool->impactTable[i] += (-deform >> 5) - (ChemicalPool->impactTable[i] >> 3);
         ChemicalPool->deformTable[i] = ChemicalPool->impactTable[i] + ChemicalPool->surfaceDeformation[i];
     }
 
-    for (int32 i = self->leftEdge; i < self->rightEdge; ++i) {
+    for (i = self->leftEdge; i < self->rightEdge; ++i) {
         int32 prev = MAX(i - 1, self->leftEdge);
         int32 next = MIN(i + 1, self->rightEdge);
 
@@ -176,14 +186,15 @@ void ChemicalPool_ProcessDeformations(void)
     }
 
     self->maxDeform   = 0;
-    int32 id          = self->leftEdge;
-    Vector2 *vertices = self->vertices;
-    for (int32 i = 0; i <= self->tileSizeX; ++i) {
+    id          = self->leftEdge;
+    vertices = self->vertices;
+    for (i = 0; i <= self->tileSizeX; ++i) {
+        int32 deform;
         if (ChemicalPool->surfaceDeformation[id] > self->maxDeform)
             self->maxDeform = ChemicalPool->surfaceDeformation[id];
         vertices[0].y = ChemicalPool->surfaceDeformation[id] + self->offsetY;
 
-        int32 deform = 2 * ChemicalPool->surfaceDeformation[id] + 0x80000;
+        deform = 2 * ChemicalPool->surfaceDeformation[id] + 0x80000;
         if (deform < ChemicalPool->surfaceDeformation[id])
             deform = ChemicalPool->surfaceDeformation[id] + 0x10000;
         vertices[1].y = deform + self->offsetY;
@@ -195,6 +206,7 @@ void ChemicalPool_ProcessDeformations(void)
 
 void ChemicalPool_SetDeform(int32 impactX, int32 impactVelocity)
 {
+    int32 i;
     int32 bounceX = (impactX + 0x80000) >> 20;
 
     foreach_active(ChemicalPool, chemPool)
@@ -203,7 +215,7 @@ void ChemicalPool_SetDeform(int32 impactX, int32 impactVelocity)
             int32 prev = MAX(bounceX - 1, chemPool->leftEdge + 1);
             int32 next = MIN(bounceX + 2, chemPool->rightEdge);
 
-            for (int32 i = 0; i < next - prev; ++i) ChemicalPool->impactTable[prev + i] += impactVelocity;
+            for (i = 0; i < next - prev; ++i) ChemicalPool->impactTable[prev + i] += impactVelocity;
 
             foreach_break;
         }
@@ -212,9 +224,10 @@ void ChemicalPool_SetDeform(int32 impactX, int32 impactVelocity)
 
 void ChemicalPool_SpawnDebris(int32 x, int32 y)
 {
+    int32 i;
     RSDK_THIS(ChemicalPool);
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
         EntityDebris *debris    = CREATE_ENTITY(Debris, NULL, x + ZONE_RAND(-0x80000, 0x80000), y + ZONE_RAND(0x40000, 0x140000));
         debris->state           = Debris_State_Fall;
         debris->gravityStrength = 0x3800;
@@ -273,27 +286,30 @@ void ChemicalPool_SetupColors(void)
 
 void ChemicalPool_State_HarmfulBlue(void)
 {
+    int32 topStore;
     RSDK_THIS(ChemicalPool);
     ChemicalPool_ProcessDeformations();
-    int32 topStore = self->hitbox.top;
+    topStore = self->hitbox.top;
 
-    foreach_active(Player, player)
     {
-        if (player->velocity.y >= 0 && Player_CheckCollisionBox(player, self, &self->hitbox)) {
-            ChemicalPool_SetDeform(player->position.x, (player->velocity.y >> 4) + 0x1000);
-            if (player->shield != SHIELD_BUBBLE) {
-                if (player->state != Player_State_Hurt && player->state != Player_State_Death && player->state != Player_State_Drown
-                    && !player->invincibleTimer && player->blinkTimer <= 0) {
-                    if (player->position.x > self->position.x)
-                        player->velocity.x = 0x20000;
-                    else
-                        player->velocity.x = -0x20000;
-                    Player_Hit(player);
+        foreach_active(Player, player)
+        {
+            if (player->velocity.y >= 0 && Player_CheckCollisionBox(player, self, &self->hitbox)) {
+                ChemicalPool_SetDeform(player->position.x, (player->velocity.y >> 4) + 0x1000);
+                if (player->shield != SHIELD_BUBBLE) {
+                    if (player->state != Player_State_Hurt && player->state != Player_State_Death && player->state != Player_State_Drown
+                        && !player->invincibleTimer && player->blinkTimer <= 0) {
+                        if (player->position.x > self->position.x)
+                            player->velocity.x = 0x20000;
+                        else
+                            player->velocity.x = -0x20000;
+                        Player_Hit(player);
+                    }
                 }
-            }
 
-            if (player->velocity.y < 0 && player->velocity.y > -0x40000)
-                player->velocity.y = -0x40000;
+                if (player->velocity.y < 0 && player->velocity.y > -0x40000)
+                    player->velocity.y = -0x40000;
+            }
         }
     }
 
@@ -311,24 +327,27 @@ void ChemicalPool_State_Green(void)
 
     ChemicalPool_ProcessDeformations();
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
-            ChemicalPool_SetDeform(player->position.x, player->velocity.y >> 1);
-            ChemicalPool_SpawnDebris(player->position.x, player->position.y);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+                int32 anim;
+                ChemicalPool_SetDeform(player->position.x, player->velocity.y >> 1);
+                ChemicalPool_SpawnDebris(player->position.x, player->position.y);
 
-            if (player->state != Player_State_DropDash)
-                player->state = Player_State_Air;
+                if (player->state != Player_State_DropDash)
+                    player->state = Player_State_Air;
 
-            int32 anim = player->animator.animationID;
-            if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                player->animator.animationID = ANI_WALK;
+                anim = player->animator.animationID;
+                if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                    player->animator.animationID = ANI_WALK;
 
-            player->onGround     = false;
-            player->applyJumpCap = false;
-            player->velocity.y   = -0x140000;
+                player->onGround     = false;
+                player->applyJumpCap = false;
+                player->velocity.y   = -0x140000;
 
-            RSDK.PlaySfx(ChemicalPool->sfxChemRed, false, 255);
+                RSDK.PlaySfx(ChemicalPool->sfxChemRed, false, 255);
+            }
         }
     }
 }
@@ -339,28 +358,31 @@ void ChemicalPool_State_Cyan(void)
 
     ChemicalPool_ProcessDeformations();
 
-    foreach_active(Player, player)
     {
-        if (player->velocity.y >= 0) {
-            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
-                ChemicalPool_SetDeform(player->position.x, player->velocity.y >> 1);
-                ChemicalPool_SpawnDebris(player->position.x, player->position.y);
+        foreach_active(Player, player)
+        {
+            if (player->velocity.y >= 0) {
+                if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+                    int32 anim;
+                    ChemicalPool_SetDeform(player->position.x, player->velocity.y >> 1);
+                    ChemicalPool_SpawnDebris(player->position.x, player->position.y);
 
-                if (player->state != Player_State_DropDash)
-                    player->state = Player_State_Air;
+                    if (player->state != Player_State_DropDash)
+                        player->state = Player_State_Air;
 
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                    player->animator.animationID = ANI_WALK;
+                    anim = player->animator.animationID;
+                    if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                        player->animator.animationID = ANI_WALK;
 
-                if ((-0x10000 - player->velocity.y) > -0x80000)
-                    player->velocity.y = -0x10000 - player->velocity.y;
-                else
-                    player->velocity.y = -0x80000;
+                    if ((-0x10000 - player->velocity.y) > -0x80000)
+                        player->velocity.y = -0x10000 - player->velocity.y;
+                    else
+                        player->velocity.y = -0x80000;
 
-                player->onGround     = false;
-                player->applyJumpCap = false;
-                RSDK.PlaySfx(ChemicalPool->sfxChemYellow, false, 255);
+                    player->onGround     = false;
+                    player->applyJumpCap = false;
+                    RSDK.PlaySfx(ChemicalPool->sfxChemYellow, false, 255);
+                }
             }
         }
     }
@@ -390,12 +412,12 @@ void ChemicalPool_State_Changing(void)
 #if GAME_INCLUDE_EDITOR
 void ChemicalPool_EditorDraw(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(ChemicalPool);
 
     self->updateRange.x = self->size.x >> 1;
     self->updateRange.y = self->size.y >> 1;
 
-    Vector2 drawPos;
     drawPos.x = self->position.x - (self->size.x >> 1);
     drawPos.y = self->position.y - (self->size.y >> 1);
     ChemicalPool_SetupColors();

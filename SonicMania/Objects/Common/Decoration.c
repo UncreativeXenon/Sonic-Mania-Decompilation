@@ -100,6 +100,7 @@ void Decoration_StageLoad(void)
 
 void Decoration_DrawSprite(void)
 {
+    int32 y;
     RSDK_THIS(Decoration);
 
     Vector2 drawPos, repeat;
@@ -109,9 +110,10 @@ void Decoration_DrawSprite(void)
     drawPos.x = self->position.x - ((repeat.x * self->repeatSpacing.x) >> 1);
     drawPos.y = self->position.y - ((repeat.y * self->repeatSpacing.y) >> 1);
 
-    for (int32 y = 0; y <= repeat.y; ++y) {
+    for (y = 0; y <= repeat.y; ++y) {
+        int32 x;
         drawPos.x = self->position.x - (repeat.x * self->repeatSpacing.x >> 1);
-        for (int32 x = 0; x <= repeat.x; ++x) {
+        for (x = 0; x <= repeat.x; ++x) {
             RSDK.DrawSprite(&self->animator, &drawPos, false);
             drawPos.x += self->repeatSpacing.x;
         }

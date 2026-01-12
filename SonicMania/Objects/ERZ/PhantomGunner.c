@@ -164,9 +164,10 @@ void PhantomGunner_HandleMalfunctionDudExhaust(void)
 
 void PhantomGunner_SpawnDust(void)
 {
+    int32 i;
     RSDK_THIS(PhantomGunner);
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         int32 x          = self->position.x + RSDK.Rand(-0x100000, 0x100000);
         int32 y          = self->position.y + RSDK.Rand(-0x280000, -0x180000);
         EntityDust *dust = CREATE_ENTITY(Dust, NULL, x, y);
@@ -279,13 +280,13 @@ void PhantomGunner_Draw_Gunner(void)
 
 void PhantomGunner_Draw_RocketLaunch(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(PhantomGunner);
 
     EntityPhantomGunner *parent = self->parent;
 
     RSDK.SetClipBounds(0, 0, 0, ScreenInfo->size.x, ((self->originPos.y + parent->position.y) >> 16) - ScreenInfo->position.y);
 
-    Vector2 drawPos;
     drawPos.x = parent->position.x + self->originPos.x;
     drawPos.y = self->position.y;
     RSDK.DrawSprite(&self->mainAnimator, &drawPos, false);
@@ -421,6 +422,7 @@ void PhantomGunner_State_LaunchedRocket(void)
     self->position.y -= 0x80000;
 
     if (++self->timer == 60) {
+        bool32 canFire;
         EntityPhantomGunner *parent = self->parent;
 
         self->timer = 0;
@@ -433,17 +435,19 @@ void PhantomGunner_State_LaunchedRocket(void)
         self->drawGroup  = Zone->objectDrawGroup[0];
         self->position.y = (ScreenInfo->position.y - 64) << 16;
 
-        bool32 canFire = false;
+        canFire = false;
         while (!canFire) {
             canFire          = true;
             self->position.x = parent->position.x + RSDK.Rand(-0x1000000, 0x1000000);
 
-            foreach_active(PhantomGunner, gunner)
             {
-                if (gunner != self && gunner->type >= PHANTOMGUNNER_MORTAR) {
-                    int32 dist = abs(gunner->position.x - self->position.x);
-                    if (dist < 0x180000 && gunner->position.y - self->position.y < 0x800000)
-                        canFire = false;
+                foreach_active(PhantomGunner, gunner)
+                {
+                    if (gunner != self && gunner->type >= PHANTOMGUNNER_MORTAR) {
+                        int32 dist = abs(gunner->position.x - self->position.x);
+                        if (dist < 0x180000 && gunner->position.y - self->position.y < 0x800000)
+                            canFire = false;
+                    }
                 }
             }
         }
@@ -545,10 +549,12 @@ void PhantomGunner_State_Napalm(void)
 
 void PhantomGunner_State_Dud_Active(void)
 {
+    int32 angle;
+    EntityPhantomGunner *parent;
     RSDK_THIS(PhantomGunner);
 
     RSDK.ProcessAnimation(&self->tailAnimator);
-    EntityPhantomGunner *parent = self->parent;
+    parent = self->parent;
 
     ++self->timer;
 
@@ -567,7 +573,7 @@ void PhantomGunner_State_Dud_Active(void)
     self->position.y += self->velocity.y;
     PhantomGunner_HandleDudExhaust();
 
-    int32 angle = RSDK.ATan2(self->velocity.y, -self->velocity.x);
+    angle = RSDK.ATan2(self->velocity.y, -self->velocity.x);
     PhantomGunner_HandleRotations(2 * angle);
 
     if (self->timer == 320) {
@@ -613,13 +619,15 @@ void PhantomGunner_State_Dud_HitByPlayer(void)
 
 void PhantomGunner_State_Dud_Malfunction(void)
 {
+    EntityPhantomGunner *parent;
+    int32 angle;
     RSDK_THIS(PhantomGunner);
 
     RSDK.ProcessAnimation(&self->tailAnimator);
 
-    EntityPhantomGunner *parent = self->parent;
+    parent = self->parent;
 
-    int32 angle = RSDK.ATan2((parent->position.y - self->position.y) >> 16, -((parent->position.x - self->position.x) >> 16));
+    angle = RSDK.ATan2((parent->position.y - self->position.y) >> 16, -((parent->position.x - self->position.x) >> 16));
     PhantomGunner_HandleRotations(2 * angle);
 
     self->rotation &= 0x1FF;

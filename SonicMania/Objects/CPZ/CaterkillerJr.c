@@ -28,10 +28,11 @@ void CaterkillerJr_StaticUpdate(void) {}
 
 void CaterkillerJr_Draw(void)
 {
+    int32 i;
     RSDK_THIS(CaterkillerJr);
     int32 storeDir = self->direction;
 
-    for (int32 i = CATERKILLERJR_SEGMENT_COUNT - 1; i >= 0; --i) {
+    for (i = CATERKILLERJR_SEGMENT_COUNT - 1; i >= 0; --i) {
         self->direction = self->bodyDirection[i];
         RSDK.DrawSprite(&self->bodyAnimators[i], &self->bodyPosition[i], false);
     }
@@ -108,9 +109,10 @@ void CaterkillerJr_DebugSpawn(void)
 
 void CaterkillerJr_SetupPositions(void)
 {
+    int32 i;
     RSDK_THIS(CaterkillerJr);
 
-    for (int32 i = 0; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
+    for (i = 0; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
         self->bodyPosition[i].x = self->position.x;
         self->bodyPosition[i].y = self->position.y;
         self->bodyVelocity[i].x = 0;
@@ -167,9 +169,10 @@ void CaterkillerJr_State_SetupVelocities(void)
 
 void CaterkillerJr_State_Move(void)
 {
+    int32 i;
     RSDK_THIS(CaterkillerJr);
 
-    for (int32 i = 0; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
+    for (i = 0; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
         RSDK.ProcessAnimation(&self->bodyAnimators[i]);
 
         self->bodyPosition[i].x += self->bodyVelocity[i].x;
@@ -212,36 +215,40 @@ void CaterkillerJr_State_Move(void)
     RSDK.ProcessAnimation(&self->smokePuffAnimators[1]);
     RSDK.ProcessAnimation(&self->smokePuffAnimators[2]);
 
-    foreach_active(Player, player)
     {
-        self->position = self->bodyPosition[0];
-        if (Player_CheckBadnikTouch(player, self, &CaterkillerJr->hitbox) && Player_CheckBadnikBreak(player, self, false)) {
-            for (int32 i = 1; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
-                EntityDebris *debris    = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->bodyPosition[i].x, self->bodyPosition[i].y);
-                debris->animator        = self->bodyAnimators[i];
-                debris->velocity.x      = RSDK.Rand(-16, 16) << 14;
-                debris->velocity.y      = RSDK.Rand(-8, 8) << 14;
-                debris->gravityStrength = 0x3800;
-                debris->drawGroup       = Zone->objectDrawGroup[0];
-                debris->updateRange.x   = 0x400000;
-                debris->updateRange.y   = 0x400000;
-            }
-
-            destroyEntity(self);
-            self->active = ACTIVE_DISABLED;
-            foreach_break;
-        }
-
-        if (self->classID != TYPE_BLANK) {
-            for (int32 i = 1; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
-                self->position.x = self->bodyPosition[i].x;
-                self->position.y = self->bodyPosition[i].y;
-                if (Player_CheckCollisionTouch(player, self, &CaterkillerJr->hitbox)) {
-                    Player_Hurt(player, self);
+        foreach_active(Player, player)
+        {
+            self->position = self->bodyPosition[0];
+            if (Player_CheckBadnikTouch(player, self, &CaterkillerJr->hitbox) && Player_CheckBadnikBreak(player, self, false)) {
+                int32 i;
+                for (i = 1; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
+                    EntityDebris *debris    = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->bodyPosition[i].x, self->bodyPosition[i].y);
+                    debris->animator        = self->bodyAnimators[i];
+                    debris->velocity.x      = RSDK.Rand(-16, 16) << 14;
+                    debris->velocity.y      = RSDK.Rand(-8, 8) << 14;
+                    debris->gravityStrength = 0x3800;
+                    debris->drawGroup       = Zone->objectDrawGroup[0];
+                    debris->updateRange.x   = 0x400000;
+                    debris->updateRange.y   = 0x400000;
                 }
+
+                destroyEntity(self);
+                self->active = ACTIVE_DISABLED;
+                foreach_break;
             }
-            self->position.x = self->bodyPosition[0].x;
-            self->position.y = self->bodyPosition[0].y;
+
+            if (self->classID != TYPE_BLANK) {
+                int32 i;
+                for (i = 1; i < CATERKILLERJR_SEGMENT_COUNT; ++i) {
+                    self->position.x = self->bodyPosition[i].x;
+                    self->position.y = self->bodyPosition[i].y;
+                    if (Player_CheckCollisionTouch(player, self, &CaterkillerJr->hitbox)) {
+                        Player_Hurt(player, self);
+                    }
+                }
+                self->position.x = self->bodyPosition[0].x;
+                self->position.y = self->bodyPosition[0].y;
+            }
         }
     }
 }

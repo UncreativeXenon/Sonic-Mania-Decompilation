@@ -20,12 +20,14 @@ void CutsceneSeq_Update(void)
 
 void CutsceneSeq_LateUpdate(void)
 {
+    int32 p;
     RSDK_THIS(CutsceneSeq);
 
     self->currentState = self->cutsceneStates[self->stateID];
     if (self->currentState) {
+        bool32 finishedState;
         SceneInfo->entity    = self->activeEntity;
-        bool32 finishedState = self->currentState(self);
+        finishedState = self->currentState(self);
         SceneInfo->entity    = (Entity *)self;
 
         ++self->timer;
@@ -41,7 +43,7 @@ void CutsceneSeq_LateUpdate(void)
     }
 
     self->visible = false;
-    for (int32 p = 0; p < CUTSCENESEQ_POINT_COUNT; ++p) {
+    for (p = 0; p < CUTSCENESEQ_POINT_COUNT; ++p) {
         if (self->points[p].x && self->points[p].y)
             self->visible = true;
     }
@@ -54,6 +56,7 @@ void CutsceneSeq_StaticUpdate(void) {}
 
 void CutsceneSeq_Draw(void)
 {
+    int32 p;
     RSDK_THIS(CutsceneSeq);
 
     color colors[CUTSCENESEQ_POINT_COUNT];
@@ -66,7 +69,7 @@ void CutsceneSeq_Draw(void)
     colors[6] = 0x9933FF;
     colors[7] = 0xFF9900;
 
-    for (int32 p = 0; p < CUTSCENESEQ_POINT_COUNT; ++p) {
+    for (p = 0; p < CUTSCENESEQ_POINT_COUNT; ++p) {
         Vector2 *point = &self->points[p];
         if (point->x || point->y) {
 #if MANIA_USE_PLUS
@@ -102,11 +105,12 @@ void CutsceneSeq_StageLoad(void) {}
 
 void CutsceneSeq_NewState(int32 nextState, EntityCutsceneSeq *seq)
 {
+    int32 p;
     seq->stateID     = nextState;
     seq->timer       = 0;
     seq->storedTimer = 0;
 
-    for (int32 p = 0; p < CUTSCENESEQ_POINT_COUNT; ++p) {
+    for (p = 0; p < CUTSCENESEQ_POINT_COUNT; ++p) {
         seq->values[p]   = 0;
         seq->points[p].x = 0;
         seq->points[p].y = 0;
@@ -189,27 +193,30 @@ void CutsceneSeq_LockPlayerControl(EntityPlayer *player)
 
 void CutsceneSeq_LockAllPlayerControl(void)
 {
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    int32 p;
+    for (p = 0; p < Player->playerCount; ++p) {
         CutsceneSeq_LockPlayerControl(RSDK_GET_ENTITY(p, Player));
     }
 }
 void CutsceneSeq_StartSequence(void *manager, ...)
 {
+    EntityCutsceneSeq *cutsceneSeq;
+    va_list list;
+    int32 count;
     if (RSDK_GET_ENTITY(SLOT_CUTSCENESEQ, CutsceneSeq)->classID)
         return;
 
     RSDK.ResetEntitySlot(SLOT_CUTSCENESEQ, CutsceneSeq->classID, NULL);
-    EntityCutsceneSeq *cutsceneSeq = RSDK_GET_ENTITY(SLOT_CUTSCENESEQ, CutsceneSeq);
+    cutsceneSeq = RSDK_GET_ENTITY(SLOT_CUTSCENESEQ, CutsceneSeq);
 
     cutsceneSeq->position.x    = 0;
     cutsceneSeq->position.y    = 0;
     cutsceneSeq->activeEntity  = SceneInfo->entity;
     cutsceneSeq->managerEntity = manager;
 
-    va_list list;
     va_start(list, manager);
 
-    int32 count = 0;
+    count = 0;
     for (count = 0;; ++count) {
         void *state = va_arg(list, void *);
         if (!state)

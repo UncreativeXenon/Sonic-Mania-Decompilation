@@ -80,6 +80,7 @@ void ForceSpin_StageLoad(void) { ForceSpin->aniFrames = RSDK.LoadSpriteAnimation
 
 void ForceSpin_DrawSprites(void)
 {
+    int32 i; 
     RSDK_THIS(ForceSpin);
 
     Vector2 drawPos;
@@ -87,7 +88,7 @@ void ForceSpin_DrawSprites(void)
     drawPos.y = self->position.y - (self->size << 19);
     Zone_RotateOnPivot(&drawPos, &self->position, self->angle);
 
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += RSDK.Sin256(self->angle) << 12;
         drawPos.y += RSDK.Cos256(self->angle) << 12;

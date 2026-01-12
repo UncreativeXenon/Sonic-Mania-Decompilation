@@ -25,12 +25,13 @@ void Grabber_Draw(void)
     RSDK_THIS(Grabber);
 
     if (SceneInfo->currentDrawGroup == self->drawGroup) {
+        Vector2 drawPos;
+        int32 storeDir;
         RSDK.DrawLine(self->position.x, self->startPos.y - 0x100000, self->position.x, self->position.y, 0x202020, 0x00, INK_NONE, false);
         RSDK.DrawLine(self->position.x - 0x10000, self->startPos.y - 0x100000, self->position.x - 0x10000, self->position.y, 0xE0E0E0, 0x00, INK_NONE,
                       false);
 
-        Vector2 drawPos;
-        int32 storeDir  = self->direction;
+        storeDir  = self->direction;
         drawPos.x       = self->position.x;
         drawPos.y       = self->startPos.y;
         self->direction = 0;
@@ -209,11 +210,13 @@ void Grabber_State_CheckForGrab(void)
     }
     self->position.x += self->velocity.x;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &Grabber->hitboxRange)) {
-            self->timer = 16;
-            self->state = Grabber_State_GrabDelay;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Grabber->hitboxRange)) {
+                self->timer = 16;
+                self->state = Grabber_State_GrabDelay;
+            }
         }
     }
 
@@ -288,6 +291,7 @@ void Grabber_State_RiseUp(void)
 
 void Grabber_State_GrabbedPlayer(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Grabber);
 
     RSDK.ProcessAnimation(&self->bodyAnimator);
@@ -296,7 +300,7 @@ void Grabber_State_GrabbedPlayer(void)
     if (++self->timer < 32) {
         self->position.y -= 0x20000;
 
-        EntityPlayer *player = self->grabbedPlayer;
+        player = self->grabbedPlayer;
         if (player) {
             player->animator.speed = 0;
             player->position.x     = self->position.x;
@@ -332,9 +336,10 @@ void Grabber_State_Struggle(void)
             player->velocity.x = 0;
             player->velocity.y = 0;
             if (self->struggleDelay) {
+                uint8 struggleFlags;
                 self->struggleDelay--;
 
-                uint8 struggleFlags = 0;
+                struggleFlags = 0;
                 if (player->left)
                     struggleFlags = 1;
 
@@ -394,6 +399,8 @@ void Grabber_State_PlayerEscaped(void)
 #if GAME_INCLUDE_EDITOR
 void Grabber_EditorDraw(void)
 {
+    Vector2 drawPos;
+    int32 dir;
     RSDK_THIS(Grabber);
 
     self->startPos = self->position;
@@ -402,8 +409,7 @@ void Grabber_EditorDraw(void)
     RSDK.DrawLine(self->position.x - 0x10000, self->startPos.y - 0x100000, self->position.x - 0x10000, self->position.y, 0xE0E0E0, 0, INK_NONE,
                   false);
 
-    Vector2 drawPos;
-    int32 dir       = self->direction;
+    dir       = self->direction;
     drawPos.x       = self->position.x;
     drawPos.y       = self->startPos.y;
     self->direction = FLIP_NONE;

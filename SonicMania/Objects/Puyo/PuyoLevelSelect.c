@@ -14,11 +14,13 @@ void PuyoLevelSelect_Update(void)
     RSDK_THIS(PuyoLevelSelect);
 
     if (self->canSelectLevels) {
+        int32 controllerID;
+        RSDKControllerState *controller;
         self->visible = !self->ready;
 
-        int32 controllerID = self->playerID + 1;
+        controllerID = self->playerID + 1;
 
-        RSDKControllerState *controller = &ControllerInfo[controllerID];
+        controller = &ControllerInfo[controllerID];
 
         self->up   = controller->keyUp.press || AnalogStickInfoL[controllerID].keyUp.press;
         self->down = controller->keyDown.press || AnalogStickInfoL[controllerID].keyDown.press;
@@ -66,6 +68,7 @@ void PuyoLevelSelect_StageLoad(void)
 
 void PuyoLevelSelect_DrawSprites(void)
 {
+    int32 i;
     RSDK_THIS(PuyoLevelSelect);
 
     Vector2 drawPos;
@@ -91,7 +94,7 @@ void PuyoLevelSelect_DrawSprites(void)
     drawPos.y = self->position.y - 0x310000;
 
     // Draw Levels
-    for (int32 i = 0; i < 5; ++i) {
+    for (i = 0; i < 5; ++i) {
         if (i != self->optionID || (!(Zone->timer & 4))) {
             RSDK.SetSpriteAnimation(PuyoLevelSelect->aniFrames, (i != self->optionID) + 4, &self->labelAnimator, true, i + 1);
             RSDK.DrawSprite(&self->labelAnimator, &drawPos, false);

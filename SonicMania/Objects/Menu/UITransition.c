@@ -52,6 +52,7 @@ void UITransition_StageLoad(void)
 
 void UITransition_StartTransition(void (*callback)(void), int32 delay)
 {
+    EntityUIControl *control;
     EntityUITransition *transition = (EntityUITransition *)UITransition->activeTransition;
 
     if (transition->state == UITransition_State_Init && !UIDialog->activeDialog) {
@@ -62,7 +63,7 @@ void UITransition_StartTransition(void (*callback)(void), int32 delay)
         transition->prevEntity = SceneInfo->entity;
     }
 
-    EntityUIControl *control = UIControl_GetUIControl();
+    control = UIControl_GetUIControl();
     if (control)
         control->selectionDisabled = true;
 }
@@ -88,6 +89,9 @@ void UITransition_SetNewTag(const char *text)
 
 void UITransition_DrawShapes(void)
 {
+    int32 screenCenterX;
+    int32 screenCenterY;
+    int32 i;
     RSDK_THIS(UITransition);
 
     Vector2 positions[3];
@@ -97,8 +101,8 @@ void UITransition_DrawShapes(void)
     colors[1] = 0x1888F0;
     colors[2] = 0xE82858;
 
-    int32 screenCenterX = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
-    int32 screenCenterY = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
+    screenCenterX = (ScreenInfo->position.x + ScreenInfo->center.x) << 16;
+    screenCenterY = (ScreenInfo->position.y + ScreenInfo->center.y) << 16;
     positions[0].x      = screenCenterX + self->drawPos[0].x - 0xF00000;
     positions[0].y      = screenCenterY + self->drawPos[0].y;
     positions[1].x      = screenCenterX + self->drawPos[1].x;
@@ -106,7 +110,7 @@ void UITransition_DrawShapes(void)
     positions[2].x      = screenCenterX + self->drawPos[2].x + 0xF00000;
     positions[2].y      = screenCenterY + self->drawPos[2].y;
 
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         UIWidgets_DrawParallelogram(positions[i].x, positions[i].y, 0, SCREEN_YSIZE, SCREEN_YSIZE, (colors[i] >> 16) & 0xFF, (colors[i] >> 8) & 0xFF,
                                     colors[i] & 0xFF);
     }
@@ -138,18 +142,20 @@ void UITransition_State_TransitionIn(void)
         self->state        = UITransition_State_TransitionOut;
     }
     else {
+        int32 remain;
+        int32 offsets[3];
+        int32 percent;
         self->isTransitioning = true;
 
-        int32 remain = self->timer - self->delay;
+        remain = self->timer - self->delay;
         if (!remain)
             RSDK.PlaySfx(UIWidgets->sfxWoosh, false, 255);
 
-        int32 offsets[3];
         offsets[0] = CLAMP(remain, 0, 8);
         offsets[1] = CLAMP(remain - 4, 0, 8);
         offsets[2] = CLAMP(remain - 8, 0, 8);
 
-        int32 percent = 32 * offsets[0];
+        percent = 32 * offsets[0];
         if (percent > 0) {
             if (percent < 256) {
                 self->drawPos[0].x = -0xF000 * percent + 0xF00000;
@@ -207,6 +213,7 @@ void UITransition_State_TransitionOut(void)
 
     if (self->timer >= 1) {
         if (self->timer > 16) {
+            EntityUIControl *control;
             self->timer           = 0;
             self->isTransitioning = false;
             self->drawPos[0].x    = -0xF00000;
@@ -216,21 +223,22 @@ void UITransition_State_TransitionOut(void)
             self->drawPos[2].x    = -0xF00000;
             self->drawPos[2].y    = 0xF00000;
 
-            EntityUIControl *control = UIControl_GetUIControl();
+            control = UIControl_GetUIControl();
             if (control)
                 control->selectionDisabled = false;
 
             self->state = UITransition_State_Init;
         }
         else {
-            self->isTransitioning = true;
             int32 offsets[3];
+            int32 percent;
+            self->isTransitioning = true;
 
             offsets[0] = CLAMP(self->timer - 1, 0, 8);
             offsets[1] = CLAMP(self->timer - 4, 0, 8);
             offsets[2] = CLAMP(self->timer - 1, 0, 8);
 
-            int32 percent = 32 * offsets[0];
+            percent = 32 * offsets[0];
             if (percent > 0) {
                 if (percent < 256) {
                     self->drawPos[0].x = -0xF000 * percent;
@@ -282,6 +290,7 @@ void UITransition_State_TransitionOut(void)
         }
     }
     else {
+        EntityUIControl *control;
         self->isTransitioning                       = true;
         UIControl_GetUIControl()->selectionDisabled = false;
 
@@ -307,7 +316,7 @@ void UITransition_State_TransitionOut(void)
 #endif
         }
 
-        EntityUIControl *control   = UIControl_GetUIControl();
+        control   = UIControl_GetUIControl();
         control->selectionDisabled = true;
         ++self->timer;
     }

@@ -11,9 +11,10 @@ ObjectBoundsMarker *BoundsMarker;
 
 void BoundsMarker_Update(void)
 {
+    int32 p;
     RSDK_THIS(BoundsMarker);
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
         BoundsMarker_ApplyBounds(player, self, false);
     }
@@ -34,11 +35,12 @@ void BoundsMarker_Create(void *data)
             destroyEntity(self);
         }
         else {
+            int32 p;
             self->active = ACTIVE_XBOUNDS;
             self->width  = self->width ? (self->width << 15) : (48 << 15);
             self->updateRange.x += self->width << 15;
 
-            for (int32 p = 0; p < Player->playerCount; ++p) {
+            for (p = 0; p < Player->playerCount; ++p) {
                 EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
                 BoundsMarker_ApplyBounds(player, self, true);
             }

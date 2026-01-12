@@ -279,6 +279,8 @@ void Cylinder_State_Spiral(void)
 
             case 1:
                 if (player->groundVel <= 0x30000) {
+                    int32 distance;
+                    int32 right;
                     if (player->groundVel >= -0x30000) {
                         player->onGround                     = false;
                         self->playerStatus[player->playerID] = 0;
@@ -290,8 +292,8 @@ void Cylinder_State_Spiral(void)
                             self->playerStatus[player->playerID] = 2;
                         }
 
-                        int32 distance = (player->position.x - self->position.x) >> 16;
-                        int32 right    = self->hitboxR.right - 48;
+                        distance = (player->position.x - self->position.x) >> 16;
+                        right    = self->hitboxR.right - 48;
                         if (distance < right) {
                             player->rotation  = 256;
                             player->direction = FLIP_NONE;
@@ -304,14 +306,16 @@ void Cylinder_State_Spiral(void)
                     }
                 }
                 else {
+                    int32 distance;
+                    int32 right;
                     if (player->position.x >= self->position.x) {
                         self->playerAngles[player->playerID] = 768;
                         player->tileCollisions               = TILECOLLISION_NONE;
                         self->playerStatus[player->playerID] = 2;
                     }
 
-                    int32 distance = (self->position.x - player->position.x) >> 16;
-                    int32 right    = -48 - self->hitboxL.left;
+                    distance = (self->position.x - player->position.x) >> 16;
+                    right    = -48 - self->hitboxL.left;
                     if (distance < right) {
                         player->rotation  = 256;
                         player->direction = FLIP_X;
@@ -327,6 +331,7 @@ void Cylinder_State_Spiral(void)
                 break;
 
             case 2: {
+                int32 frame;
                 self->playerAngles[player->playerID] = (self->playerAngles[player->playerID] + (player->groundVel >> 15)) & 0x3FF;
                 player->position.x                   = radius * RSDK.Cos1024(self->playerAngles[player->playerID]) + self->position.x;
 
@@ -336,7 +341,7 @@ void Cylinder_State_Spiral(void)
                     player->position.y += (player->groundVel >> 2) & 0xFFFFE000;
                 player->direction = FLIP_X;
 
-                int32 frame = 0;
+                frame = 0;
                 if (player->groundVel <= 0) {
                     player->rotation = 0x80;
                     frame            = 35 - 24 * self->playerAngles[player->playerID] / 0x400;
@@ -541,6 +546,7 @@ void Cylinder_State_InkRoller(void)
                 }
                 else if ((player->position.y < self->position.y && player->velocity.y >= 0)
                          || (player->position.y >= self->position.y && player->velocity.y <= 0)) {
+                    int32 frame;
                     if (player->position.y >= self->position.y) {
                         player->position.y                   = self->position.y + (radius << 10);
                         self->playerAngles[player->playerID] = 0x000;
@@ -554,7 +560,7 @@ void Cylinder_State_InkRoller(void)
                     player->velocity.y                   = 0;
                     self->playerStatus[player->playerID] = 1;
 
-                    int32 frame = (ANI_STAND_CS - 24 * ((self->playerAngles[player->playerID] + 8) & 0x3FF) / 1024) % ANI_STAND_CS;
+                    frame = (ANI_STAND_CS - 24 * ((self->playerAngles[player->playerID] + 8) & 0x3FF) / 1024) % ANI_STAND_CS;
                     if (player->groundVel)
                         RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_CS, &player->animator, true, frame);
                     else
@@ -600,6 +606,9 @@ void Cylinder_State_Pillar(void)
 
             if (Player_CheckCollisionTouch(player, self, &self->hitboxRange)) {
                 if (player->onGround) {
+                    int32 len;
+                    int32 frame;
+                    int32 angle;
                     if (hasInput) {
                         if (player->velocity.y > 0x18000)
                             player->velocity.y = player->velocity.y - 0x2000;
@@ -617,10 +626,10 @@ void Cylinder_State_Pillar(void)
 
                     player->position.y += player->velocity.y;
 
-                    int32 len   = MIN(abs(player->position.y - top) >> 16, self->length);
-                    int32 frame = 0;
+                    len   = MIN(abs(player->position.y - top) >> 16, self->length);
+                    frame = 0;
 
-                    int32 angle = ((len << 10) / 0xC0 + (((uint32)player->groundVel >> 22) & 0x200)) & 0x3FF;
+                    angle = ((len << 10) / 0xC0 + (((uint32)player->groundVel >> 22) & 0x200)) & 0x3FF;
                     if (player->groundVel <= 0) {
                         frame             = (24 - 24 * angle / 0x400) % 24;
                         player->direction = FLIP_NONE;

@@ -71,6 +71,8 @@ void ReplayDB_SaveDB(void (*callback)(bool32 success))
 uint32 ReplayDB_AddReplay(uint8 zoneID, uint8 act, uint8 characterID, int32 score, uint8 encore)
 {
     if (globals->replayTableLoaded == STATUS_OK) {
+        uint32 UUID;
+        char createTime[24];
         uint32 rowID       = API.AddUserDBRow(globals->replayTableID);
         int32 zoneStortVal = (score & 0x3FFFFFF) | (((zoneID << 2) | (act & 1) | ((encore & 1) << 1)) << 26);
 
@@ -81,8 +83,7 @@ uint32 ReplayDB_AddReplay(uint8 zoneID, uint8 act, uint8 characterID, int32 scor
         API.SetUserDBValue(globals->replayTableID, rowID, DBVAR_UINT8, "encore", &encore);
         API.SetUserDBValue(globals->replayTableID, rowID, DBVAR_UINT32, "zoneSortVal", &zoneStortVal);
 
-        uint32 UUID = API.GetUserDBRowUUID(globals->replayTableID, rowID);
-        char createTime[24];
+        UUID = API.GetUserDBRowUUID(globals->replayTableID, rowID);
         sprintf_s(createTime, (int32)sizeof(createTime), "");
         API.GetUserDBRowCreationTime(globals->replayTableID, rowID, createTime, sizeof(createTime) - 1, "%Y/%m/%d %H:%M:%S");
 
@@ -99,6 +100,9 @@ uint32 ReplayDB_AddReplay(uint8 zoneID, uint8 act, uint8 characterID, int32 scor
 
 void ReplayDB_DeleteReplay(int32 row, void (*callback)(bool32 success), bool32 useAltCB)
 {
+    int32 count;
+    int32 i;
+    char filename[0x20];
     int32 id       = API.GetUserDBRowUUID(globals->replayTableID, row);
     int32 replayID = 0;
 
@@ -110,14 +114,13 @@ void ReplayDB_DeleteReplay(int32 row, void (*callback)(bool32 success), bool32 u
     API.SetupUserDBRowSorting(globals->taTableID);
     API.AddRowSortFilter(globals->taTableID, DBVAR_UINT32, "replayID", &id);
 
-    int32 count = API.GetSortedUserDBRowCount(globals->taTableID);
-    for (int32 i = 0; i < count; ++i) {
+    count = API.GetSortedUserDBRowCount(globals->taTableID);
+    for (i = 0; i < count; ++i) {
         uint32 uuid = API.GetSortedUserDBRowID(globals->taTableID, i);
         LogHelpers_Print("Deleting Time Attack replay from row #%d", uuid);
         API.SetUserDBValue(globals->taTableID, uuid, DBVAR_UINT32, "replayID", &replayID);
     }
 
-    char filename[0x20];
     sprintf_s(filename, (int32)sizeof(filename), "Replay_%08X.bin", id);
     if (!useAltCB)
         API.DeleteUserFile(filename, ReplayDB_DeleteReplay_CB);
@@ -199,14 +202,17 @@ void ReplayDB_LoadCallback(bool32 success) {}
 
 int32 ReplayDB_Buffer_PackEntry(uint8 *compressed, void *uncompressed)
 {
+    bool32 forcePack;
+    uint8 changes;
+    uint8 *compressedBuffer;
     ReplayFrame *framePtr = (ReplayFrame *)uncompressed;
 
     compressed[0]    = framePtr->info;
     compressed[1]    = framePtr->changedValues;
-    bool32 forcePack = framePtr->info == REPLAY_INFO_STATECHANGE || framePtr->info == REPLAY_INFO_PASSEDGATE;
-    uint8 changes    = framePtr->changedValues;
+    forcePack = framePtr->info == REPLAY_INFO_STATECHANGE || framePtr->info == REPLAY_INFO_PASSEDGATE;
+    changes    = framePtr->changedValues;
 
-    uint8 *compressedBuffer = &compressed[2];
+    compressedBuffer = &compressed[2];
 
     // input
     if (forcePack || (changes & REPLAY_CHANGED_INPUT)) {
@@ -261,16 +267,19 @@ int32 ReplayDB_Buffer_PackEntry(uint8 *compressed, void *uncompressed)
 
 int32 ReplayDB_Buffer_UnpackEntry(void *uncompressed, uint8 *compressed)
 {
+    bool32 forceUnpack;
+    uint8 changes;
+    uint8 *compressedBuffer;
     ReplayFrame *framePtr = (ReplayFrame *)uncompressed;
 
     // compress state
     framePtr->info = compressed[0];
 
-    bool32 forceUnpack      = *compressed == REPLAY_INFO_STATECHANGE || *compressed == REPLAY_INFO_PASSEDGATE;
-    uint8 changes           = compressed[1];
+    forceUnpack      = *compressed == REPLAY_INFO_STATECHANGE || *compressed == REPLAY_INFO_PASSEDGATE;
+    changes           = compressed[1];
     framePtr->changedValues = changes;
 
-    uint8 *compressedBuffer = &compressed[2];
+    compressedBuffer = &compressed[2];
 
     // input
     if (forceUnpack || (changes & REPLAY_CHANGED_INPUT)) {
@@ -279,10 +288,12 @@ int32 ReplayDB_Buffer_UnpackEntry(void *uncompressed, uint8 *compressed)
 
     // position
     if (forceUnpack || (changes & REPLAY_CHANGED_POS)) {
-        int32 x = *(int32 *)compressedBuffer;
+        int32 x;
+        int32 y;
+        x = *(int32 *)compressedBuffer;
         compressedBuffer += sizeof(int32);
 
-        int32 y = *(int32 *)compressedBuffer;
+        y = *(int32 *)compressedBuffer;
         compressedBuffer += sizeof(int32);
 
         framePtr->position.x = x;
@@ -291,10 +302,12 @@ int32 ReplayDB_Buffer_UnpackEntry(void *uncompressed, uint8 *compressed)
 
     // velocity
     if (forceUnpack || (changes & REPLAY_CHANGED_VEL)) {
-        int32 x = *(int32 *)compressedBuffer;
+        int32 x;
+        int32 y;
+        x = *(int32 *)compressedBuffer;
         compressedBuffer += sizeof(int32);
 
-        int32 y = *(int32 *)compressedBuffer;
+        y = *(int32 *)compressedBuffer;
         compressedBuffer += sizeof(int32);
 
         framePtr->velocity.x = x;

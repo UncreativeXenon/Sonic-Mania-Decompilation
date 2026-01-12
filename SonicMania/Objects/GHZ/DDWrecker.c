@@ -39,7 +39,8 @@ void DDWrecker_Draw(void)
             RSDK.SetLimitedFade(1, 2, 3, self->blendAmount, 1, 28);
         }
         else {
-            for (int32 i = 1; i < 0x1C; ++i) {
+            int32 i;
+            for (i = 1; i < 0x1C; ++i) {
                 RSDK.SetPaletteEntry(1, i, 0xF0F0F0);
             }
         }
@@ -142,27 +143,34 @@ void DDWrecker_State_InitChildren(void)
     if (self->timer) {
         self->timer++;
         if (self->timer == 60) {
-            EntityDDWrecker *chain1 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, DDWrecker);
+            EntityDDWrecker *chain1;
+            EntityDDWrecker *chain2;
+            EntityDDWrecker *chain3;
+            EntityDDWrecker *chain4;
+            EntityDDWrecker *core;
+            EntityDDWrecker *ball1;
+            EntityDDWrecker *ball2;
+            chain1 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, DDWrecker);
             RSDK.ResetEntity(chain1, DDWrecker->classID, INT_TO_VOID(DDWRECKER_CHAIN));
             chain1->position.x = self->position.x;
             chain1->position.y = self->position.y + 0x400000;
 
-            EntityDDWrecker *chain2 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 2, DDWrecker);
+            chain2 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 2, DDWrecker);
             RSDK.ResetEntity(chain2, DDWrecker->classID, INT_TO_VOID(DDWRECKER_CHAIN));
             chain2->position.x = self->position.x;
             chain2->position.y = self->position.y + 0x400000;
 
-            EntityDDWrecker *chain3 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 4, DDWrecker);
+            chain3 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 4, DDWrecker);
             RSDK.ResetEntity(chain3, DDWrecker->classID, INT_TO_VOID(DDWRECKER_CHAIN));
             chain3->position.x = self->position.x;
             chain3->position.y = self->position.y + 0x400000;
 
-            EntityDDWrecker *chain4 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 5, DDWrecker);
+            chain4 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 5, DDWrecker);
             RSDK.ResetEntity(chain4, DDWrecker->classID, INT_TO_VOID(DDWRECKER_CHAIN));
             chain4->position.x = self->position.x;
             chain4->position.y = self->position.y + 0x400000;
 
-            EntityDDWrecker *core = RSDK_GET_ENTITY(SceneInfo->entitySlot + 3, DDWrecker);
+            core = RSDK_GET_ENTITY(SceneInfo->entitySlot + 3, DDWrecker);
             RSDK.ResetEntity(core, DDWrecker->classID, INT_TO_VOID(DDWRECKER_CORE));
             core->position.x = self->position.x;
             core->position.y = self->position.y;
@@ -181,7 +189,7 @@ void DDWrecker_State_InitChildren(void)
             core->bodyB           = RSDK_GET_ENTITY(SceneInfo->entitySlot + 7, DDWrecker);
             core->state           = DDWrecker_State_Assemble;
 
-            EntityDDWrecker *ball1 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 6, DDWrecker);
+            ball1 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 6, DDWrecker);
             RSDK.ResetEntity(ball1, DDWrecker->classID, INT_TO_VOID(DDWRECKER_BALL1));
             ball1->position.x = self->position.x;
             ball1->position.y = self->position.y;
@@ -196,7 +204,7 @@ void DDWrecker_State_InitChildren(void)
             ball1->bodyB           = RSDK_GET_ENTITY(SceneInfo->entitySlot + 7, DDWrecker);
             ball1->radius          = 64;
 
-            EntityDDWrecker *ball2 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 7, DDWrecker);
+            ball2 = RSDK_GET_ENTITY(SceneInfo->entitySlot + 7, DDWrecker);
             RSDK.ResetEntity(ball2, DDWrecker->classID, INT_TO_VOID(DDWRECKER_BALL2));
             ball2->position.x = self->position.x;
             ball2->position.y = self->position.y;
@@ -254,10 +262,12 @@ void DDWrecker_State_EnterWreckers(void)
     if (self->spinTimer <= 0) {
         self->timer = 30;
         self->state = DDWrecker_State_AttackDelay;
-        foreach_active(DDWrecker, child)
         {
-            if (child->type == DDWRECKER_BALL1 || child->type == DDWRECKER_BALL2)
-                child->stateBall = DDWrecker_StateBall_Vulnerable;
+            foreach_active(DDWrecker, child)
+            {
+                if (child->type == DDWRECKER_BALL1 || child->type == DDWRECKER_BALL2)
+                    child->stateBall = DDWrecker_StateBall_Vulnerable;
+            }
         }
     }
     else {
@@ -779,30 +789,32 @@ void DDWrecker_Hit(void)
         self->state     = DDWrecker_State_Die;
         self->stateBall = StateMachine_None;
         self->timer     = 0;
-        foreach_active(DDWrecker, child)
         {
-            if (self != child) {
-                switch (child->type) {
-                    case DDWRECKER_BALL1:
-                    case DDWRECKER_BALL2:
-                        if (child->stateBall) {
-                            child->state       = DDWrecker_State_EndBounceAttack;
-                            child->originPos.y = child->position.y;
-                            child->velocity.x  = -DDWrecker->attackVelocities[2];
-                            child->stateBall   = DDWrecker_StateBall_Partnerless;
-                        }
-                        break;
+            foreach_active(DDWrecker, child)
+            {
+                if (self != child) {
+                    switch (child->type) {
+                        case DDWRECKER_BALL1:
+                        case DDWRECKER_BALL2:
+                            if (child->stateBall) {
+                                child->state       = DDWrecker_State_EndBounceAttack;
+                                child->originPos.y = child->position.y;
+                                child->velocity.x  = -DDWrecker->attackVelocities[2];
+                                child->stateBall   = DDWrecker_StateBall_Partnerless;
+                            }
+                            break;
 
-                    case DDWRECKER_CHAIN:
-                    case DDWRECKER_CORE:
-                        if (child->state != DDWrecker_State_Debris) {
-                            child->state      = DDWrecker_State_Debris;
-                            child->velocity.x = RSDK.Rand(-0x20000, 0x20000);
-                            child->velocity.y = RSDK.Rand(-0x20000, 0x20000);
-                        }
-                        break;
+                        case DDWRECKER_CHAIN:
+                        case DDWRECKER_CORE:
+                            if (child->state != DDWrecker_State_Debris) {
+                                child->state      = DDWrecker_State_Debris;
+                                child->velocity.x = RSDK.Rand(-0x20000, 0x20000);
+                                child->velocity.y = RSDK.Rand(-0x20000, 0x20000);
+                            }
+                            break;
 
-                    default: break;
+                        default: break;
+                    }
                 }
             }
         }
@@ -814,14 +826,16 @@ void DDWrecker_Hit(void)
 }
 void DDWrecker_Spin(void)
 {
+    int32 i;
     RSDK_THIS(DDWrecker);
 
-    for (int32 i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i) {
+        int32 rot;
         EntityDDWrecker *chain = RSDK_GET_ENTITY(self->siblingSlots[i], DDWrecker);
         chain->position.x      = self->position.x + (DDWrecker->spinOffset[i] * RSDK.Sin1024(self->spinAngle) * self->radius);
         chain->position.y      = self->position.y + (DDWrecker->spinOffset[i] * RSDK.Cos1024(self->spinAngle) * self->radius);
 
-        int32 rot = chain->rotation;
+        rot = chain->rotation;
         if (rot < 0) {
             if (rot < 0) {
                 rot += 2;
@@ -842,6 +856,8 @@ void DDWrecker_Spin(void)
 }
 void DDWrecker_Swing(void)
 {
+    EntityDDWrecker *chain;
+    int32 i;
     RSDK_THIS(DDWrecker);
     int32 angle    = RSDK.Sin1024(self->spinAngle) >> 2;
     self->rotation = RSDK.Sin1024(-self->spinAngle) >> 6;
@@ -849,8 +865,8 @@ void DDWrecker_Swing(void)
     if (!self->angleVel)
         self->unusedAngle = RSDK.Sin1024(-self->spinAngle) >> 5;
 
-    EntityDDWrecker *chain = NULL;
-    for (int32 i = 0; i < 6; ++i) {
+    chain = NULL;
+    for (i = 0; i < 6; ++i) {
         chain             = RSDK_GET_ENTITY(self->siblingSlots[i], DDWrecker);
         chain->position.x = self->position.x + (DDWrecker->swingOffset[i] * RSDK.Sin1024(angle) * self->radius);
         chain->position.y = self->position.y + (DDWrecker->swingOffset[i] * RSDK.Cos1024(angle) * self->radius);

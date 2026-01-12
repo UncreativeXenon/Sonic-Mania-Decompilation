@@ -106,13 +106,15 @@ void BuzzSaw_CheckPlayerCollisions(void)
     self->position.x = self->drawPos.x;
     self->position.y = self->drawPos.y;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &BuzzSaw->hitbox)) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &BuzzSaw->hitbox)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x600, false, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x600, false, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 
@@ -139,17 +141,19 @@ void BuzzSaw_State_Stray_Waiting(void)
     self->drawPos.x = self->position.x;
     self->drawPos.y = self->position.y;
 
-    foreach_active(Player, player)
-    {
-        int32 angle = RSDK.ATan2((player->position.x - self->position.x) >> 16, (player->position.y - self->position.y) >> 16);
+{
+        foreach_active(Player, player)
+        {
+            int32 angle = RSDK.ATan2((player->position.x - self->position.x) >> 16, (player->position.y - self->position.y) >> 16);
 
-        int32 rx = (abs(player->position.x - self->position.x) >> 16) * (abs(player->position.x - self->position.x) >> 16);
-        int32 ry = (abs(player->position.y - self->position.y) >> 16) * (abs(player->position.y - self->position.y) >> 16);
-        if (((angle + 0x20 - (self->angle & 0xFF)) & 0xFF) < 0x40 && (uint32)((rx + ry) - 0x4000) < 0x5000) {
-            self->active     = ACTIVE_NORMAL;
-            self->velocity.x = 0x600 * RSDK.Cos256(self->angle);
-            self->velocity.y = 0x600 * RSDK.Sin256(self->angle);
-            self->state      = BuzzSaw_State_Stray_Released;
+            int32 rx = (abs(player->position.x - self->position.x) >> 16) * (abs(player->position.x - self->position.x) >> 16);
+            int32 ry = (abs(player->position.y - self->position.y) >> 16) * (abs(player->position.y - self->position.y) >> 16);
+            if (((angle + 0x20 - (self->angle & 0xFF)) & 0xFF) < 0x40 && (uint32)((rx + ry) - 0x4000) < 0x5000) {
+                self->active     = ACTIVE_NORMAL;
+                self->velocity.x = 0x600 * RSDK.Cos256(self->angle);
+                self->velocity.y = 0x600 * RSDK.Sin256(self->angle);
+                self->state      = BuzzSaw_State_Stray_Released;
+            }
         }
     }
 }

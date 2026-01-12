@@ -107,27 +107,30 @@ void PushSpring_Collide_Top(void)
 
     self->hitbox.top = (self->pushOffset >> 16) - 22;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_TOP) {
-            player->position.y += 0x20000;
-            self->beingPushed |= true;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_TOP) {
+                player->position.y += 0x20000;
+                self->beingPushed |= true;
 
-            if (self->pushOffset >= 0x120000) {
-                player->collisionMode = 0;
-                player->onGround      = false;
-                player->state         = Player_State_Air;
-                player->velocity.y    = -0xA0000;
+                if (self->pushOffset >= 0x120000) {
+                    int32 anim;
+                    player->collisionMode = 0;
+                    player->onGround      = false;
+                    player->state         = Player_State_Air;
+                    player->velocity.y    = -0xA0000;
 
-                int32 anim = player->animator.animationID;
-                if (anim == ANI_WALK || (anim > ANI_AIR_WALK && anim <= ANI_DASH))
-                    player->animationReserve = player->animator.animationID;
-                else
-                    player->animationReserve = ANI_WALK;
+                    anim = player->animator.animationID;
+                    if (anim == ANI_WALK || (anim > ANI_AIR_WALK && anim <= ANI_DASH))
+                        player->animationReserve = player->animator.animationID;
+                    else
+                        player->animationReserve = ANI_WALK;
 
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, true, 0);
-                RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
-                self->state = PushSpring_State_PushRecoil;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_SPRING_DIAGONAL, &player->animator, true, 0);
+                    RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
+                    self->state = PushSpring_State_PushRecoil;
+                }
             }
         }
     }
@@ -139,24 +142,26 @@ void PushSpring_Collide_Bottom(void)
 
     self->hitbox.top = (self->pushOffset >> 16) - 22;
 
-    foreach_active(Player, player)
-    {
-        int32 yvel = player->velocity.y;
+{
+        foreach_active(Player, player)
+        {
+            int32 yvel = player->velocity.y;
 
-        if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_BOTTOM) {
-            if (yvel < 0) {
-                player->velocity.y = yvel + 0x3800;
-                player->position.y -= 0x20000;
-                self->beingPushed |= true;
-            }
+            if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_BOTTOM) {
+                if (yvel < 0) {
+                    player->velocity.y = yvel + 0x3800;
+                    player->position.y -= 0x20000;
+                    self->beingPushed |= true;
+                }
 
-            if (self->pushOffset >= 0x120000) {
-                player->collisionMode = 0;
-                player->onGround      = false;
-                player->state         = Player_State_Air;
-                player->velocity.y    = 0xA0000;
-                RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
-                self->state = PushSpring_State_PushRecoil;
+                if (self->pushOffset >= 0x120000) {
+                    player->collisionMode = 0;
+                    player->onGround      = false;
+                    player->state         = Player_State_Air;
+                    player->velocity.y    = 0xA0000;
+                    RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
+                    self->state = PushSpring_State_PushRecoil;
+                }
             }
         }
     }
@@ -168,25 +173,27 @@ void PushSpring_Collide_Left(void)
 
     self->hitbox.right = 22 - (self->pushOffset >> 16);
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_LEFT) {
-            if (player->direction == FLIP_NONE)
-                player->position.x += 0x20000;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_LEFT) {
+                if (player->direction == FLIP_NONE)
+                    player->position.x += 0x20000;
 
-            if (player->right)
-                self->beingPushed |= true;
+                if (player->right)
+                    self->beingPushed |= true;
 
-            if (self->state == PushSpring_State_PushRecoil) {
-                if (self->pushOffset > 0x10000) {
-                    player->groundVel     = -12 * self->pushOffset / 18;
-                    player->velocity.x    = player->groundVel;
-                    player->collisionMode = 0;
-                    player->controlLock   = 16;
-                    player->pushing       = false;
-                    player->direction     = self->direction;
-                    player->state         = Player_State_Ground;
-                    RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
+                if (self->state == PushSpring_State_PushRecoil) {
+                    if (self->pushOffset > 0x10000) {
+                        player->groundVel     = -12 * self->pushOffset / 18;
+                        player->velocity.x    = player->groundVel;
+                        player->collisionMode = 0;
+                        player->controlLock   = 16;
+                        player->pushing       = false;
+                        player->direction     = self->direction;
+                        player->state         = Player_State_Ground;
+                        RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
+                    }
                 }
             }
         }
@@ -199,25 +206,27 @@ void PushSpring_Collide_Right(void)
 
     self->hitbox.right = 22 - (self->pushOffset >> 16);
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_RIGHT) {
-            if (player->direction == FLIP_X)
-                player->position.x -= 0x20000;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionBox(player, self, &self->hitbox) == C_RIGHT) {
+                if (player->direction == FLIP_X)
+                    player->position.x -= 0x20000;
 
-            if (player->left)
-                self->beingPushed |= true;
+                if (player->left)
+                    self->beingPushed |= true;
 
-            if (self->state == PushSpring_State_PushRecoil) {
-                if (self->pushOffset > 0x10000) {
-                    player->groundVel     = 12 * self->pushOffset / 18;
-                    player->velocity.x    = player->groundVel;
-                    player->collisionMode = 0;
-                    player->controlLock   = 16;
-                    player->pushing       = false;
-                    player->direction     = self->direction;
-                    player->state         = Player_State_Ground;
-                    RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
+                if (self->state == PushSpring_State_PushRecoil) {
+                    if (self->pushOffset > 0x10000) {
+                        player->groundVel     = 12 * self->pushOffset / 18;
+                        player->velocity.x    = player->groundVel;
+                        player->collisionMode = 0;
+                        player->controlLock   = 16;
+                        player->pushing       = false;
+                        player->direction     = self->direction;
+                        player->state         = Player_State_Ground;
+                        RSDK.PlaySfx(PushSpring->sfxSpring, false, 255);
+                    }
                 }
             }
         }

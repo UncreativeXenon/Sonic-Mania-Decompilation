@@ -95,7 +95,7 @@ void GHZSetup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE || (RSDK.CheckSceneFolder("GHZCutscene") && globals->gameMode == MODE_ENCORE)) {
-        RSDK.LoadPalette(0, "EncoreGHZ.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreGHZ.act", 0xFF);
         RSDK.CopyPalette(0, 128, 1, 128, 80);
         RSDK.CopyPalette(0, 128, 2, 128, 80);
         RSDK.RotatePalette(2, 181, 184, true);
@@ -127,13 +127,16 @@ void GHZSetup_SetupAct1BG(void)
         Zone_ReloadStoredEntities(WIDE_SCR_XCENTER << 16, 1724 << 16, true);
     }
     else {
+        TileLayer *outsideLayer;
+        EntityPlayer *player;
+        int32 s;
         Zone_ReloadStoredEntities(WIDE_SCR_XCENTER << 16, 1004 << 16, true);
-        TileLayer *outsideLayer = RSDK.GetTileLayer(RSDK.GetTileLayerID("BG Outside"));
-        EntityPlayer *player    = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        outsideLayer = RSDK.GetTileLayer(RSDK.GetTileLayerID("BG Outside"));
+        player    = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
         player->onGround = true;
         player->state    = Player_State_Ground;
-        for (int32 s = 0; s < outsideLayer->scrollInfoCount; ++s) {
+        for (s = 0; s < outsideLayer->scrollInfoCount; ++s) {
             outsideLayer->scrollInfo[s].scrollPos += globals->parallaxOffset[0] * outsideLayer->scrollInfo[s].scrollSpeed;
         }
     }
@@ -145,20 +148,23 @@ void GHZSetup_StageFinish_EndAct1(void)
 }
 void GHZSetup_HandleActTransition(void)
 {
+    TileLayer *bgCave1;
+    int32 s;
+    TileLayer *bgCave2;
     Zone->cameraBoundsL[0] = 256 - ScreenInfo->center.x;
     Zone->cameraBoundsB[0] = 1412;
 
     Zone_ReloadStoredEntities(256 << 16, 1412 << 16, true);
 
-    TileLayer *bgCave1 = RSDK.GetTileLayer(2);
+    bgCave1 = RSDK.GetTileLayer(2);
     bgCave1->scrollPos += 0xB000 * bgCave1->parallaxFactor;
-    for (int32 s = 0; s < bgCave1->scrollInfoCount; ++s) {
+    for (s = 0; s < bgCave1->scrollInfoCount; ++s) {
         bgCave1->scrollInfo[s].scrollPos += 0x3CB000 * bgCave1->scrollInfo[s].parallaxFactor;
     }
 
-    TileLayer *bgCave2 = RSDK.GetTileLayer(3);
+    bgCave2 = RSDK.GetTileLayer(3);
     bgCave2->scrollPos += 0xB000 * bgCave2->parallaxFactor;
-    for (int32 s = 0; s < bgCave2->scrollInfoCount; ++s) {
+    for (s = 0; s < bgCave2->scrollInfoCount; ++s) {
         bgCave2->scrollInfo[s].scrollPos += 0x3CB000 * bgCave2->scrollInfo[s].parallaxFactor;
     }
 

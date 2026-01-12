@@ -37,6 +37,7 @@ void MatryoshkaBom_Draw(void)
 
 void MatryoshkaBom_Create(void *data)
 {
+    int32 size;
     RSDK_THIS(MatryoshkaBom);
 
     self->visible = true;
@@ -49,7 +50,7 @@ void MatryoshkaBom_Create(void *data)
     self->updateRange.x = 0x800000;
     self->updateRange.y = 0x800000;
 
-    int32 size = VOID_TO_INT(data);
+    size = VOID_TO_INT(data);
     if (size < MATRYOSHKA_SIZE_SHRAPNEL) {
         self->active = ACTIVE_BOUNDS;
         if (size)
@@ -328,9 +329,11 @@ void MatryoshkaBom_State_FuseLit(void)
         MatryoshkaBom_CheckOffScreen();
     }
     else {
+        EntityMatryoshkaBom *shrapnel;
+        EntityExplosion *explosion; 
         RSDK.PlaySfx(MatryoshkaBom->sfxExplosion, false, 255);
 
-        EntityMatryoshkaBom *shrapnel = CREATE_ENTITY(MatryoshkaBom, INT_TO_VOID(MATRYOSHKA_SIZE_SHRAPNEL), self->position.x, self->position.y);
+        shrapnel = CREATE_ENTITY(MatryoshkaBom, INT_TO_VOID(MATRYOSHKA_SIZE_SHRAPNEL), self->position.x, self->position.y);
         shrapnel->velocity.x          = -0x20000;
         shrapnel->velocity.y          = -0x30000;
         shrapnel->planeFilter         = self->planeFilter;
@@ -354,7 +357,7 @@ void MatryoshkaBom_State_FuseLit(void)
         shrapnel->planeFilter = self->planeFilter;
         shrapnel->drawGroup   = self->drawGroup;
 
-        EntityExplosion *explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y);
+        explosion = CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_ENEMY), self->position.x, self->position.y);
         explosion->drawGroup       = self->drawGroup + 1;
         explosion->planeFilter     = self->planeFilter;
 
@@ -369,9 +372,10 @@ void MatryoshkaBom_State_ReleaseSmallerBuddy(void)
     RSDK.ProcessAnimation(&self->bodyAnimator);
 
     if (!--self->timer) {
+        EntityMatryoshkaBom *child;
         RSDK.PlaySfx(MatryoshkaBom->sfxPon, false, 255);
 
-        EntityMatryoshkaBom *child = CREATE_ENTITY(MatryoshkaBom, INT_TO_VOID(self->size + 1), self->position.x, self->position.y);
+        child = CREATE_ENTITY(MatryoshkaBom, INT_TO_VOID(self->size + 1), self->position.x, self->position.y);
 
         child->velocity.x = self->direction == FLIP_NONE ? -0x18000 : 0x18000;
         child->velocity.y = -0x40000;
@@ -394,6 +398,7 @@ void MatryoshkaBom_State_ReleaseSmallerBuddy(void)
 
 void MatryoshkaBom_State_Hatched(void)
 {
+    bool32 collided;
     RSDK_THIS(MatryoshkaBom);
 
     self->position.x += self->velocity.x;
@@ -411,7 +416,7 @@ void MatryoshkaBom_State_Hatched(void)
             self->velocity.x = 0;
     }
 
-    bool32 collided = false;
+    collided = false;
     if (self->direction & FLIP_Y)
         collided = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_ROOF, 0, 0, -self->offsetY, true);
     else
@@ -440,11 +445,13 @@ void MatryoshkaBom_State_Shrapnel(void)
     if (RSDK.CheckOnScreen(self, &self->updateRange)) {
         RSDK.ProcessAnimation(&self->bodyAnimator);
 
-        foreach_active(Player, player)
         {
-            if (self->planeFilter <= 0 || player->collisionPlane == ((uint8)(self->planeFilter - 1) & 1)) {
-                if (Player_CheckCollisionTouch(player, self, &MatryoshkaBom->hitboxShrapnel)) {
-                    Player_Hurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (self->planeFilter <= 0 || player->collisionPlane == ((uint8)(self->planeFilter - 1) & 1)) {
+                    if (Player_CheckCollisionTouch(player, self, &MatryoshkaBom->hitboxShrapnel)) {
+                        Player_Hurt(player, self);
+                    }
                 }
             }
         }

@@ -291,6 +291,7 @@ void UIWidgets_DrawTime(int32 x, int32 y, int32 minutes, int32 seconds, int32 mi
     Vector2 drawPos;
     Animator animator;
     Animator arrowsAnimator;
+    int32 i;
     char strBuf[16];
 
     memset(&animator, 0, sizeof(Animator));
@@ -317,7 +318,7 @@ void UIWidgets_DrawTime(int32 x, int32 y, int32 minutes, int32 seconds, int32 mi
             sprintf_s(strBuf, (int32)sizeof(strBuf), "%02d:%02d;%02d", minutes, seconds, milliseconds);
     }
 
-    for (int32 i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         if (!strBuf[i])
             break;
 

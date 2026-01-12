@@ -20,13 +20,17 @@ void UFO_ItemBox_LateUpdate(void)
     RSDK_THIS(UFO_ItemBox);
 
     if (self->state == UFO_ItemBox_State_HasContents) {
+        int32 x;
+        int32 y;
+        int32 z;
+        Matrix *mat;
         self->visible = true;
 
-        int32 x = self->position.x >> 8;
-        int32 y = self->height >> 8;
-        int32 z = self->position.y >> 8;
+        x = self->position.x >> 8;
+        y = self->height >> 8;
+        z = self->position.y >> 8;
 
-        Matrix *mat = &UFO_Camera->matWorld;
+        mat = &UFO_Camera->matWorld;
 
         self->worldX = mat->values[0][3] + (y * mat->values[0][1] >> 8) + (z * mat->values[0][2] >> 8) + (x * mat->values[0][0] >> 8);
         self->worldY = mat->values[1][3] + (y * mat->values[1][1] >> 8) + (z * mat->values[1][2] >> 8) + (x * mat->values[1][0] >> 8);
@@ -165,12 +169,13 @@ void UFO_ItemBox_State_HasContents(void)
 
 void UFO_ItemBox_State_ShowContents(void)
 {
+    int32 scale;
     RSDK_THIS(UFO_ItemBox);
 
     self->drawPos.x += ((ScreenInfo->center.x << 16) - self->drawPos.x) >> 3;
     self->drawPos.y += (((ScreenInfo->center.x - 4) << 16) - self->drawPos.y) >> 3;
 
-    int32 scale   = self->scale.x + ((0x200 - self->scale.x) >> 3);
+    scale   = self->scale.x + ((0x200 - self->scale.x) >> 3);
     self->scale.x = scale;
     self->scale.y = scale;
 

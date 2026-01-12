@@ -83,10 +83,12 @@ void TVFlyingBattery_StageLoad(void)
     TVFlyingBattery->sfxFlyover = RSDK.GetSfx("SPZ/Flyover.wav");
 
     TVFlyingBattery->weatherTV = NULL;
-    foreach_all(WeatherTV, weatherTV)
     {
-        TVFlyingBattery->weatherTV = weatherTV;
-        foreach_break;
+        foreach_all(WeatherTV, weatherTV)
+        {
+            TVFlyingBattery->weatherTV = weatherTV;
+            foreach_break;
+        }
     }
 }
 
@@ -114,6 +116,7 @@ void TVFlyingBattery_DrawSection(Vector2 drawPos, bool32 flipBlades)
 
 void TVFlyingBattery_DrawSprites(void)
 {
+    int32 s;
     RSDK_THIS(TVFlyingBattery);
     Vector2 drawPos;
 
@@ -122,7 +125,7 @@ void TVFlyingBattery_DrawSprites(void)
     RSDK.SetSpriteAnimation(TVFlyingBattery->aniFrames, 0, &self->shipAnimator, true, 1);
     RSDK.DrawSprite(&self->shipAnimator, &drawPos, false);
 
-    for (int32 s = 0; s < 3; ++s) {
+    for (s = 0; s < 3; ++s) {
         Vector2 sectionDrawPos;
         sectionDrawPos.x = drawPos.x;
         sectionDrawPos.y = drawPos.y;

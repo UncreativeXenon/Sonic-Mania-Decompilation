@@ -166,6 +166,7 @@ void PKingAttack_State_OrbitAppear(void)
 
 void PKingAttack_State_Orbiting(void)
 {
+    int32 inc;
     RSDK_THIS(PKingAttack);
 
     RSDK.ProcessAnimation(&self->animator);
@@ -198,7 +199,7 @@ void PKingAttack_State_Orbiting(void)
     self->targetPos.y = self->target->position.y;
 
     self->angle = (self->angle + 12) & 0x3FF;
-    int32 inc   = (384 - self->scale.x - (RSDK.Sin1024(self->angle) >> 3)) >> 3;
+    inc   = (384 - self->scale.x - (RSDK.Sin1024(self->angle) >> 3)) >> 3;
 
     self->scale.x += inc;
     self->scale.y = self->scale.x;

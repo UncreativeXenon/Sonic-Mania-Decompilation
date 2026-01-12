@@ -96,6 +96,7 @@ void SP500MkII_DrawDebugOverlay(void)
 
 void SP500MkII_DrawPrinter(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(SP500MkII);
 
     int32 storeX = self->position.x;
@@ -104,7 +105,6 @@ void SP500MkII_DrawPrinter(void)
     self->position.x += self->printPos.x;
     self->position.y += self->printPos.y;
 
-    Vector2 drawPos;
     drawPos.x = self->position.x;
     drawPos.y = self->position.y + self->buttonPos;
     RSDK.SetSpriteAnimation(SP500MkII->aniFrames, 1, &self->animator, true, 0);
@@ -138,6 +138,7 @@ void SP500MkII_DrawPrinter(void)
 
 void SP500MkII_DrawRails(void)
 {
+    int32 l;
     RSDK_THIS(SP500MkII);
 
     Vector2 drawPos;
@@ -154,7 +155,7 @@ void SP500MkII_DrawRails(void)
 
     drawPos.x += 0x80000;
     self->animator.frameID = 1;
-    for (int32 l = 0; l < self->length + 8; ++l) {
+    for (l = 0; l < self->length + 8; ++l) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += 0x80000;
     }
@@ -175,6 +176,8 @@ void SP500MkII_DrawRails(void)
 
 void SP500MkII_CheckPlayerCollisions(void)
 {
+    int32 top;
+    int32 buttonPos;
     RSDK_THIS(SP500MkII);
 
     int32 storeX = self->position.x;
@@ -182,39 +185,43 @@ void SP500MkII_CheckPlayerCollisions(void)
 
     self->position.x = self->printerPosition.x;
     self->position.y = self->printerPosition.y;
-    int32 top        = SP500MkII->hitboxButton.top << 16;
+    top        = SP500MkII->hitboxButton.top << 16;
 
-    int32 buttonPos = 0;
-    foreach_active(Player, player)
+    buttonPos = 0;
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        int32 bottom   = player->position.y + (Player_GetHitbox(player)->bottom << 16);
+        foreach_active(Player, player)
+        {
+            int32 side;
+            bool32 touched;
+            int32 playerID = RSDK.GetEntitySlot(player);
+            int32 bottom   = player->position.y + (Player_GetHitbox(player)->bottom << 16);
 
-        Player_CheckCollisionBox(player, self, &SP500MkII->hitboxPrinter);
+            Player_CheckCollisionBox(player, self, &SP500MkII->hitboxPrinter);
 
-        int32 side     = Player_CheckCollisionBox(player, self, &SP500MkII->hitboxSolid);
-        bool32 touched = Player_CheckCollisionTouch(player, self, &SP500MkII->hitboxButton);
+            side    = Player_CheckCollisionBox(player, self, &SP500MkII->hitboxSolid);
+            touched = Player_CheckCollisionTouch(player, self, &SP500MkII->hitboxButton);
 
-        if (side == C_TOP) {
-            player->position.x += self->printMoveOffset.x;
-            player->position.y += self->printMoveOffset.y;
-        }
+            if (side == C_TOP) {
+                player->position.x += self->printMoveOffset.x;
+                player->position.y += self->printMoveOffset.y;
+            }
 
-        if (touched) {
-            int32 distY = MIN(bottom - (self->position.y + top), 0xD0000);
+            if (touched) {
+                int32 distY = MIN(bottom - (self->position.y + top), 0xD0000);
 
-            if (buttonPos <= distY)
-                buttonPos = distY;
+                if (buttonPos <= distY)
+                    buttonPos = distY;
 
-            buttonPos = MIN(buttonPos, 0xD0000);
+                buttonPos = MIN(buttonPos, 0xD0000);
 
-            if (side == C_TOP)
-                self->activePlayers |= 1 << playerID;
-            else
+                if (side == C_TOP)
+                    self->activePlayers |= 1 << playerID;
+                else
+                    self->activePlayers &= ~(1 << playerID);
+            }
+            else {
                 self->activePlayers &= ~(1 << playerID);
-        }
-        else {
-            self->activePlayers &= ~(1 << playerID);
+            }
         }
     }
 
@@ -313,12 +320,13 @@ void SP500MkII_State_PrintRow(void)
 
 void SP500MkII_State_NextPrintRow(void)
 {
+    int32 dist;
     RSDK_THIS(SP500MkII);
 
     self->printMoveOffset.x = self->printPos.x;
     self->printMoveOffset.y = self->printPos.y;
 
-    int32 dist = (self->printRowID * (2 * (self->yDir != 0) - 1)) << 21;
+    dist = (self->printRowID * (2 * (self->yDir != 0) - 1)) << 21;
 
     if (self->yDir == FLIP_X) {
         if (self->printPos.y < dist)

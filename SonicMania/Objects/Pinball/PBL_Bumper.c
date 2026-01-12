@@ -98,6 +98,7 @@ void PBL_Bumper_HandlePlayerInteractions(void)
     foreach_active(PBL_Player, player)
     {
         if (RSDK.CheckObjectCollisionTouchBox(self, &PBL_Bumper->hitbox, player, &PBL_Player->outerBox)) {
+            int32 angle;
             if (self->state == PBL_Bumper_State_CheckBumps) {
                 self->scaleFactor = 0;
                 self->scaleVel    = 0x8000;
@@ -106,7 +107,7 @@ void PBL_Bumper_HandlePlayerInteractions(void)
                 RSDK.PlaySfx(PBL_Bumper->sfxBumper, false, 255);
             }
 
-            int32 angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
+            angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
             player->velocity.x >>= 1;
             player->velocity.y >>= 1;
             player->velocity.x += 0x700 * RSDK.Cos256(angle);

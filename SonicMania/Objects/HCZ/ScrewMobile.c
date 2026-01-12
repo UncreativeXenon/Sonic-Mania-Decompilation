@@ -128,6 +128,7 @@ void ScrewMobile_StageLoad(void)
 
 void ScrewMobile_State_CheckPlayerEnter(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(ScrewMobile);
 
     Zone->cameraBoundsR[0]      = (self->position.x >> 16) + 32;
@@ -150,7 +151,7 @@ void ScrewMobile_State_CheckPlayerEnter(void)
         }
     }
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (Player_CheckCollisionTouch(player1, self, &ScrewMobile->hitboxCockpit)) {
         Zone->cameraBoundsT[0]      = (self->position.y >> 16) - 40;
         Zone->playerBoundsR[0]      = 0x7FFF;
@@ -176,6 +177,7 @@ void ScrewMobile_State_CheckPlayerEnter(void)
 
 void ScrewMobile_State_PlayerRiding(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(ScrewMobile);
 
     RSDK.ProcessAnimation(&self->propellerAnimator);
@@ -187,7 +189,7 @@ void ScrewMobile_State_PlayerRiding(void)
     self->position.y = BadnikHelpers_Oscillate(self->startPos.y, 2, 10);
     self->position.x += self->velocity.x;
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (Player_CheckValidState(player1)) {
         player1->position.x     = self->position.x;
         player1->position.y     = self->position.y - 0x100000;
@@ -364,9 +366,10 @@ void ScrewMobile_State_PlayerRiding(void)
     }
 
     if (self->rackAnimator.frameID == 2 && !self->timer) {
+        EntityScrewMobile *bomb;
         self->timer = 60;
 
-        EntityScrewMobile *bomb = CREATE_ENTITY(ScrewMobile, INT_TO_VOID(SCREWMOBILE_BOMB), self->position.x, self->position.y + 0x130000);
+        bomb = CREATE_ENTITY(ScrewMobile, INT_TO_VOID(SCREWMOBILE_BOMB), self->position.x, self->position.y + 0x130000);
         if (self->direction)
             bomb->position.x -= 0x350000;
         else
@@ -416,11 +419,12 @@ void ScrewMobile_State_BossFinished(void)
 
 void ScrewMobile_State_Idle(void)
 {
+    EntityPlayer *player1;
     RSDK_THIS(ScrewMobile);
 
     self->position.y = BadnikHelpers_Oscillate(self->startPos.y, 2, 10);
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (player1->state == Player_State_Static) {
         if (player1->jumpPress) {
             Player_Action_Jump(player1);
@@ -497,6 +501,7 @@ void ScrewMobile_Draw_ScrewMobile(void)
         RSDK.DrawSprite(&self->mobileAnimator, NULL, false);
     }
     else {
+        int32 storeDir;
         if (self->invincibilityTimer & 1)
             RSDK.SetPaletteEntry(0, 128, 0xE0E0E0);
 
@@ -505,7 +510,7 @@ void ScrewMobile_Draw_ScrewMobile(void)
         RSDK.SetPaletteEntry(0, 128, 0x0000);
         RSDK.DrawSprite(&self->rackAnimator, NULL, false);
 
-        int32 storeDir = self->direction;
+        storeDir = self->direction;
 
         self->direction = FLIP_NONE;
         RSDK.DrawSprite(&self->propellerAnimator, NULL, false);
@@ -518,17 +523,20 @@ void ScrewMobile_Draw_ScrewMobile(void)
                 self->alpha = self->propellerAnimator.speed;
             }
             else {
+                SpriteFrame *frame;
+                int32 count;
+                int32 i;
                 self->alpha = 0xD0;
                 drawPos.y   = Water->waterLevel - 0x100000;
 
-                SpriteFrame *frame = RSDK.GetFrame(ScrewMobile->aniFrames, 2, self->whirlpoolAnimator.frameID);
+                frame = RSDK.GetFrame(ScrewMobile->aniFrames, 2, self->whirlpoolAnimator.frameID);
 
                 frame->height = 32;
                 frame->sprY   = 33 * self->whirlpoolAnimator.frameID + 181;
                 frame->pivotY = -16;
 
-                int32 count = self->whirlpoolHeight >> 5;
-                for (int32 i = 0; i < count; ++i) {
+                count = self->whirlpoolHeight >> 5;
+                for (i = 0; i < count; ++i) {
                     RSDK.DrawSprite(&self->whirlpoolAnimator, &drawPos, false);
                     drawPos.y -= 0x200000;
                 }
@@ -567,34 +575,37 @@ void ScrewMobile_StateDepthCharge_Active(void)
 
         self->velocity.y += self->whirlpoolHeight; // this is "gravityStrength" here
 
-        foreach_active(DiveEggman, eggman)
         {
-            if (eggman->state == DiveEggman_StateBomb_Idle || eggman->state == DiveEggman_StateBomb_InWhirlpool
-                || eggman->state == DiveEggman_StateBomb_WhirlpoolRise || eggman->state == DiveEggman_StateBomb_Falling) {
-                if (RSDK.CheckObjectCollisionTouchBox(self, &ScrewMobile->hitboxDepthCharge, eggman, &DiveEggman->hitboxBomb)) {
-                    CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSS), eggman->position.x, eggman->position.y)->drawGroup =
-                        Zone->objectDrawGroup[1];
-                    RSDK.PlaySfx(DiveEggman->sfxExplosion, false, 255);
+            foreach_active(DiveEggman, eggman)
+            {
+                if (eggman->state == DiveEggman_StateBomb_Idle || eggman->state == DiveEggman_StateBomb_InWhirlpool
+                    || eggman->state == DiveEggman_StateBomb_WhirlpoolRise || eggman->state == DiveEggman_StateBomb_Falling) {
+                    if (RSDK.CheckObjectCollisionTouchBox(self, &ScrewMobile->hitboxDepthCharge, eggman, &DiveEggman->hitboxBomb)) {
+                        EntityWater *water;
+                        CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSS), eggman->position.x, eggman->position.y)->drawGroup =
+                            Zone->objectDrawGroup[1];
+                        RSDK.PlaySfx(DiveEggman->sfxExplosion, false, 255);
 
-                    EntityWater *water = CREATE_ENTITY(Water, INT_TO_VOID(WATER_BUBBLE), eggman->position.x, eggman->position.y);
-                    water->velocity.y  = -0x8800;
-                    water->angle       = 2 * RSDK.Rand(0, 256);
-                    water->bubbleX     = water->position.x;
-                    water->childPtr    = NULL;
-                    RSDK.SetSpriteAnimation(Water->aniFrames, 3, &water->animator, true, 0);
+                        water = CREATE_ENTITY(Water, INT_TO_VOID(WATER_BUBBLE), eggman->position.x, eggman->position.y);
+                        water->velocity.y  = -0x8800;
+                        water->angle       = 2 * RSDK.Rand(0, 256);
+                        water->bubbleX     = water->position.x;
+                        water->childPtr    = NULL;
+                        RSDK.SetSpriteAnimation(Water->aniFrames, 3, &water->animator, true, 0);
 
-                    destroyEntity(eggman);
-                    destroyEntity(self);
+                        destroyEntity(eggman);
+                        destroyEntity(self);
+                        foreach_break;
+                    }
+                }
+                else if (RSDK.CheckObjectCollisionTouchBox(self, &ScrewMobile->hitboxDepthCharge, eggman, &DiveEggman->hitboxEggman)) {
+                    RSDK.PlaySfx(DiveEggman->sfxRockemSockem, false, 255);
+
+                    self->velocity.x = RSDK.Rand(-4, 5) << 15;
+                    self->velocity.y = -0x20000;
+                    self->state      = ScrewMobile_StateDepthCharge_Debris;
                     foreach_break;
                 }
-            }
-            else if (RSDK.CheckObjectCollisionTouchBox(self, &ScrewMobile->hitboxDepthCharge, eggman, &DiveEggman->hitboxEggman)) {
-                RSDK.PlaySfx(DiveEggman->sfxRockemSockem, false, 255);
-
-                self->velocity.x = RSDK.Rand(-4, 5) << 15;
-                self->velocity.y = -0x20000;
-                self->state      = ScrewMobile_StateDepthCharge_Debris;
-                foreach_break;
             }
         }
     }

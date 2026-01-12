@@ -80,12 +80,14 @@ void SpikeCrusher_State_Init(void)
 
 void SpikeCrusher_State_MovingDown(void)
 {
+    int32 storeX;
+    int32 storeY;
     RSDK_THIS(SpikeCrusher);
 
     self->drawPos.y += self->velocity.y;
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
     self->velocity.y += 0x3800;
 
     if (self->timer < 8 && (self->timer & 1))

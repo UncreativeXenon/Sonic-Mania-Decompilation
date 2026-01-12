@@ -68,17 +68,20 @@ void WoodChipper_Draw(void)
         Vector2 drawPos = self->position;
 
         if (self->height < 0) {
+            int32 pos;
             self->animator.frameID = 3;
             drawPos.y += self->height + (RSDK.Sin256(self->angle) << 10);
             RSDK.DrawSprite(&self->animator, &drawPos, false);
 
-            int32 pos = self->height >> 16;
+            pos = self->height >> 16;
             if (pos <= -16) {
+                int32 dist;
                 self->animator.frameID = 4;
-                int32 dist             = -16 - pos;
+                dist             = -16 - pos;
                 if (dist >= -79) {
+                    int32 i;
                     int32 size = dist / 80 + 2;
-                    for (int32 i = 0; i < size; ++i) {
+                    for (i = 0; i < size; ++i) {
                         RSDK.DrawSprite(&self->animator, &drawPos, false);
                         drawPos.y += 0x500000;
                     }
@@ -187,32 +190,34 @@ void WoodChipper_HandlePlayerCollisions(void)
 
     WoodChipper->hitboxWood.top = (((RSDK.Sin256(self->angle) << 10) + self->height) >> 16) - 48;
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &WoodChipper->hitboxRazor)
-            && (!self->height || (prevPlayers && (prevPlayers != 0b10 || !player2->sidekick)))) {
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &WoodChipper->hitboxRazor)
+                && (!self->height || (prevPlayers && (prevPlayers != 0x02 || !player2->sidekick)))) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x400, false, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x400, false, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
-        }
-
-        if (WoodChipper->hitboxWood.top > -48) {
-            self->height = 0;
-            Player_CheckCollisionBox(player, self, &WoodChipper->hitboxStump);
-        }
-        else if (Player_CheckCollisionBox(player, self, &WoodChipper->hitboxWood) == C_TOP) {
-            self->activePlayers |= 1 << player->playerID;
-
-#if MANIA_USE_PLUS
-            if (player->state == Player_State_MightyHammerDrop) {
-                self->timer   = 1;
-                player->state = Player_State_Air;
+                    Player_Hurt(player, self);
             }
+
+            if (WoodChipper->hitboxWood.top > -48) {
+                self->height = 0;
+                Player_CheckCollisionBox(player, self, &WoodChipper->hitboxStump);
+            }
+            else if (Player_CheckCollisionBox(player, self, &WoodChipper->hitboxWood) == C_TOP) {
+                self->activePlayers |= 1 << player->playerID;
+
+#if MANIA_USE_PLUS
+                if (player->state == Player_State_MightyHammerDrop) {
+                    self->timer   = 1;
+                    player->state = Player_State_Air;
+                }
 #endif
-        }
-        else {
-            Player_CheckCollisionBox(player, self, &WoodChipper->hitboxStump);
+            }
+            else {
+                Player_CheckCollisionBox(player, self, &WoodChipper->hitboxStump);
+            }
         }
     }
 }
@@ -254,6 +259,8 @@ void WoodChipper_State_Chipper(void)
     else {
         if (self->timer <= 0) {
             if (self->height < 0) {
+                int32 move;
+                int32 i; 
                 int32 height = ((RSDK.Sin256(self->angle) << 10) + self->height) & 0xFFFF0000;
 
                 self->height += self->speed;
@@ -263,15 +270,17 @@ void WoodChipper_State_Chipper(void)
                 if (self->angle < 0x40)
                     self->angle += 4;
 
-                int32 move = height - (((RSDK.Sin256(self->angle) << 10) + self->height) & 0xFFFF0000);
+                move = height - (((RSDK.Sin256(self->angle) << 10) + self->height) & 0xFFFF0000);
 
-                foreach_active(Player, player)
-                {
-                    if ((1 << player->playerID) & self->activePlayers)
-                        player->position.y -= move;
+{
+                    foreach_active(Player, player)
+                    {
+                        if ((1 << player->playerID) & self->activePlayers)
+                            player->position.y -= move;
+                    }
                 }
 
-                for (int32 i = self->speed >> 12; i > 0; --i) {
+                for (i = self->speed >> 12; i > 0; --i) {
                     int32 x                   = self->position.x;
                     int32 y                   = self->position.y + ((RSDK.Rand(0, 17) - 40) << 16);
                     EntityWoodChipper *debris = CREATE_ENTITY(WoodChipper, INT_TO_VOID(true), x, y);
@@ -300,6 +309,8 @@ void WoodChipper_State_Chipper(void)
             self->rotation = (self->rotation + 8) & 0x1FF;
         }
         else {
+            int32 height;
+            int32 move;
             self->timer--;
 
             self->shakeOffsets[0].x = 0;
@@ -309,17 +320,19 @@ void WoodChipper_State_Chipper(void)
             self->shakeOffsets[2].x = 0;
             self->shakeOffsets[2].y = 0;
 
-            int32 height = ((RSDK.Sin256(self->angle) << 10) + (self->height & 0xFC00)) & 0xFFFF0000;
+            height = ((RSDK.Sin256(self->angle) << 10) + (self->height & 0xFC00)) & 0xFFFF0000;
 
             if (self->angle < 0x40)
                 self->angle += 4;
 
-            int32 move = height - (((RSDK.Sin256(self->angle) << 10) + (self->height & 0xFC00)) & 0xFFFF0000);
+            move = height - (((RSDK.Sin256(self->angle) << 10) + (self->height & 0xFC00)) & 0xFFFF0000);
 
-            foreach_active(Player, player)
-            {
-                if ((1 << player->playerID) & self->activePlayers)
-                    player->position.y -= move;
+{
+                foreach_active(Player, player)
+                {
+                    if ((1 << player->playerID) & self->activePlayers)
+                        player->position.y -= move;
+                }
             }
         }
     }

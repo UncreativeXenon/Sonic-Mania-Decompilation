@@ -190,12 +190,13 @@ void Jellygnite_HandlePlayerStruggle(void)
 
     if (player) {
         if (self->lastShakeFlags) {
+            uint8 shakeFlags;
             if (!--self->shakeTimer) {
                 self->shakeCount     = 0;
                 self->lastShakeFlags = 0;
             }
 
-            uint8 shakeFlags = 0;
+            shakeFlags = 0;
             if (player->left)
                 shakeFlags = 1;
             if (player->right)
@@ -237,12 +238,14 @@ bool32 Jellygnite_CheckInWater(EntityPlayer *player)
     if (player->position.y > Water->waterLevel)
         return true;
 
-    foreach_active(Water, water)
     {
-        if (water->type == WATER_POOL) {
-            if (Player_CheckCollisionTouch(player, self, &water->hitbox)
-                && RSDK.CheckObjectCollisionTouchBox(self, &Jellygnite->hitbox, water, &water->hitbox)) {
-                return true;
+        foreach_active(Water, water)
+        {
+            if (water->type == WATER_POOL) {
+                if (Player_CheckCollisionTouch(player, self, &water->hitbox)
+                    && RSDK.CheckObjectCollisionTouchBox(self, &Jellygnite->hitbox, water, &water->hitbox)) {
+                    return true;
+                }
             }
         }
     }
@@ -251,12 +254,13 @@ bool32 Jellygnite_CheckInWater(EntityPlayer *player)
 
 void Jellygnite_DrawBackTentacle(void)
 {
+    int32 i;
     RSDK_THIS(Jellygnite);
 
     int32 angle = self->angle & 0x1FF;
     int32 y     = self->position.y + 0x70000;
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         Vector2 drawPos;
         drawPos.x = self->position.x + (RSDK.Cos512(angle) << 9);
         drawPos.y = y + (RSDK.Sin512(angle) << 8);
@@ -269,17 +273,18 @@ void Jellygnite_DrawBackTentacle(void)
 
 void Jellygnite_DrawFrontTentacle(void)
 {
+    int32 i;
     RSDK_THIS(Jellygnite);
 
     int32 x   = 0;
     int32 y   = 0;
     int32 ang = self->frontTentacleAngle;
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
+        Vector2 drawPos;
         int32 angle = (ang >> 7) & 0x1FF;
         x += 0x312 * RSDK.Sin512(angle);
         y += 0x312 * RSDK.Cos512(angle);
 
-        Vector2 drawPos;
         drawPos.x = x + self->position.x - 0xD0000;
         drawPos.y = y + self->position.y + 0x10000;
         RSDK.DrawSprite(&self->frontTentacleAnimator, &drawPos, false);
@@ -318,6 +323,7 @@ void Jellygnite_State_Init(void)
 
 void Jellygnite_State_Swimming(void)
 {
+    EntityPlayer *playerPtr;
     RSDK_THIS(Jellygnite);
 
     self->angle              = (self->angle + 4) & 0x1FF;
@@ -326,7 +332,7 @@ void Jellygnite_State_Swimming(void)
     self->oscillateAngle = (self->oscillateAngle + 1) & 0x1FF;
     self->position.x     = (RSDK.Sin512(self->oscillateAngle) << 11) + self->startPos.x;
 
-    EntityPlayer *playerPtr = Player_GetNearestPlayerX();
+    playerPtr = Player_GetNearestPlayerX();
     if (playerPtr) {
         if (Jellygnite_CheckInWater(playerPtr)) {
             if (self->position.y <= playerPtr->position.y - 0x200000) {
@@ -357,6 +363,7 @@ void Jellygnite_State_Swimming(void)
 
 void Jellygnite_State_GrabbedPlayer(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Jellygnite);
 
     if (self->frontTentacleAngle >= 0x600) {
@@ -368,7 +375,7 @@ void Jellygnite_State_GrabbedPlayer(void)
         self->frontTentacleAngle += 0x80;
     }
 
-    EntityPlayer *player = self->grabbedPlayer;
+    player = self->grabbedPlayer;
     player->position.x   = self->position.x;
     player->position.y   = self->position.y + 0xC0000;
 }

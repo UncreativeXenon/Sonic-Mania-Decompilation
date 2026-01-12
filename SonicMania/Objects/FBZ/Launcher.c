@@ -47,44 +47,47 @@ void Launcher_StageLoad(void) { Launcher->sfxLaunch = RSDK.GetSfx("Stage/Launch.
 
 void Launcher_Collide_Normal(void)
 {
+    Hitbox *hitbox;
     RSDK_THIS(Launcher);
     int32 stoodPlayers = self->stoodPlayers;
     self->stoodPlayers = 0;
-    Hitbox *hitbox     = RSDK.GetHitbox(&self->animator, 0);
+    hitbox     = RSDK.GetHitbox(&self->animator, 0);
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (Player_CheckCollisionPlatform(player, self, hitbox)) {
-            self->stoodPlayers |= 1 << playerID;
+            if (Player_CheckCollisionPlatform(player, self, hitbox)) {
+                self->stoodPlayers |= 1 << playerID;
 
-            if (self->state == Launcher_State_Idle) {
-                self->active       = ACTIVE_NORMAL;
-                self->velocity.x   = self->direction == FLIP_NONE ? 0x10000 : -0x10000;
-                self->releaseDelay = 12;
-                self->accelTimer   = 4;
-                RSDK.PlaySfx(Launcher->sfxLaunch, false, 255);
-                self->state = Launcher_State_HandleLaunch;
-            }
+                if (self->state == Launcher_State_Idle) {
+                    self->active       = ACTIVE_NORMAL;
+                    self->velocity.x   = self->direction == FLIP_NONE ? 0x10000 : -0x10000;
+                    self->releaseDelay = 12;
+                    self->accelTimer   = 4;
+                    RSDK.PlaySfx(Launcher->sfxLaunch, false, 255);
+                    self->state = Launcher_State_HandleLaunch;
+                }
 
-            if (self->state == Launcher_State_ReturnToStart) {
-                player->position.x += self->collisionOffset.x;
+                if (self->state == Launcher_State_ReturnToStart) {
+                    player->position.x += self->collisionOffset.x;
+                }
+                else {
+                    player->position.x     = self->drawPos.x;
+                    player->direction      = self->direction;
+                    player->velocity.x     = 0;
+                    player->groundVel      = CLAMP(self->velocity.x, -0x60000, 0x60000);
+                    player->pushing        = false;
+                    player->tileCollisions = TILECOLLISION_DOWN;
+                    if (player->state != Player_State_Roll)
+                        player->state = Player_State_Ground;
+                }
             }
-            else {
-                player->position.x     = self->drawPos.x;
-                player->direction      = self->direction;
-                player->velocity.x     = 0;
-                player->groundVel      = CLAMP(self->velocity.x, -0x60000, 0x60000);
-                player->pushing        = false;
-                player->tileCollisions = TILECOLLISION_DOWN;
-                if (player->state != Player_State_Roll)
-                    player->state = Player_State_Ground;
+            else if (((1 << playerID) & stoodPlayers) && self->state != Launcher_State_ReturnToStart) {
+                player->velocity.x = self->velocity.x;
+                player->groundVel  = self->velocity.x;
             }
-        }
-        else if (((1 << playerID) & stoodPlayers) && self->state != Launcher_State_ReturnToStart) {
-            player->velocity.x = self->velocity.x;
-            player->groundVel  = self->velocity.x;
         }
     }
 }

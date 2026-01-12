@@ -91,6 +91,7 @@ void TitleCard_Create(void *data)
 
 #if MANIA_USE_PLUS
         if (Zone->swapGameMode) {
+            EntityPlayer *player;
             Zone->swapGameMode         = false;
             globals->enableIntro       = false;
             globals->suppressTitlecard = false;
@@ -98,7 +99,7 @@ void TitleCard_Create(void *data)
             SceneInfo->seconds         = globals->restartSeconds;
             SceneInfo->minutes         = globals->restartMinutes;
             SceneInfo->timeEnabled     = true;
-            EntityPlayer *player       = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+            player       = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
             RSDK.CopyEntity(player, &Zone->entityStorage[0], false);
             RSDK.SetSpriteAnimation(player->aniFrames, player->animator.animationID, &player->animator, false, player->animator.frameID);
 
@@ -125,7 +126,9 @@ void TitleCard_StageLoad(void)
 {
     TitleCard->aniFrames = RSDK.LoadSpriteAnimation("Global/TitleCard.bin", SCOPE_STAGE);
 
-    foreach_all(TitleCard, titleCard) { Zone->actID = titleCard->actID; }
+    {
+        foreach_all(TitleCard, titleCard) { Zone->actID = titleCard->actID; }
+    }
 }
 
 #if MANIA_USE_PLUS
@@ -250,6 +253,9 @@ void TitleCard_SetupVertices(void)
 
 void TitleCard_SetupTitleWords(void)
 {
+    int32 offset;
+    int32 c;
+    int32 i;
     RSDK_THIS(TitleCard);
 
     if (!self->zoneName.chars)
@@ -257,19 +263,19 @@ void TitleCard_SetupTitleWords(void)
 
     RSDK.SetSpriteString(TitleCard->aniFrames, 1, &self->zoneName);
 
-    int32 offset = TO_FIXED(40);
-    for (int32 c = 0; c < self->zoneName.length; ++c) {
+    offset = TO_FIXED(40);
+    for (c = 0; c < self->zoneName.length; ++c) {
         self->charPos[c].y = offset;
         self->charVel[c]   = -TO_FIXED(8);
         offset += TO_FIXED(16);
     }
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         self->zoneCharPos[i] = ((2 - self->zoneName.length) << 19) - ((i * 2) << 19);
         self->zoneCharVel[i] = TO_FIXED(4);
     }
 
-    for (int32 c = 0; c < self->zoneName.length; ++c) {
+    for (c = 0; c < self->zoneName.length; ++c) {
         if (self->zoneName.chars[c] == (uint16)-1)
             self->titleCardWord2 = c + 1;
     }
@@ -335,9 +341,11 @@ void TitleCard_HandleWordMovement(void)
 
 void TitleCard_HandleZoneCharMovement(void)
 {
+    int32 c;
+    int32 i;
     RSDK_THIS(TitleCard);
 
-    for (int32 c = 0; c < self->zoneName.length; ++c) {
+    for (c = 0; c < self->zoneName.length; ++c) {
         if (self->charPos[c].y < 0)
             self->charVel[c] += 0x28000;
 
@@ -346,7 +354,7 @@ void TitleCard_HandleZoneCharMovement(void)
             self->charPos[c].y = 0;
     }
 
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         if (self->zoneCharPos[i] > 0)
             self->zoneCharVel[i] -= 0x14000;
 
@@ -518,11 +526,12 @@ void TitleCard_State_ShowingTitle(void)
 
 void TitleCard_State_SlideAway(void)
 {
+    int32 speed;
     RSDK_THIS(TitleCard);
 
     Zone_ApplyWorldBounds();
 
-    int32 speed = ++self->actionTimer << 18;
+    speed = ++self->actionTimer << 18;
     self->stripVertsGreen[0].x -= speed;
     self->stripVertsGreen[0].y -= speed;
     self->stripVertsGreen[1].x -= speed;
@@ -684,11 +693,12 @@ void TitleCard_Draw_SlideIn(void)
 
     // The big ol' BG
     if (!globals->atlEnabled && !globals->suppressTitlecard) {
+        int32 height;
         if (self->timer < 256)
             RSDK.DrawRect(0, 0, ScreenInfo->size.x, ScreenInfo->size.y, 0, 0xFF, INK_NONE, true);
 
         // Blue
-        int32 height = self->timer;
+        height = self->timer;
         if (self->timer < 512)
             RSDK.DrawRect(0, ScreenInfo->center.y - (height >> 1), ScreenInfo->size.x, height, colors[3], 0xFF, INK_NONE, true);
 
@@ -731,6 +741,9 @@ void TitleCard_Draw_SlideIn(void)
 
 void TitleCard_Draw_ShowTitleCard(void)
 {
+    Vector2 drawPos;
+    RSDKScreenInfo *screen;
+    int32 i;
     RSDK_THIS(TitleCard);
 
     color colors[5];
@@ -748,7 +761,7 @@ void TitleCard_Draw_ShowTitleCard(void)
     colors[4] = 0xF0C800; // yellow
 #endif
 
-    RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
+    screen = &ScreenInfo[SceneInfo->currentScreenID];
 
     // Draw Yellow BG
     if (!globals->atlEnabled && !globals->suppressTitlecard)
@@ -790,9 +803,8 @@ void TitleCard_Draw_ShowTitleCard(void)
     // Draw "ZONE"
     RSDK.SetClipBounds(SceneInfo->currentScreenID, 0, 170, screen->size.x, SCREEN_YSIZE);
 
-    Vector2 drawPos;
     drawPos.x = self->zoneXPos;
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         self->zoneLetterAnimator.frameID = i;
         drawPos.y                        = TO_FIXED(186) + self->zoneCharPos[i];
         RSDK.DrawSprite(&self->zoneLetterAnimator, &drawPos, true);
@@ -837,6 +849,8 @@ void TitleCard_Draw_ShowTitleCard(void)
 
 void TitleCard_Draw_SlideAway(void)
 {
+    int32 i;
+    Vector2 drawPos;
     RSDK_THIS(TitleCard);
 
     color colors[5];
@@ -905,10 +919,9 @@ void TitleCard_Draw_SlideAway(void)
     RSDK.DrawFace(self->zoneDecorVerts, 4, 0xF0, 0xF0, 0xF0, 0xFF, INK_NONE);
 
     // Draw "ZONE"
-    Vector2 drawPos;
     drawPos.x = self->zoneXPos;
     drawPos.y = TO_FIXED(186);
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         self->zoneLetterAnimator.frameID = i;
         RSDK.DrawSprite(&self->zoneLetterAnimator, &drawPos, true);
     }

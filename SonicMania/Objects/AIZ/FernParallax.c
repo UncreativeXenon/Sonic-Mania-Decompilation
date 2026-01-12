@@ -18,6 +18,10 @@ void FernParallax_StaticUpdate(void) {}
 
 void FernParallax_Draw(void)
 {
+    Hitbox *otherHitbox;
+    Hitbox thisHitbox;
+    EntityBase *screenBuffer;
+    EntityBase *entityBuffer;
     RSDK_THIS(FernParallax);
     RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
 
@@ -28,19 +32,18 @@ void FernParallax_Draw(void)
     drawPos.x = self->position.x + ((self->position.x - screenX) << self->parallaxFactor.x);
     drawPos.y = self->position.y + ((self->position.y - screenY) << self->parallaxFactor.y);
 
-    Hitbox *otherHitbox = RSDK.GetHitbox(&self->animator, 0);
+    otherHitbox = RSDK.GetHitbox(&self->animator, 0);
 
-    Hitbox thisHitbox;
     thisHitbox.left   = -screen->center.x;
     thisHitbox.right  = screen->center.x;
     thisHitbox.top    = -screen->center.y;
     thisHitbox.bottom = screen->center.y;
 
-    EntityBase *screenBuffer = &FernParallax->entityBuffer[0];
+    screenBuffer = &FernParallax->entityBuffer[0];
     screenBuffer->position.x = screenX;
     screenBuffer->position.y = screenY;
 
-    EntityBase *entityBuffer = &FernParallax->entityBuffer[1];
+    entityBuffer = &FernParallax->entityBuffer[1];
     entityBuffer->position.x = drawPos.x;
     entityBuffer->position.y = drawPos.y;
 

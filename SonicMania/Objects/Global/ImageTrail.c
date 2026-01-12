@@ -13,6 +13,7 @@ void ImageTrail_Update(void) {}
 
 void ImageTrail_LateUpdate(void)
 {
+    int32 i;
     RSDK_THIS(ImageTrail);
 
     EntityPlayer *player = self->player;
@@ -48,7 +49,7 @@ void ImageTrail_LateUpdate(void)
         return;
 
     // Update recordings
-    for (int32 i = IMAGETRAIL_TRACK_COUNT - 1; i > 0; --i) {
+    for (i = IMAGETRAIL_TRACK_COUNT - 1; i > 0; --i) {
         self->statePos[i].x     = self->statePos[i - 1].x;
         self->statePos[i].y     = self->statePos[i - 1].y;
         self->stateRotation[i]  = self->stateRotation[i - 1];
@@ -89,13 +90,14 @@ void ImageTrail_StaticUpdate(void) {}
 
 void ImageTrail_Draw(void)
 {
+    int32 i;
     RSDK_THIS(ImageTrail);
 
     // int32 alpha[3] = { 0xA0 * self->baseAlpha >> 8, self->baseAlpha >> 1, 0x60 * self->baseAlpha >> 8 };
     int32 alpha = 0x60 * self->baseAlpha >> 8;
     int32 inc   = 0x40 / (IMAGETRAIL_TRACK_COUNT / 3);
 
-    for (int32 i = (IMAGETRAIL_TRACK_COUNT / 3); i >= 0; --i) {
+    for (i = (IMAGETRAIL_TRACK_COUNT / 3); i >= 0; --i) {
         int32 id = (i * 3) - (i - 1);
         if (self->stateVisible[id]) {
             if (self->stateScale[id] != 0x200) {
@@ -118,6 +120,7 @@ void ImageTrail_Create(void *data)
     RSDK_THIS(ImageTrail);
 
     if (!SceneInfo->inEditor) {
+        int32 i;
         EntityPlayer *player = (EntityPlayer *)data;
         self->active         = ACTIVE_ALWAYS;
         self->visible        = true;
@@ -127,7 +130,7 @@ void ImageTrail_Create(void *data)
         self->drawFX         = FX_FLIP | FX_SCALE | FX_ROTATE;
         self->inkEffect      = INK_ALPHA;
 
-        for (int32 i = IMAGETRAIL_TRACK_COUNT - 1; i >= 0; --i) {
+        for (i = IMAGETRAIL_TRACK_COUNT - 1; i >= 0; --i) {
             self->statePos[i].x     = player->position.x;
             self->statePos[i].y     = player->position.y;
             self->stateRotation[i]  = player->rotation;

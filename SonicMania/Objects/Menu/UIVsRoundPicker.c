@@ -11,6 +11,7 @@ ObjectUIVsRoundPicker *UIVsRoundPicker;
 
 void UIVsRoundPicker_Update(void)
 {
+    EntityUIControl *control;
     RSDK_THIS(UIVsRoundPicker);
 
     self->touchPosSizeS.x   = self->size.x;
@@ -32,7 +33,7 @@ void UIVsRoundPicker_Update(void)
 
     StateMachine_Run(self->state);
 
-    EntityUIControl *control = (EntityUIControl *)self->parent;
+    control = (EntityUIControl *)self->parent;
     if (control) {
         if (control->state == UIButton_State_HandleButtonLeave)
             UIVsRoundPicker_SetChoiceInactive(self);
@@ -121,6 +122,7 @@ void UIVsRoundPicker_StageLoad(void) { UIVsRoundPicker->aniFrames = RSDK.LoadSpr
 
 void UIVsRoundPicker_DrawText(void)
 {
+    int32 width;
     RSDK_THIS(UIVsRoundPicker);
     Vector2 drawPos;
 
@@ -135,7 +137,7 @@ void UIVsRoundPicker_DrawText(void)
         case UIBUTTON_ALIGN_RIGHT: drawPos.x = drawPos.x + (self->size.x >> 1) - 0x60000; break;
     }
 
-    int32 width = RSDK.GetStringWidth(UIVsRoundPicker->aniFrames, 15, &self->text, 0, self->text.length, 0) << 16;
+    width = RSDK.GetStringWidth(UIVsRoundPicker->aniFrames, 15, &self->text, 0, self->text.length, 0) << 16;
     drawPos.x -= (width + 0x300000) >> 1;
     RSDK.DrawText(&self->numbersAnimator, &drawPos, &self->text, 0, self->text.length, ALIGN_LEFT, 0, NULL, NULL, false);
 
@@ -186,6 +188,8 @@ void UIVsRoundPicker_ProcessButtonCB(void)
 
 bool32 UIVsRoundPicker_ProcessTouchCB(void)
 {
+    bool32 pressed;
+    uint32 i;
     RSDK_THIS(UIVsRoundPicker);
 
     void (*callbacks[2])(void);
@@ -205,13 +209,14 @@ bool32 UIVsRoundPicker_ProcessTouchCB(void)
     touchEnd[1].x = -self->touchPosOffsetS.x;
     touchEnd[1].y = self->touchPosOffsetS.y;
 
-    bool32 pressed = false;
-    for (uint32 i = 0; i < 2; ++i) {
+    pressed = false;
+    for (i = 0; i < 2; ++i) {
         if (TouchInfo->count) {
+            int32 t;
             int32 sizeX = touchStart[i].x >> 1;
             int32 sizeY = touchStart[i].y >> 1;
 
-            for (int32 t = 0; t < TouchInfo->count; ++t) {
+            for (t = 0; t < TouchInfo->count; ++t) {
                 int32 x = (ScreenInfo->position.x << 16) - ((TouchInfo->x[t] * ScreenInfo->size.x) * -65536.0f);
                 int32 y = (ScreenInfo->position.y << 16) - ((TouchInfo->y[t] * ScreenInfo->size.y) * -65536.0f);
 

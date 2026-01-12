@@ -252,8 +252,9 @@ void BuzzBomber_State_ProjectileCharge(void)
     RSDK.ProcessAnimation(&self->animator);
 
     if (self->animator.frameID == 6) {
+        EntityBuzzBomber *shot;
         self->state            = BuzzBomber_State_ProjectileShot;
-        EntityBuzzBomber *shot = (EntityBuzzBomber *)self->projectile;
+        shot = (EntityBuzzBomber *)self->projectile;
         shot->projectile       = NULL;
     }
 }
@@ -268,10 +269,12 @@ void BuzzBomber_State_ProjectileShot(void)
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->animator);
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &BuzzBomber->hitboxProjectile))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &BuzzBomber->hitboxProjectile))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
     else {

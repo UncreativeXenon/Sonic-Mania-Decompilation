@@ -96,50 +96,56 @@ void PhantomShield_State_Active(void)
 
     RSDK.ProcessAnimation(&self->animator);
 
-    foreach_active(Player, player)
     {
-        if (self->playerTimer[player->playerID])
-            self->playerTimer[player->playerID]--;
+        foreach_active(Player, player)
+        {
+            if (self->playerTimer[player->playerID])
+                self->playerTimer[player->playerID]--;
 
-        if (Player_CheckCollisionTouch(player, self, &PhantomShield->hitbox)) {
-            if (Player_CheckAttacking(player, self)) {
-                self->blendAmount = 256;
-                if (!self->playerTimer[player->playerID]) {
-                    RSDK.PlaySfx(PhantomEgg->sfxRepel, false, 255);
-                    self->playerTimer[player->playerID] = 16;
-                }
-
-                int32 angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
-                int32 velX  = 0x500 * RSDK.Cos256(angle);
-                int32 velY  = 0x500 * RSDK.Sin256(angle);
-
-                if (player->state == Player_State_FlyCarried)
-                    RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
-
-                int32 anim = player->animator.animationID;
-                if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED) {
-                    if (player->state != Player_State_TailsFlight) {
-                        if (player->state != Player_State_DropDash)
-                            player->state = Player_State_Air;
-                        if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
-                            player->animator.animationID = ANI_WALK;
+            if (Player_CheckCollisionTouch(player, self, &PhantomShield->hitbox)) {
+                if (Player_CheckAttacking(player, self)) {
+                    int32 angle;
+                    int32 velX;
+                    int32 velY;
+                    int32 anim;
+                    self->blendAmount = 256;
+                    if (!self->playerTimer[player->playerID]) {
+                        RSDK.PlaySfx(PhantomEgg->sfxRepel, false, 255);
+                        self->playerTimer[player->playerID] = 16;
                     }
-                }
 
-                if (player->characterID == ID_KNUCKLES && player->animator.animationID == ANI_GLIDE) {
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_GLIDE_DROP, &player->animator, false, 0);
-                    player->state = Player_State_KnuxGlideDrop;
-                }
+                    angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
+                    velX  = 0x500 * RSDK.Cos256(angle);
+                    velY  = 0x500 * RSDK.Sin256(angle);
 
-                player->groundVel      = velX;
-                player->velocity.x     = velX;
-                player->velocity.y     = velY;
-                player->applyJumpCap   = false;
-                player->onGround       = false;
-                player->tileCollisions = TILECOLLISION_DOWN;
-            }
-            else {
-                Player_Hurt(player, self);
+                    if (player->state == Player_State_FlyCarried)
+                        RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
+
+                    anim = player->animator.animationID;
+                    if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED) {
+                        if (player->state != Player_State_TailsFlight) {
+                            if (player->state != Player_State_DropDash)
+                                player->state = Player_State_Air;
+                            if (anim != ANI_JUMP && anim != ANI_JOG && anim != ANI_RUN && anim != ANI_DASH)
+                                player->animator.animationID = ANI_WALK;
+                        }
+                    }
+
+                    if (player->characterID == ID_KNUCKLES && player->animator.animationID == ANI_GLIDE) {
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_GLIDE_DROP, &player->animator, false, 0);
+                        player->state = Player_State_KnuxGlideDrop;
+                    }
+
+                    player->groundVel      = velX;
+                    player->velocity.x     = velX;
+                    player->velocity.y     = velY;
+                    player->applyJumpCap   = false;
+                    player->onGround       = false;
+                    player->tileCollisions = TILECOLLISION_DOWN;
+                }
+                else {
+                    Player_Hurt(player, self);
+                }
             }
         }
     }

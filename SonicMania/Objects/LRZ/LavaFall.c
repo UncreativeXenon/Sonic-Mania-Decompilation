@@ -117,10 +117,12 @@ void LavaFall_State_Lava(void)
 
     self->position.y += 0x70000;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &LavaFall->hitbox))
-            Player_ElementHurt(player, self, SHIELD_FIRE);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &LavaFall->hitbox))
+                Player_ElementHurt(player, self, SHIELD_FIRE);
+        }
     }
 
     if (self->onScreen)

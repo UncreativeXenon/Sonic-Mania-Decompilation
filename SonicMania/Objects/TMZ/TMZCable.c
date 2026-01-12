@@ -22,9 +22,10 @@ void TMZCable_StaticUpdate(void) {}
 
 void TMZCable_Draw(void)
 {
+    int32 i;
     RSDK_THIS(TMZCable);
 
-    for (int32 i = 0; i < TMZCABLE_JOINT_COUNT; ++i) {
+    for (i = 0; i < TMZCABLE_JOINT_COUNT; ++i) {
         if (!self->jointVisible[i])
             RSDK.DrawSprite(&self->animator, &self->jointPos[i], false);
     }
@@ -88,13 +89,14 @@ void TMZCable_HandleDrawPositions(void)
     RSDK_THIS(TMZCable);
 
     if (self->parentPos) {
+        int32 i;
         int32 x           = self->parentPos->x + self->offset.x;
         int32 y           = self->parentPos->y + self->offset.y;
         int32 entityAngle = self->angle;
         int32 angle       = RSDK.ATan2((self->position.x - x) >> 16, (self->position.y - y) >> 16) + 64;
 
         int32 id = 0;
-        for (int32 i = 0; i < (18 * TMZCABLE_JOINT_COUNT); i += 18) {
+        for (i = 0; i < (18 * TMZCABLE_JOINT_COUNT); i += 18) {
             self->jointPos[id].x = x + 0x20 * id * ((self->position.x - x) >> 8);
             self->jointPos[id].y = y + 0x20 * id * ((self->position.y - y) >> 8);
             self->jointPos[id].x += ((RSDK.Sin256(entityAngle) * RSDK.Sin256(i)) >> 5) * RSDK.Cos256(angle);
@@ -128,21 +130,26 @@ void TMZCable_State_Charge(void)
 
 void TMZCable_State_Live(void)
 {
+    int32 storeX;
+    int32 storeY;
+    int32 i;
     RSDK_THIS(TMZCable);
 
     RSDK.ProcessAnimation(&self->animator);
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
+    storeX = self->position.x;
+    storeY = self->position.y;
 
-    for (int32 i = 1; i < TMZCABLE_JOINT_COUNT; ++i) {
+    for (i = 1; i < TMZCABLE_JOINT_COUNT; ++i) {
         self->position.x = self->jointPos[i].x;
         self->position.y = self->jointPos[i].y;
 
-        foreach_active(Player, player)
-        {
-            if (Player_CheckCollisionTouch(player, self, &TMZCable->hitbox)) {
-                Player_Hurt(player, self);
+{
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &TMZCable->hitbox)) {
+                    Player_Hurt(player, self);
+                }
             }
         }
     }
@@ -170,10 +177,11 @@ void TMZCable_State_Fade(void)
 
 void TMZCable_State_Destroyed(void)
 {
+    int32 id;
     RSDK_THIS(TMZCable);
     TMZCable_HandleDrawPositions();
 
-    int32 id = self->timer >> 5;
+    id = self->timer >> 5;
     if (!(Zone->timer % 3)) {
         RSDK.PlaySfx(PhantomEgg->sfxExplosion2, false, 255);
         if (Zone->timer & 4) {
@@ -187,9 +195,10 @@ void TMZCable_State_Destroyed(void)
     if (self->timer < 256) {
         int32 timer = self->timer & 0x1F;
         if (timer >= 29) {
+            EntityDebris *debris;
             self->jointVisible[id] = true;
 
-            EntityDebris *debris    = CREATE_ENTITY(Debris, NULL, self->jointPos[id].x, self->jointPos[id].y);
+            debris    = CREATE_ENTITY(Debris, NULL, self->jointPos[id].x, self->jointPos[id].y);
             debris->state           = Debris_State_Fall;
             debris->gravityStrength = 0x4000;
             debris->velocity.x      = RSDK.Rand(-0x20000, 0x20000);

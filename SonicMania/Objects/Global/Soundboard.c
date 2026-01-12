@@ -15,7 +15,8 @@ void Soundboard_LateUpdate(void) {}
 
 void Soundboard_StaticUpdate(void)
 {
-    for (int32 s = 0; s < MIN(Soundboard->sfxCount, SOUNDBOARD_SFX_COUNT); ++s) {
+    int32 s;
+    for (s = 0; s < MIN(Soundboard->sfxCount, SOUNDBOARD_SFX_COUNT); ++s) {
         bool32 shouldStopSfx = true;
 
         if (Soundboard->sfxCheckCallback[s] && SceneInfo->state == ENGINESTATE_REGULAR) {
@@ -69,10 +70,11 @@ void Soundboard_Create(void *data) {}
 
 void Soundboard_StageLoad(void)
 {
+    int32 i;
     Soundboard->active   = ACTIVE_ALWAYS;
     Soundboard->sfxCount = 0;
 
-    for (int32 i = 0; i < SOUNDBOARD_SFX_COUNT; ++i) {
+    for (i = 0; i < SOUNDBOARD_SFX_COUNT; ++i) {
         Soundboard->sfxList[i]            = 0;
         Soundboard->sfxLoopPoint[i]       = 0;
         Soundboard->sfxCheckCallback[i]   = NULL;
@@ -85,12 +87,13 @@ void Soundboard_StageLoad(void)
 
 uint8 Soundboard_LoadSfx(const char *sfxName, uint32 loopPoint, bool32 (*checkCallback)(void), void (*updateCallback)(int32))
 {
+    int32 sfxID;
     if (!Soundboard)
         return -1;
     if (Soundboard->sfxCount >= SOUNDBOARD_SFX_COUNT)
         return -1;
 
-    int32 sfxID = Soundboard->sfxCount;
+    sfxID = Soundboard->sfxCount;
 
     Soundboard->sfxList[sfxID]            = RSDK.GetSfx(sfxName);
     Soundboard->sfxLoopPoint[sfxID]       = loopPoint;

@@ -27,6 +27,7 @@ void ERZShinobi_StaticUpdate(void) {}
 
 void ERZShinobi_Draw(void)
 {
+    int32 i;
     RSDK_THIS(ERZShinobi);
 
     if ((self->invincibilityTimer & 1))
@@ -34,7 +35,7 @@ void ERZShinobi_Draw(void)
 
     self->rotation = self->rotStore;
 
-    for (int32 i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         Vector2 drawPos;
 
         drawPos.x                 = self->finRadius * RSDK.Sin512(self->rotation) + self->position.x;
@@ -89,6 +90,9 @@ void ERZShinobi_StageLoad(void)
 
 void ERZShinobi_CheckPlayerCollisions(void)
 {
+    int32 storeX;
+    int32 storeY;
+    int32 angle;
     RSDK_THIS(ERZShinobi);
 
     foreach_active(Player, playerLoop)
@@ -99,18 +103,21 @@ void ERZShinobi_CheckPlayerCollisions(void)
         }
     }
 
-    int32 storeX = self->position.x;
-    int32 storeY = self->position.y;
-    int32 angle  = self->rotStore;
-    foreach_active(Player, player)
+    storeX = self->position.x;
+    storeY = self->position.y;
+    angle  = self->rotStore;
     {
-        for (int32 f = 0; f < 8; ++f) {
-            self->position.x = storeX + self->finRadius * RSDK.Sin512(angle);
-            self->position.y = storeY - self->finRadius * RSDK.Cos512(angle);
-            if (RSDK.CheckObjectCollisionTouchCircle(player, 0xC0000, self, 0x80000)) {
-                Player_Hurt(player, self);
+        foreach_active(Player, player)
+        {
+            int32 f;
+            for (f = 0; f < 8; ++f) {
+                self->position.x = storeX + self->finRadius * RSDK.Sin512(angle);
+                self->position.y = storeY - self->finRadius * RSDK.Cos512(angle);
+                if (RSDK.CheckObjectCollisionTouchCircle(player, 0xC0000, self, 0x80000)) {
+                    Player_Hurt(player, self);
+                }
+                angle += 0x40;
             }
-            angle += 0x40;
         }
     }
 
@@ -128,6 +135,7 @@ void ERZShinobi_Hit(void)
 
 void ERZShinobi_HandleTileCollisions(void)
 {
+    int32 size;
     RSDK_THIS(ERZShinobi);
 
     if (self->onGround) {
@@ -149,7 +157,7 @@ void ERZShinobi_HandleTileCollisions(void)
         self->finRadius += (0x1600 - self->finRadius) >> 3;
     }
 
-    int32 size = self->finRadius / 88;
+    size = self->finRadius / 88;
 
     self->outerBox.left   = -size;
     self->outerBox.top    = -size;

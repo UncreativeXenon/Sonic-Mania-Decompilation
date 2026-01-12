@@ -26,9 +26,10 @@ void BSS_Player_Update(void)
         }
     }
     else {
+        int32 speed;
         self->gravityStrength += self->velocity.y;
 
-        int32 speed = !setup->speedupLevel ? 16 : setup->speedupLevel;
+        speed = !setup->speedupLevel ? 16 : setup->speedupLevel;
         self->velocity.y += (speed << 12);
         if (self->gravityStrength >= 0) {
             self->gravityStrength = 0;

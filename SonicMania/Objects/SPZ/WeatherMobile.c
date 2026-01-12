@@ -287,35 +287,39 @@ void WeatherMobile_HandleDefeat(void)
     self->state = WeatherMobile_State_Defeated;
     self->timer = 0;
 
-    foreach_active(WeatherMobile, weatherMobile)
-    {
-        switch (weatherMobile->type) {
-            case WEATHERMOBILE_LIGHTS:
-                if (weatherMobile->state == WeatherMobile_StateLights_Shine) {
-                    weatherMobile->timer = 0;
-                    weatherMobile->state = WeatherMobile_StateLights_DimAndDissapear;
-                }
-                break;
+{
+        foreach_active(WeatherMobile, weatherMobile)
+        {
+            switch (weatherMobile->type) {
+                case WEATHERMOBILE_LIGHTS:
+                    if (weatherMobile->state == WeatherMobile_StateLights_Shine) {
+                        weatherMobile->timer = 0;
+                        weatherMobile->state = WeatherMobile_StateLights_DimAndDissapear;
+                    }
+                    break;
 
-            case WEATHERMOBILE_WIND_MANAGER:
-            case WEATHERMOBILE_RAIN_MANAGER:
-                destroyEntity(weatherMobile);
-                Zone->cameraBoundsT[0] = Zone->cameraBoundsB[0] - ScreenInfo->size.y;
-                break;
+                case WEATHERMOBILE_WIND_MANAGER:
+                case WEATHERMOBILE_RAIN_MANAGER:
+                    destroyEntity(weatherMobile);
+                    Zone->cameraBoundsT[0] = Zone->cameraBoundsB[0] - ScreenInfo->size.y;
+                    break;
 
-            case WEATHERMOBILE_CLOUD:
-                if (weatherMobile->state != WeatherMobile_StateCloud_FadeAway) {
-                    weatherMobile->timer     = 0;
-                    weatherMobile->stateDraw = StateMachine_None;
-                    weatherMobile->state     = WeatherMobile_StateCloud_FadeAway;
-                }
-                break;
+                case WEATHERMOBILE_CLOUD:
+                    if (weatherMobile->state != WeatherMobile_StateCloud_FadeAway) {
+                        weatherMobile->timer     = 0;
+                        weatherMobile->stateDraw = StateMachine_None;
+                        weatherMobile->state     = WeatherMobile_StateCloud_FadeAway;
+                    }
+                    break;
 
-            default: break;
+                default: break;
+            }
         }
     }
 
-    foreach_active(TVPole, pole) { pole->state = TVPole_State_ForceRelease; }
+{
+        foreach_active(TVPole, pole) { pole->state = TVPole_State_ForceRelease; }
+    }
 
     SceneInfo->timeEnabled = false;
     Player_GiveScore(RSDK_GET_ENTITY(SLOT_PLAYER1, Player), 1000);
@@ -351,6 +355,7 @@ void WeatherMobile_Draw_Eggman(void)
 
 void WeatherMobile_Draw_Lights(void)
 {
+    color color;
     RSDK_THIS(WeatherMobile);
 
     Vector2 drawPos;
@@ -375,7 +380,7 @@ void WeatherMobile_Draw_Lights(void)
 
     drawPos.x   = (self->parent->position.x >> 16) - ScreenInfo->position.x;
     drawPos.y   = (self->parent->position.y >> 16) - ScreenInfo->position.y;
-    color color = RSDK.GetPaletteEntry(0, 151);
+    color = RSDK.GetPaletteEntry(0, 151);
 
     if (self->direction) {
         RSDK.DrawRect(0, 0, drawPos.x - 36, ScreenInfo->size.y, color, self->alpha, INK_ADD, true);
@@ -433,12 +438,14 @@ void WeatherMobile_State_StartBoss(void)
             self->state   = WeatherMobile_State_EnterEggman;
             self->position.y += -0x400000 - (ScreenInfo->size.y << 16);
 
-            foreach_active(WeatherTV, weatherTV)
-            {
-                weatherTV->state     = WeatherTV_State_TurnOn;
-                weatherTV->stateDraw = WeatherTV_Draw_TurningOn;
-                weatherTV->eggman    = self;
-                self->weatherTV      = weatherTV;
+{
+                foreach_active(WeatherTV, weatherTV)
+                {
+                    weatherTV->state     = WeatherTV_State_TurnOn;
+                    weatherTV->stateDraw = WeatherTV_Draw_TurningOn;
+                    weatherTV->eggman    = self;
+                    self->weatherTV      = weatherTV;
+                }
             }
         }
     }
@@ -634,10 +641,11 @@ void WeatherMobile_StateLights_DimAndDissapear(void)
     }
     else {
         if (!--self->lightsTimer) {
+            EntityWeatherMobile *parent;
             SPZ2Setup->fgLow->scrollInfo[0].deform  = false;
             SPZ2Setup->fgHigh->scrollInfo[0].deform = false;
 
-            EntityWeatherMobile *parent = self->parent;
+            parent = self->parent;
             if (parent->health > 0)
                 parent->state = WeatherMobile_State_HandleMovement;
         }
@@ -649,7 +657,8 @@ void WeatherMobile_StateWindManager_SetupWind(void)
     RSDK_THIS(WeatherMobile);
 
     if (!(Zone->timer & 3)) {
-        for (int32 i = 0; i < 4; ++i) {
+        int32 i;
+        for (i = 0; i < 4; ++i) {
             int32 x                    = self->position.x + RSDK.Rand(-0x1C00000, 0x1C00000);
             int32 y                    = self->position.y + 0xD00000;
             EntityWeatherMobile *child = CREATE_ENTITY(WeatherMobile, INT_TO_VOID(WEATHERMOBILE_WIND), x, y);
@@ -671,7 +680,9 @@ void WeatherMobile_StateWindManager_SetupWind(void)
         self->timer = 0;
         Zone->cameraBoundsT[0] -= 128;
         self->state = WeatherMobile_StateWindManager_StrongWind;
-        foreach_active(TVPole, pole) { pole->state = TVPole_State_CheckGrab; }
+        {
+            foreach_active(TVPole, pole) { pole->state = TVPole_State_CheckGrab; }
+        }
     }
     else {
         self->velocity.y -= 0x2000;
@@ -683,7 +694,8 @@ void WeatherMobile_StateWindManager_StrongWind(void)
     RSDK_THIS(WeatherMobile);
 
     if (!(Zone->timer & 3)) {
-        for (int32 i = 0; i < 4; ++i) {
+        int32 i;
+        for (i = 0; i < 4; ++i) {
             int32 x                    = self->position.x + RSDK.Rand(-0x1C00000, 0x1C00000);
             int32 y                    = self->position.y + 0xD00000;
             EntityWeatherMobile *child = CREATE_ENTITY(WeatherMobile, INT_TO_VOID(WEATHERMOBILE_WIND), x, y);
@@ -695,14 +707,16 @@ void WeatherMobile_StateWindManager_StrongWind(void)
         }
     }
 
-    foreach_active(Player, player)
-    {
-        if (player->state != Player_State_Static && !player->blinkTimer) {
-            if (player->animator.animationID != ANI_JUMP)
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
+{
+        foreach_active(Player, player)
+        {
+            if (player->state != Player_State_Static && !player->blinkTimer) {
+                if (player->animator.animationID != ANI_JUMP)
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
 
-            player->onGround = false;
-            player->velocity.y -= 0x5800;
+                player->onGround = false;
+                player->velocity.y -= 0x5800;
+            }
         }
     }
 
@@ -719,7 +733,8 @@ void WeatherMobile_StateWindManager_FinishWind(void)
     RSDK_THIS(WeatherMobile);
 
     if (!(Zone->timer & 3)) {
-        for (int32 i = 0; i < 4; ++i) {
+        int32 i;
+        for (i = 0; i < 4; ++i) {
             int32 x                    = self->position.x + RSDK.Rand(-0x1C00000, 0x1C00000);
             int32 y                    = self->position.y + 0xD00000;
             EntityWeatherMobile *child = CREATE_ENTITY(WeatherMobile, INT_TO_VOID(WEATHERMOBILE_WIND), x, y);
@@ -759,7 +774,8 @@ void WeatherMobile_State_RainManager(void)
     self->angle = RSDK.Sin512(self->timer++) >> 4;
 
     if (!(Zone->timer & 1)) {
-        for (int32 i = 0; i < 4; ++i) {
+        int32 i;
+        for (i = 0; i < 4; ++i) {
             int32 x                    = self->position.x + RSDK.Rand(-0x1C00000, 0x1C00000);
             int32 y                    = self->position.y - 0x800000;
             EntityWeatherMobile *child = CREATE_ENTITY(WeatherMobile, INT_TO_VOID(WEATHERMOBILE_RAIN), x, y);
@@ -892,6 +908,7 @@ void WeatherMobile_StateCloud_FadeAway(void)
 
 void WeatherMobile_State_Defeated(void)
 {
+    EntityDebris *debris;
     RSDK_THIS(WeatherMobile);
 
     RSDK.ProcessAnimation(&self->eggmanAnimator);
@@ -899,7 +916,7 @@ void WeatherMobile_State_Defeated(void)
     WeatherMobile_Explode();
 
     self->timer++;
-    EntityDebris *debris = NULL;
+    debris = NULL;
     switch (self->timer) {
         case 48:
             debris                  = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);

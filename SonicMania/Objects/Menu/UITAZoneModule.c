@@ -11,6 +11,7 @@ ObjectUITAZoneModule *UITAZoneModule;
 
 void UITAZoneModule_Update(void)
 {
+    EntityUIControl *parent;
     RSDK_THIS(UITAZoneModule);
 
     UITAZoneModule_Setup();
@@ -57,7 +58,7 @@ void UITAZoneModule_Update(void)
     if (self->zoneIconSprX >= 192)
         self->zoneIconSprX -= 192;
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
     if (self->state == UITAZoneModule_State_Selected
         && (parent->buttons[parent->lastButtonID] != (EntityUIButton *)self || parent->state != UIControl_ProcessInputs)) {
         self->isSelected = false;
@@ -229,6 +230,7 @@ void UITAZoneModule_SetupText(void)
 
 void UITAZoneModule_DrawBGShapes(void)
 {
+    int32 drawY;
     RSDK_THIS(UITAZoneModule);
 
     uint32 color = 0x5FA0B0;
@@ -237,7 +239,7 @@ void UITAZoneModule_DrawBGShapes(void)
         color = 0xF26C4F;
 #endif
 
-    int32 drawY = self->drawPos.y + 0x230000;
+    drawY = self->drawPos.y + 0x230000;
     UIWidgets_DrawRightTriangle(self->drawPos.x + 0x790000, drawY, -71, 88, 112, 224);
 
     RSDK.DrawRect(self->drawPos.x + 0x790000, drawY - 0x480000, 0x200000, 0x480000, 0x5870E0, 255, INK_NONE, false);

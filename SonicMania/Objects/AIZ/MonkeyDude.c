@@ -47,6 +47,7 @@ void MonkeyDude_Draw(void)
         RSDK.DrawSprite(&MonkeyDude->armAnimator, &drawPos, false);
 
         for (self->armNodeID = 0; self->armNodeID < MonkeyDude_ArmJointCount; ++self->armNodeID) {
+            Animator *animator;
             if (self->direction)
                 drawPos.x += RSDK.Sin256(self->armAngles[self->armNodeID]) << 11;
             else
@@ -54,7 +55,7 @@ void MonkeyDude_Draw(void)
 
             drawPos.y += RSDK.Cos256(self->armAngles[self->armNodeID]) << 11;
 
-            Animator *animator = NULL;
+            animator = NULL;
             if (self->armNodeID == MonkeyDude_ArmJointCount - 1) {
                 if (self->throwCount >= 4)
                     animator = &self->handAnimator;
@@ -165,6 +166,8 @@ void MonkeyDude_DebugSpawn(void)
 
 void MonkeyDude_State_Init(void)
 {
+    int32 delay;
+    int32 i;
     RSDK_THIS(MonkeyDude);
     self->armY           = self->position.y;
     self->active         = ACTIVE_NORMAL;
@@ -189,8 +192,8 @@ void MonkeyDude_State_Init(void)
     MonkeyDude_HandleStates();
 #endif
 
-    int32 delay = 0;
-    for (int32 i = 0; i < MonkeyDude_ArmJointCount; ++i) {
+    delay = 0;
+    for (i = 0; i < MonkeyDude_ArmJointCount; ++i) {
         self->armAngles[i] = 0;
         self->armTimers[i] = delay;
         self->armStates[i] = MonkeyDude_StateBody_ArmRaise;
@@ -257,21 +260,26 @@ void MonkeyDude_HandleBodyPart(void)
 void MonkeyDude_HandleStates(void)
 {
     RSDK_THIS(MonkeyDude);
-    foreach_active(Player, player)
     {
-        if (Player_CheckBadnikTouch(player, self, &MonkeyDude->hitboxBadnik))
-            Player_CheckBadnikBreak(player, self, true);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &MonkeyDude->hitboxBadnik))
+                Player_CheckBadnikBreak(player, self, true);
+        }
     }
 
     if (self->classID) {
         if (self->throwCount) {
             if (self->throwCount == 3 && self->armAngles[MonkeyDude_ArmJointCount - 1] <= 164) {
+                int32 spawnY;
+                int32 i;
+                EntityMonkeyDude *coconut;
                 int32 spawnX = self->position.x + 0xD0000;
                 if (!self->direction)
                     spawnX = self->position.x - 0xD0000;
-                int32 spawnY = self->position.y;
+                spawnY = self->position.y;
 
-                for (int32 i = 0; i < MonkeyDude_ArmJointCount; ++i) {
+                for (i = 0; i < MonkeyDude_ArmJointCount; ++i) {
                     if (self->direction)
                         spawnX += RSDK.Sin256(self->armAngles[i]) << 11;
                     else
@@ -279,7 +287,7 @@ void MonkeyDude_HandleStates(void)
                     spawnY += (RSDK.Cos256(self->armAngles[i]) << 11);
                 }
 
-                EntityMonkeyDude *coconut = CREATE_ENTITY(MonkeyDude, INT_TO_VOID(1), spawnX, spawnY);
+                coconut = CREATE_ENTITY(MonkeyDude, INT_TO_VOID(1), spawnX, spawnY);
                 if (!self->direction)
                     coconut->velocity.x = -0x20000;
                 else
@@ -430,10 +438,12 @@ void MonkeyDude_State_Coconut(void)
 
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->bodyAnimator);
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &MonkeyDude->hitboxCoconut))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &MonkeyDude->hitboxCoconut))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
     else {

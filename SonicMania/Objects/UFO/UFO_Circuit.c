@@ -70,16 +70,20 @@ void UFO_Circuit_Create(void *data)
     RSDK_THIS(UFO_Circuit);
 
     if (!SceneInfo->inEditor) {
+        int32 id;
+        EntityUFO_Circuit *next;
+        EntityUFO_Circuit *prev;
         self->startPos.x = self->position.x;
         self->startPos.y = self->position.y;
-        int32 id         = RSDK.GetEntitySlot(self);
+        id         = RSDK.GetEntitySlot(self);
 
-        EntityUFO_Circuit *next = RSDK_GET_ENTITY(id + 1, UFO_Circuit);
+        next = RSDK_GET_ENTITY(id + 1, UFO_Circuit);
         if (next->classID == UFO_Circuit->classID) {
             self->nextNode = next;
         }
         else {
-            for (int32 e = id - 1; e > 0; --e) {
+            int32 e;
+            for (e = id - 1; e > 0; --e) {
                 EntityUFO_Circuit *node = RSDK_GET_ENTITY(e, UFO_Circuit);
                 if (node->classID != UFO_Circuit->classID) {
                     self->nextNode = RSDK_GET_ENTITY(e + 1, UFO_Circuit);
@@ -88,12 +92,13 @@ void UFO_Circuit_Create(void *data)
             }
         }
 
-        EntityUFO_Circuit *prev = RSDK_GET_ENTITY(id - 1, UFO_Circuit);
+        prev = RSDK_GET_ENTITY(id - 1, UFO_Circuit);
         if (prev->classID == UFO_Circuit->classID) {
             self->prevNode = prev;
         }
         else {
-            for (int32 e = id + 1; e < TEMPENTITY_START; ++e) {
+            int32 e;
+            for (e = id + 1; e < TEMPENTITY_START; ++e) {
                 EntityUFO_Circuit *node = RSDK_GET_ENTITY(e, UFO_Circuit);
                 if (node->classID != UFO_Circuit->classID) {
                     self->prevNode = RSDK_GET_ENTITY(e - 1, UFO_Circuit);
@@ -135,7 +140,9 @@ void UFO_Circuit_StageLoad(void)
     UFO_Circuit->sceneIndex = RSDK.Create3DScene("View:Special", 4096, SCOPE_STAGE);
 
     UFO_Circuit->nodeCount = 0;
-    foreach_all(UFO_Circuit, node) { UFO_Circuit->nodeCount++; }
+    {
+        foreach_all(UFO_Circuit, node) { UFO_Circuit->nodeCount++; }
+    }
 
     UFO_Circuit->decelerationNoMach = 0;
     UFO_Circuit->decelerationMach   = 0;
@@ -296,11 +303,12 @@ void UFO_Circuit_State_UFO(void)
         if (!UFO_Setup->timedOut) {
             foreach_active(UFO_Player, player)
             {
+                int32 dist;
                 rx = (self->position.x - player->position.x) >> 16;
                 ry = (self->height - player->height - 0xA0000) >> 16;
                 rz = (self->position.y - player->position.y) >> 16;
 
-                int32 dist = rx * rx + ry * ry + rz * rz;
+                dist = rx * rx + ry * ry + rz * rz;
                 if (!UFO_Setup->machLevel && dist < 0xC000)
                     self->topSpeed += (abs(player->velocity.y) + abs(player->velocity.x)) >> 1;
 

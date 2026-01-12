@@ -33,13 +33,15 @@ void Spear_Update(void)
 
     Spear_SetupHitboxes();
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox)) {
 #if MANIA_USE_PLUS
-            if (!Player_CheckMightyUnspin(player, 0x200, 2, &player->uncurlTimer))
+                if (!Player_CheckMightyUnspin(player, 0x200, 2, &player->uncurlTimer))
 #endif
-                Player_Hurt(player, self);
+                    Player_Hurt(player, self);
+            }
         }
     }
 }
@@ -83,6 +85,7 @@ void Spear_Draw(void)
 
 void Spear_Create(void *data)
 {
+    int32 anim;
     RSDK_THIS(Spear);
 
     if (SceneInfo->inEditor) {
@@ -101,7 +104,7 @@ void Spear_Create(void *data)
     self->updateRange.x = 0x800000;
     self->updateRange.y = 0x800000;
 
-    int32 anim = 0;
+    anim = 0;
     switch (self->orientation) {
         case SPEAR_UP:
             self->direction = FLIP_NONE;

@@ -121,16 +121,18 @@ void PhantomRider_ProcessAutoScroll(void)
             Zone->autoScrollSpeed = 0x80000;
     }
 
-    foreach_active(Player, player)
     {
-        if (player->groundVel < Zone->autoScrollSpeed - 0x20000)
-            player->groundVel = Zone->autoScrollSpeed - 0x20000;
+        foreach_active(Player, player)
+        {
+            if (player->groundVel < Zone->autoScrollSpeed - 0x20000)
+                player->groundVel = Zone->autoScrollSpeed - 0x20000;
 
-        player->direction = FLIP_NONE;
-        player->topSpeed  = Zone->autoScrollSpeed + 0x20000;
+            player->direction = FLIP_NONE;
+            player->topSpeed  = Zone->autoScrollSpeed + 0x20000;
 
-        if (player->groundVel > player->topSpeed)
-            player->groundVel = player->topSpeed;
+            if (player->groundVel > player->topSpeed)
+                player->groundVel = player->topSpeed;
+        }
     }
 }
 
@@ -174,12 +176,16 @@ void PhantomRider_State_HandleBegin(void)
         self->active     = ACTIVE_NORMAL;
         self->state      = PhantomRider_State_EnterRider;
 
-        foreach_active(PopOut, popOut)
         {
-            popOut->active    = ACTIVE_NORMAL;
-            popOut->drawGroup = 2;
+            foreach_active(PopOut, popOut)
+            {
+                popOut->active    = ACTIVE_NORMAL;
+                popOut->drawGroup = 2;
+            }
         }
-        foreach_active(Button, button) { button->active = ACTIVE_NORMAL; }
+        {
+            foreach_active(Button, button) { button->active = ACTIVE_NORMAL; }
+        }
         RSDK.PlaySfx(PhantomRider->sfxRiderLaunch, false, 255);
     }
 }
@@ -220,6 +226,7 @@ void PhantomRider_State_EnterRider(void)
 
 void PhantomRider_State_InitialRace(void)
 {
+    EntityPlatformNode *marker;
     RSDK_THIS(PhantomRider);
 
     RSDK.ProcessAnimation(&self->mainAnimator);
@@ -246,7 +253,7 @@ void PhantomRider_State_InitialRace(void)
     self->prevOnGround = self->onGround;
     RSDK.ProcessObjectMovement(self, &self->outerBox, &self->innerBox);
 
-    EntityPlatformNode *marker = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, PlatformNode);
+    marker = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, PlatformNode);
     if (self->position.x > marker->position.x)
         self->state = PhantomRider_State_RacePlayer;
 }
@@ -279,23 +286,31 @@ void PhantomRider_State_RacePlayer(void)
         PhantomEgg_SetupWarpFX();
         self->state = PhantomRider_State_ExitRider;
 
-        foreach_active(PopOut, popOut) { popOut->shouldAppear = false; }
-        foreach_active(Player, player) { Player_UpdatePhysicsState(player); }
+        {
+            foreach_active(PopOut, popOut) { popOut->shouldAppear = false; }
+        }
+        {
+            foreach_active(Player, player) { Player_UpdatePhysicsState(player); }
+        }
     }
 
-    foreach_active(Spikes, spikes)
     {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &self->hitbox, spikes, &spikes->hitbox) == C_TOP) {
-            EntityPopOut *popOut = RSDK_GET_ENTITY(RSDK.GetEntitySlot(spikes) - 1, PopOut);
-            popOut->shouldAppear = false;
+        foreach_active(Spikes, spikes)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &self->hitbox, spikes, &spikes->hitbox) == C_TOP) {
+                EntityPopOut *popOut = RSDK_GET_ENTITY(RSDK.GetEntitySlot(spikes) - 1, PopOut);
+                popOut->shouldAppear = false;
 
-            foreach_active(Button, button)
-            {
-                if (button->tag == popOut->tag)
-                    button->activated = false;
+                {
+                    foreach_active(Button, button)
+                    {
+                        if (button->tag == popOut->tag)
+                            button->activated = false;
+                    }
+                }
+
+                PhantomRider_Hit();
             }
-
-            PhantomRider_Hit();
         }
     }
 }
@@ -305,22 +320,27 @@ void PhantomRider_State_ExitRider(void)
     RSDK_THIS(PhantomRider);
 
     if (++self->timer == 60) {
+        EntityPlayer *player1;
         self->position.x = self->startPos.x;
         self->position.y = self->startPos.y;
         self->timer      = 0;
         self->active     = ACTIVE_BOUNDS;
         destroyEntity(self->child);
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         Camera_SetTargetEntity(0, player1);
         player1->camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
 
-        foreach_active(PopOut, popOut) { popOut->active = ACTIVE_BOUNDS; }
-
-        foreach_active(Button, button)
         {
-            button->active    = ACTIVE_BOUNDS;
-            button->activated = false;
+            foreach_active(PopOut, popOut) { popOut->active = ACTIVE_BOUNDS; }
+        }
+
+        {
+            foreach_active(Button, button)
+            {
+                button->active    = ACTIVE_BOUNDS;
+                button->activated = false;
+            }
         }
 
         self->state = PhantomRider_State_HandleBegin;
@@ -329,6 +349,7 @@ void PhantomRider_State_ExitRider(void)
 
 void PhantomRider_State_Jimmy(void)
 {
+    EntityCamera *camera;
     RSDK_THIS(PhantomRider);
 
     self->position.x += Zone->autoScrollSpeed;
@@ -336,20 +357,23 @@ void PhantomRider_State_Jimmy(void)
     if (self->position.y < 0x8A80000)
         self->position.y += 0x20000;
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
 
     if (camera->offset.y > 0)
         camera->offset.y -= (camera->offset.y >> 4);
 
-    foreach_active(Player, player)
     {
-        int32 x = self->position.x - (ScreenInfo->center.x << 16) + 0x100000;
-        if (player->position.x < x)
-            player->position.x = x;
+        foreach_active(Player, player)
+        {
+            int32 y;
+            int32 x = self->position.x - (ScreenInfo->center.x << 16) + 0x100000;
+            if (player->position.x < x)
+                player->position.x = x;
 
-        int32 y = ((ScreenInfo->center.x - 16) << 16) + self->position.x;
-        if (player->position.x > y)
-            player->position.x = y;
+            y = ((ScreenInfo->center.x - 16) << 16) + self->position.x;
+            if (player->position.x > y)
+                player->position.x = y;
+        }
     }
 }
 

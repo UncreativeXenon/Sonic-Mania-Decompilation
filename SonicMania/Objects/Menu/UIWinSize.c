@@ -12,6 +12,7 @@ ObjectUIWinSize *UIWinSize;
 
 void UIWinSize_Update(void)
 {
+    EntityUIControl *control;
     RSDK_THIS(UIWinSize);
 
     self->touchPosSizeS.x   = self->size.x;
@@ -28,7 +29,7 @@ void UIWinSize_Update(void)
 
     StateMachine_Run(self->state);
 
-    EntityUIControl *control = (EntityUIControl *)self->parent;
+    control = (EntityUIControl *)self->parent;
     if (control && control->state == UIButton_State_HandleButtonLeave)
         UIWinSize_SetChoiceInactive(self);
 
@@ -127,6 +128,7 @@ void UIWinSize_SetupText(EntityUIWinSize *entityPtr)
     RSDK_THIS(UIWinSize);
 
     if (sku_platform == PLATFORM_PC || sku_platform == PLATFORM_DEV) {
+        char buffer[0x10];
         int32 height = 0;
         RSDK.GetWindowSize(NULL, &height);
 
@@ -137,13 +139,13 @@ void UIWinSize_SetupText(EntityUIWinSize *entityPtr)
         if (self->selection >= self->maxScale)
             self->selection = 1;
 
-        char buffer[0x10];
         sprintf_s(buffer, (int32)sizeof(buffer), "%ix", self->selection);
 
         RSDK.SetString(&entityPtr->text, buffer);
 #if GAME_VERSION != VER_100
         if (Localization->language == LANGUAGE_TC) {
-            for (int32 c = 0; c < entityPtr->text.length; ++c) {
+            int32 c;
+            for (c = 0; c < entityPtr->text.length; ++c) {
                 if (entityPtr->text.chars[c] == 'x')
                     entityPtr->text.chars[c] = 20493; // unicode character ID
             }
@@ -195,6 +197,8 @@ void UIWinSize_ProcessButtonCB(void)
 
 bool32 UIWinSize_ProcessTouchCB(void)
 {
+    bool32 pressed;
+    int32 i;
     RSDK_THIS(UIWinSize);
 
     void (*callbacks[2])(void);
@@ -214,13 +218,14 @@ bool32 UIWinSize_ProcessTouchCB(void)
     touchEnd[1].x = -self->touchPosOffsetS.x;
     touchEnd[1].y = self->touchPosOffsetS.y;
 
-    bool32 pressed = false;
-    for (int32 i = 0; i < 2; ++i) {
+    pressed = false;
+    for (i = 0; i < 2; ++i) {
         if (TouchInfo->count) {
+            int32 t;
             int32 sizeX = touchStart[i].x >> 1;
             int32 sizeY = touchStart[i].y >> 1;
 
-            for (int32 t = 0; t < TouchInfo->count; ++t) {
+            for (t = 0; t < TouchInfo->count; ++t) {
                 int32 x = (ScreenInfo->position.x << 16) - ((TouchInfo->x[t] * ScreenInfo->size.x) * -65536.0f);
                 int32 y = (ScreenInfo->position.y << 16) - ((TouchInfo->y[t] * ScreenInfo->size.y) * -65536.0f);
 

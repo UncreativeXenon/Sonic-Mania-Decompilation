@@ -36,6 +36,7 @@ void RockDrill_StaticUpdate(void)
 
 void RockDrill_Draw(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(RockDrill);
 
     if (self->invincibilityTimer & 1) {
@@ -45,7 +46,6 @@ void RockDrill_Draw(void)
 
     // Piston (L1)
     self->animator.frameID = 1;
-    Vector2 drawPos;
     drawPos.x = self->position.x - 0x260000;
     drawPos.y = self->position.y - self->pistonPos[0];
     RSDK.DrawSprite(&self->animator, &drawPos, false);
@@ -250,12 +250,14 @@ void RockDrill_State_Init(void)
 
 void RockDrill_State_Drilling(void)
 {
+    int32 i; 
+    EntityCamera *camera;
     RSDK_THIS(RockDrill);
 
     ++RockDrill->drillSfxTimer;
     RSDK.ProcessAnimation(&self->animator);
 
-    for (int32 i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
         if (self->pistonDelay[i]) {
             self->pistonDelay[i]--;
         }
@@ -298,7 +300,7 @@ void RockDrill_State_Drilling(void)
         RockDrill_SpawnDebris(0x1C0000);
     }
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     if (!camera->shakePos.y)
         camera->shakePos.y = 4;
 
@@ -337,11 +339,13 @@ void RockDrill_State_Falling(void)
     RSDK_THIS(RockDrill);
 
     if (self->timer-- <= 0) {
+        uint16 tileLow;
+        uint16 tileHigh; 
         self->velocity.y += 0x3800;
         self->position.y += self->velocity.y;
 
-        uint16 tileLow  = RSDK.GetTile(Zone->fgLayer[0], self->position.x >> 20, (self->position.y + 0x200000) >> 20);
-        uint16 tileHigh = RSDK.GetTile(Zone->fgLayer[1], self->position.x >> 20, (self->position.y + 0x200000) >> 20);
+        tileLow  = RSDK.GetTile(Zone->fgLayer[0], self->position.x >> 20, (self->position.y + 0x200000) >> 20);
+        tileHigh = RSDK.GetTile(Zone->fgLayer[1], self->position.x >> 20, (self->position.y + 0x200000) >> 20);
 
         if (RSDK.GetTileFlags(tileLow, 0) == LRZ2_TFLAGS_LAVA || RSDK.GetTileFlags(tileHigh, 0) == LRZ2_TFLAGS_LAVA) {
             self->timer      = 0;

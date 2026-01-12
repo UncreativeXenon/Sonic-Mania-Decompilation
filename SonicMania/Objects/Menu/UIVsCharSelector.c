@@ -11,6 +11,7 @@ ObjectUIVsCharSelector *UIVsCharSelector;
 
 void UIVsCharSelector_Update(void)
 {
+    EntityUIControl *parent;
     RSDK_THIS(UIVsCharSelector);
 
     self->prevSelected = self->isSelected;
@@ -59,7 +60,7 @@ void UIVsCharSelector_Update(void)
     self->triBounceOffset    = MIN(self->triBounceOffset, 0x13600);
     self->playerBounceOffset = MIN(self->playerBounceOffset, 0x11800);
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
     if ((
 #if MANIA_USE_PLUS
             self->state == UIVsCharSelector_State_HandlePlayerJoin ||
@@ -218,6 +219,11 @@ void UIVsCharSelector_ProcessButtonCB(void)
 
 #if MANIA_USE_PLUS
     if (parent->active == ACTIVE_ALWAYS) {
+        int32 max;
+        int32 activePlayers = 0;
+        int32 i;
+        int32 frame;
+        bool32 pressed;
 #endif
         int32 storedFrame = self->frameID;
         int32 inc         = 1;
@@ -239,7 +245,7 @@ void UIVsCharSelector_ProcessButtonCB(void)
         }
 
 #if MANIA_USE_PLUS
-        int32 max = UICHARBUTTON_KNUX + (API.CheckDLC(DLC_PLUS) ? 2 : 0);
+        max = UICHARBUTTON_KNUX + (API.CheckDLC(DLC_PLUS) ? 2 : 0);
 #else
     int32 max = UICHARBUTTON_KNUX;
 #endif
@@ -249,15 +255,15 @@ void UIVsCharSelector_ProcessButtonCB(void)
         while (self->frameID >= max) self->frameID -= max;
 
 #if MANIA_USE_PLUS
-        int32 activePlayers = 0;
+        activePlayers = 0;
 
-        for (int32 i = 0; i < parent->buttonCount; ++i) {
+        for (i = 0; i < parent->buttonCount; ++i) {
             EntityUIVsCharSelector *button = (EntityUIVsCharSelector *)parent->buttons[i];
             if (button->state == UIVsCharSelector_State_Selected || button->processButtonCB == UIVsCharSelector_ProcessButtonCB_CharSelected)
                 activePlayers |= 1 << button->frameID;
         }
 
-        int32 frame = self->frameID;
+        frame = self->frameID;
         while ((1 << frame) & activePlayers) {
             frame += inc;
 
@@ -279,7 +285,7 @@ void UIVsCharSelector_ProcessButtonCB(void)
         if (storedFrame != self->frameID)
             UIVsCharSelector_SetupText();
 
-        bool32 pressed = false;
+        pressed = false;
 #if MANIA_USE_PLUS
         if (API_GetConfirmButtonFlip())
             pressed = ControllerInfo[CONT_P1 + self->playerID].keyB.press;
@@ -314,10 +320,11 @@ void UIVsCharSelector_ProcessButtonCB_CharSelected(void)
 
 #if MANIA_USE_PLUS
     if (parent->active == ACTIVE_ALWAYS) {
+        bool32 pressed;
 #endif
         parent->targetPos.x = self->position.x;
 
-        bool32 pressed = false;
+        pressed = false;
 #if MANIA_USE_PLUS
         if (API_GetConfirmButtonFlip())
             pressed = ControllerInfo[CONT_P1 + self->playerID].keyB.press;
@@ -372,17 +379,20 @@ void UIVsCharSelector_State_CharSelect(void)
 
 void UIVsCharSelector_State_WaitingForPlayer(void)
 {
+    uint32 id;
+    EntityUIControl *parent;
+    int32 assigned;
     RSDK_THIS(UIVsCharSelector);
 
     self->processButtonCB = StateMachine_None;
     self->isSelected      = false;
 
-    uint32 id = API_GetInputDeviceID(CONT_P1 + self->playerID);
+    id = API_GetInputDeviceID(CONT_P1 + self->playerID);
 #if MANIA_USE_PLUS
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
 
     self->ready    = false;
-    int32 assigned = API_IsInputDeviceAssigned(id);
+    assigned = API_IsInputDeviceAssigned(id);
 
     if (parent->active == ACTIVE_ALWAYS) {
         if (!id || (!assigned && id != (uint32)INPUT_AUTOASSIGN)) {
@@ -405,14 +415,16 @@ void UIVsCharSelector_State_WaitingForPlayer(void)
 
 void UIVsCharSelector_State_HandlePlayerJoin(void)
 {
+    int32 id;
+    int32 assigned;
     RSDK_THIS(UIVsCharSelector);
 
 #if MANIA_USE_PLUS
     EntityUIControl *parent = (EntityUIControl *)self->parent;
 
     self->isSelected = true;
-    int32 id         = API_GetInputDeviceID(CONT_P1 + self->playerID);
-    int32 assigned   = API_IsInputDeviceAssigned(id);
+    id         = API_GetInputDeviceID(CONT_P1 + self->playerID);
+    assigned   = API_IsInputDeviceAssigned(id);
 
     if (parent->active == ACTIVE_ALWAYS) {
         if (id != INPUT_NONE && id != INPUT_AUTOASSIGN && assigned) {

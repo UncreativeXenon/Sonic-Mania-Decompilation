@@ -56,6 +56,7 @@ void UFO_HUD_StaticUpdate(void) {}
 
 void UFO_HUD_Draw(void)
 {
+    int32 i; 
     RSDK_THIS(UFO_HUD);
 
     Vector2 drawPos;
@@ -66,7 +67,7 @@ void UFO_HUD_Draw(void)
 
     RSDK.DrawSprite(&self->hudAnimator, &drawPos, true);
 
-    for (int32 i = 0; i <= UFO_Setup->machLevel; ++i) {
+    for (i = 0; i <= UFO_Setup->machLevel; ++i) {
         RSDK.DrawSprite(&self->stripeAnimator, &drawPos, true);
         drawPos.x += 0xA0000;
     }
@@ -170,10 +171,11 @@ void UFO_HUD_LevelUpMach(void)
 
 void UFO_HUD_DrawNumbers(Vector2 *drawPos, int32 value)
 {
+    int32 i;
     RSDK_THIS(UFO_HUD);
 
     int32 mult = 1;
-    for (int32 i = 0; i < 3; ++i) {
+    for (i = 0; i < 3; ++i) {
         self->numbersAnimator.frameID = value / mult % 10;
         RSDK.DrawSprite(&self->numbersAnimator, drawPos, true);
         drawPos->x -= 0x100000;

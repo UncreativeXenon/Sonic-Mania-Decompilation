@@ -158,66 +158,75 @@ void BuckwildBall_HandleRollCrush(void)
     RSDK_THIS(BuckwildBall);
 
     Hitbox crushHitbox;
+    Hitbox spikeHitbox;
     crushHitbox.left   = -8;
     crushHitbox.top    = -8;
     crushHitbox.right  = 8;
     crushHitbox.bottom = 8;
 
-    foreach_active(Iwamodoki, iwamodoki)
     {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, iwamodoki, &crushHitbox)) {
-            BadnikHelpers_BadnikBreak(iwamodoki, true, true);
-        }
-    }
-
-    foreach_active(Fireworm, fireworm)
-    {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, fireworm, &crushHitbox)) {
-            BadnikHelpers_BadnikBreak(fireworm, true, true);
-        }
-    }
-
-    foreach_active(Toxomister, toxomister)
-    {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, toxomister, &crushHitbox)) {
-            if (toxomister->state == Toxomister_State_CreateClouds) {
-                BadnikHelpers_BadnikBreak(toxomister, true, true);
-            }
-            else if (!toxomister->grabbedPlayer) {
-                destroyEntity(toxomister);
+        foreach_active(Iwamodoki, iwamodoki)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, iwamodoki, &crushHitbox)) {
+                BadnikHelpers_BadnikBreak(iwamodoki, true, true);
             }
         }
     }
 
-    Hitbox spikeHitbox;
+    {
+        foreach_active(Fireworm, fireworm)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, fireworm, &crushHitbox)) {
+                BadnikHelpers_BadnikBreak(fireworm, true, true);
+            }
+        }
+    }
+
+    {
+        foreach_active(Toxomister, toxomister)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, toxomister, &crushHitbox)) {
+                if (toxomister->state == Toxomister_State_CreateClouds) {
+                    BadnikHelpers_BadnikBreak(toxomister, true, true);
+                }
+                else if (!toxomister->grabbedPlayer) {
+                    destroyEntity(toxomister);
+                }
+            }
+        }
+    }
+
     spikeHitbox.left   = -16;
     spikeHitbox.top    = -16;
     spikeHitbox.right  = 16;
     spikeHitbox.bottom = 16;
 
-    foreach_active(Spikes, spikes)
     {
-        if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, spikes, &spikeHitbox)) {
-            for (int32 i = 0; i < 2; ++i) {
-                int32 x              = spikes->position.x + (((2 * (i != 0) - 1) * (spikes->type == SPIKES_UP)) << 19);
-                int32 y              = spikes->position.y + (((2 * (i != 0) - 1) * (spikes->type != SPIKES_UP)) << 19);
-                EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, x, y);
+        foreach_active(Spikes, spikes)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(self, &BuckwildBall->hitbox, spikes, &spikeHitbox)) {
+                int32 i;
+                for (i = 0; i < 2; ++i) {
+                    int32 x              = spikes->position.x + (((2 * (i != 0) - 1) * (spikes->type == SPIKES_UP)) << 19);
+                    int32 y              = spikes->position.y + (((2 * (i != 0) - 1) * (spikes->type != SPIKES_UP)) << 19);
+                    EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Fall, x, y);
 
-                RSDK.SetSpriteAnimation(BuckwildBall->particleFrames, 4, &debris->animator, true, spikes->type >> 1);
-                debris->drawGroup = Zone->objectDrawGroup[1];
-                debris->direction = spikes->direction;
-                debris->drawFX |= FX_ROTATE;
-                debris->gravityStrength = 0x3800;
-                debris->rotSpeed        = RSDK.Rand(-32, 32);
-                debris->velocity.x      = RSDK.Rand(-0x28000, 0x28000);
-                debris->velocity.y      = -0x1000 * RSDK.Rand(32, 96);
+                    RSDK.SetSpriteAnimation(BuckwildBall->particleFrames, 4, &debris->animator, true, spikes->type >> 1);
+                    debris->drawGroup = Zone->objectDrawGroup[1];
+                    debris->direction = spikes->direction;
+                    debris->drawFX |= FX_ROTATE;
+                    debris->gravityStrength = 0x3800;
+                    debris->rotSpeed        = RSDK.Rand(-32, 32);
+                    debris->velocity.x      = RSDK.Rand(-0x28000, 0x28000);
+                    debris->velocity.y      = -0x1000 * RSDK.Rand(32, 96);
+                }
+
+                destroyEntity(spikes);
+
+                RSDK.PlaySfx(BuckwildBall->sfxSharp, false, 255);
+                RSDK.PlaySfx(BuckwildBall->sfxImpact, false, 255);
+                self->timerSfx = 8;
             }
-
-            destroyEntity(spikes);
-
-            RSDK.PlaySfx(BuckwildBall->sfxSharp, false, 255);
-            RSDK.PlaySfx(BuckwildBall->sfxImpact, false, 255);
-            self->timerSfx = 8;
         }
     }
 }
@@ -267,13 +276,15 @@ void BuckwildBall_State_AwaitDetection(void)
     self->position.x = self->ballPos.x;
     self->position.y = self->ballPos.y;
 
-    foreach_active(Player, player)
     {
-        if (!player->sidekick) {
-            if (Player_CheckCollisionTouch(player, self, &self->detectHitbox)) {
-                self->visible = true;
-                self->active  = ACTIVE_NORMAL;
-                self->state   = BuckwildBall_State_Falling;
+        foreach_active(Player, player)
+        {
+            if (!player->sidekick) {
+                if (Player_CheckCollisionTouch(player, self, &self->detectHitbox)) {
+                    self->visible = true;
+                    self->active  = ACTIVE_NORMAL;
+                    self->state   = BuckwildBall_State_Falling;
+                }
             }
         }
     }
@@ -320,6 +331,7 @@ void BuckwildBall_State_Falling(void)
 
 void BuckwildBall_State_Rolling(void)
 {
+    bool32 collidedWall;
     RSDK_THIS(BuckwildBall);
 
     self->velocity.x += abs(self->speed << 10) * (2 * !(self->direction == FLIP_NONE) - 1);
@@ -337,7 +349,7 @@ void BuckwildBall_State_Rolling(void)
         }
     }
 
-    bool32 collidedWall = false;
+    collidedWall = false;
     if (self->direction == FLIP_X)
         collidedWall = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_LWALL, 0, 0x1C0000, 0, true);
     else if (self->direction == FLIP_NONE)

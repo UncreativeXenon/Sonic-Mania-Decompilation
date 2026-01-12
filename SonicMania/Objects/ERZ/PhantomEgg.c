@@ -79,8 +79,8 @@ void PhantomEgg_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreTMZ3.act", 0b0000000011111111);
-        RSDK.LoadPalette(1, "EncoreTMZ3.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreTMZ3.act", 0xFF);
+        RSDK.LoadPalette(1, "EncoreTMZ3.act", 0xFF);
     }
 #endif
 
@@ -272,12 +272,13 @@ void PhantomEgg_SetupWarpFX(void)
 
 void PhantomEgg_HandlePhantomWarp(uint8 phantomID)
 {
+    Entity *targetPhantom;
     PhantomEgg->boundsStoreL1 = Zone->cameraBoundsL[0];
     PhantomEgg->boundsStoreR1 = Zone->cameraBoundsR[0];
     PhantomEgg->boundsStoreT1 = Zone->cameraBoundsT[0];
     PhantomEgg->boundsStoreB1 = Zone->cameraBoundsB[0];
 
-    Entity *targetPhantom = NULL;
+    targetPhantom = NULL;
 
     switch (phantomID & 3) {
         case 0: {
@@ -318,6 +319,8 @@ void PhantomEgg_HandlePhantomWarp(uint8 phantomID)
     }
 
     if (targetPhantom) {
+        int32 p;
+        EntityCamera *camera;
         int32 phantomSlot              = RSDK.GetEntitySlot(targetPhantom);
         EntityPlatformNode *nodeTop    = RSDK_GET_ENTITY(phantomSlot + 1, PlatformNode);
         EntityPlatformNode *nodeBottom = RSDK_GET_ENTITY(phantomSlot + 2, PlatformNode);
@@ -327,7 +330,7 @@ void PhantomEgg_HandlePhantomWarp(uint8 phantomID)
         int32 offsetX = nodeBottom->position.x - PhantomEgg->boundsM;
         int32 offsetY = nodeBottom->position.y - (PhantomEgg->boundsStoreB1 << 16);
 
-        for (int32 p = 0; p < Player->playerCount; ++p) {
+        for (p = 0; p < Player->playerCount; ++p) {
             Zone->cameraBoundsL[p] = nodeLeft->position.x >> 16;
             Zone->cameraBoundsR[p] = nodeRight->position.x >> 16;
             Zone->cameraBoundsT[p] = nodeTop->position.y >> 16;
@@ -342,7 +345,7 @@ void PhantomEgg_HandlePhantomWarp(uint8 phantomID)
 
         targetPhantom->active = ACTIVE_NORMAL;
 
-        EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         camera->boundsL      = Zone->cameraBoundsL[0];
         camera->boundsR      = Zone->cameraBoundsR[0];
         camera->boundsT      = Zone->cameraBoundsT[0];
@@ -353,42 +356,56 @@ void PhantomEgg_HandlePhantomWarp(uint8 phantomID)
             camera->position.x            = nodeStart->position.x;
             camera->position.y            = nodeStart->position.y;
 
-            foreach_active(Player, player)
             {
-                player->position.x = camera->position.x;
-                player->position.y = camera->position.y;
+                foreach_active(Player, player)
+                {
+                    player->position.x = camera->position.x;
+                    player->position.y = camera->position.y;
+                }
             }
 
-            foreach_all(PhantomHand, hand)
             {
-                hand->position.x = camera->position.x;
-                hand->position.y = camera->position.y;
+                foreach_all(PhantomHand, hand)
+                {
+                    hand->position.x = camera->position.x;
+                    hand->position.y = camera->position.y;
+                }
             }
         }
         else {
             camera->position.x += offsetX;
             camera->position.y += offsetY;
-            foreach_active(Player, player)
             {
-                player->position.x += offsetX;
-                player->position.y += offsetY;
+                foreach_active(Player, player)
+                {
+                    player->position.x += offsetX;
+                    player->position.y += offsetY;
+                }
             }
 
-            foreach_all(PhantomHand, hand)
             {
-                hand->position.x += offsetX;
-                hand->position.y += offsetY;
+                foreach_all(PhantomHand, hand)
+                {
+                    hand->position.x += offsetX;
+                    hand->position.y += offsetY;
+                }
             }
         }
 
-        foreach_all(PhantomMissile, missile) { missile->active = ACTIVE_NEVER; }
-        foreach_all(TMZCable, cable) { cable->active = ACTIVE_NEVER; }
+        {
+            foreach_all(PhantomMissile, missile) { missile->active = ACTIVE_NEVER; }
+        }
+        {
+            foreach_all(TMZCable, cable) { cable->active = ACTIVE_NEVER; }
+        }
     }
 }
 
 void PhantomEgg_HandleReturnWarp(void)
 {
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    int32 p;
+    EntityCamera *camera;
+    for (p = 0; p < Player->playerCount; ++p) {
         Zone->cameraBoundsL[p] = PhantomEgg->boundsStoreL1;
         Zone->cameraBoundsR[p] = PhantomEgg->boundsStoreR1;
         Zone->cameraBoundsT[p] = PhantomEgg->boundsStoreT1;
@@ -401,7 +418,7 @@ void PhantomEgg_HandleReturnWarp(void)
         Zone->deathBoundary[p] = Zone->playerBoundsB[p];
     }
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     camera->boundsL      = Zone->cameraBoundsL[0];
     camera->boundsR      = Zone->cameraBoundsR[0];
     camera->boundsT      = Zone->cameraBoundsT[0];
@@ -409,34 +426,43 @@ void PhantomEgg_HandleReturnWarp(void)
     camera->position.x   = PhantomEgg->boundsM;
     camera->position.y   = PhantomEgg->boundsStoreB1 - (ScreenInfo->center.y << 16);
 
-    foreach_active(Player, player)
     {
-        player->position.x = PhantomEgg->boundsM;
-        player->position.y = (PhantomEgg->boundsStoreB1 - 40) << 16;
+        foreach_active(Player, player)
+        {
+            player->position.x = PhantomEgg->boundsM;
+            player->position.y = (PhantomEgg->boundsStoreB1 - 40) << 16;
+        }
     }
 
-    foreach_all(PhantomMissile, missile) { missile->active = ACTIVE_NORMAL; }
-    foreach_all(TMZCable, cable) { cable->active = ACTIVE_NORMAL; }
+    {
+        foreach_all(PhantomMissile, missile) { missile->active = ACTIVE_NORMAL; }
+    }
+    {
+        foreach_all(TMZCable, cable) { cable->active = ACTIVE_NORMAL; }
+    }
 }
 
 void PhantomEgg_Scanline_WarpFX(ScanlineInfo *scanlines)
 {
+    int32 line = 0;
+    int32 lineY = 0;
+    int32 l;
     TileLayer *fgLow = RSDK.GetTileLayer(Zone->fgLayer[0]);
     RSDK.ProcessParallax(fgLow);
 
-    int32 line = 0;
+    line = 0;
     if (PhantomEgg->startScanline - PhantomEgg->endScanline >= 0)
         line = PhantomEgg->startScanline - PhantomEgg->endScanline;
 
-    int32 lineY = scanlines[line].position.y;
-    for (int32 l = 0; l < line; ++l) scanlines[l].position.y = lineY;
+    lineY = scanlines[line].position.y;
+    for (l = 0; l < line; ++l) scanlines[l].position.y = lineY;
 
     line = PhantomEgg->startScanline + PhantomEgg->endScanline;
     if (line > ScreenInfo->size.y)
         line = ScreenInfo->size.y;
 
     lineY = scanlines[line].position.y;
-    for (int32 l = line; l < ScreenInfo->size.y; ++l) scanlines[l].position.y = lineY;
+    for (l = line; l < ScreenInfo->size.y; ++l) scanlines[l].position.y = lineY;
 }
 
 void PhantomEgg_Draw_Normal(void)
@@ -539,28 +565,34 @@ void PhantomEgg_State_DimArena(void)
         RSDK.SetLimitedFade(0, 1, 2, self->timer, 128, 256);
 
         if (self->timer >= 384) {
+            int32 angle;
+            int32 id;
+            int32 missileAngles[] = { -24, -10, 10, 24 };
             self->timer     = 0;
             self->visible   = true;
             self->stateDraw = PhantomEgg_Draw_Normal;
             self->state     = PhantomEgg_State_EnterEggman;
 
-            foreach_active(TMZCable, cable)
             {
-                cable->parentPos = &self->position;
-                cable->state     = TMZCable_State_Idle;
+                foreach_active(TMZCable, cable)
+                {
+                    cable->parentPos = &self->position;
+                    cable->state     = TMZCable_State_Idle;
+                }
             }
 
-            int32 missileAngles[] = { -24, -10, 10, 24 };
-            int32 angle           = 0;
-            int32 id              = 0;
-            foreach_all(PhantomMissile, missile)
+            angle           = 0;
+            id              = 0;
             {
-                missile->angle          = missileAngles[id];
-                missile->oscillateAngle = angle;
-                missile->active         = ACTIVE_NORMAL;
-                missile->parent         = self;
-                missile->id             = id++;
-                angle += 64;
+                foreach_all(PhantomMissile, missile)
+                {
+                    missile->angle          = missileAngles[id];
+                    missile->oscillateAngle = angle;
+                    missile->active         = ACTIVE_NORMAL;
+                    missile->parent         = self;
+                    missile->id             = id++;
+                    angle += 64;
+                }
             }
 
             Music_TransitionTrack(TRACK_EGGMAN1, 0.0125);
@@ -612,7 +644,9 @@ void PhantomEgg_State_AdjustStartingPos(void)
 
     if (++self->timer == 16) {
         self->timer = 0;
-        foreach_active(TMZAlert, alert) { alert->state = TMZAlert_State_Activating; }
+        {
+            foreach_active(TMZAlert, alert) { alert->state = TMZAlert_State_Activating; }
+        }
         self->state = PhantomEgg_State_IntroHover;
     }
 }
@@ -672,11 +706,12 @@ void PhantomEgg_State_BeginFight(void)
 
 void PhantomEgg_State_MoveAround(void)
 {
+    int32 startX;
     RSDK_THIS(PhantomEgg);
 
     PhantomEgg_HandleAnimations();
 
-    int32 startX = self->position.x;
+    startX = self->position.x;
     if (self->position.x >= self->targetPos.x - 0x100000) {
         if (self->position.x > self->targetPos.x + 0x100000)
             self->velocity.x -= 0x1800;
@@ -698,11 +733,12 @@ void PhantomEgg_State_MoveAround(void)
     }
 
     if (self->timer <= 0) {
+        int32 angle;
         self->timer            = RSDK.Rand(0x30, 0x60);
         self->targetVelocity.x = self->targetPos.x + RSDK.Rand(-0x600000, 0x600000);
         self->targetVelocity.y = self->targetPos.y + RSDK.Rand(-0x200000, 0x200000);
 
-        int32 angle            = RSDK.ATan2((self->targetVelocity.x - self->targetPos.x) >> 16, (self->targetVelocity.y - self->targetPos.y) >> 16);
+        angle            = RSDK.ATan2((self->targetVelocity.x - self->targetPos.x) >> 16, (self->targetVelocity.y - self->targetPos.y) >> 16);
         self->targetVelocity.x = RSDK.Cos256(angle) << 9;
         self->targetVelocity.y = RSDK.Sin256(angle) << 9;
         PhantomEgg_HandleNextAttack();
@@ -727,6 +763,7 @@ void PhantomEgg_State_MoveAround(void)
 
 void PhantomEgg_State_Attack_Jumped(void)
 {
+    Hitbox *hitbox;
     RSDK_THIS(PhantomEgg);
 
     PhantomEgg_HandleAnimations();
@@ -735,7 +772,7 @@ void PhantomEgg_State_Attack_Jumped(void)
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    Hitbox *hitbox = RSDK.GetHitbox(&self->legAnimator, 0);
+    hitbox = RSDK.GetHitbox(&self->legAnimator, 0);
     if (RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, hitbox->bottom << 16, true)) {
         RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 4, &self->armLAnimator, true, 0);
         RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 4, &self->armRAnimator, true, 0);
@@ -755,6 +792,7 @@ void PhantomEgg_State_Attack_Jumped(void)
 
 void PhantomEgg_State_Attack_JumpLand(void)
 {
+    Hitbox *hitbox;
     RSDK_THIS(PhantomEgg);
 
     RSDK.ProcessAnimation(&self->armLAnimator);
@@ -763,7 +801,7 @@ void PhantomEgg_State_Attack_JumpLand(void)
 
     PhantomEgg_HandleAnimations();
 
-    Hitbox *hitbox = RSDK.GetHitbox(&self->legAnimator, 0);
+    hitbox = RSDK.GetHitbox(&self->legAnimator, 0);
     RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, hitbox->bottom << 16, 16);
 
     if (self->legAnimator.frameID == 5)
@@ -825,18 +863,22 @@ void PhantomEgg_State_Attack_CableShock(void)
         RSDK.PlaySfx(PhantomEgg->sfxShock, false, 255);
 
     if (++self->timer == 30) {
-        foreach_active(TMZCable, cable)
         {
-            if (cable->state != TMZCable_State_Destroyed) {
-                RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 10, &cable->animator, true, 0);
-                cable->state = TMZCable_State_Charge;
+            foreach_active(TMZCable, cable)
+            {
+                if (cable->state != TMZCable_State_Destroyed) {
+                    RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 10, &cable->animator, true, 0);
+                    cable->state = TMZCable_State_Charge;
+                }
             }
         }
-
-        foreach_active(PhantomShield, shield)
+    
         {
-            RSDK.SetSpriteAnimation(PhantomShield->aniFrames, 2, &shield->animator, true, 0);
-            shield->state = PhantomShield_State_Disappear;
+            foreach_active(PhantomShield, shield)
+            {
+                RSDK.SetSpriteAnimation(PhantomShield->aniFrames, 2, &shield->animator, true, 0);
+                shield->state = PhantomShield_State_Disappear;
+            }
         }
     }
 
@@ -899,9 +941,10 @@ void PhantomEgg_State_Attack_GrabPlayers(void)
     RSDK.SetLimitedFade(0, 1, 2, self->palBlendPercent, 128, 256);
 
     if (!self->timer) {
+        EntityPhantomHand *hand; 
         CREATE_ENTITY(PhantomHand, self, self->position.x - 0x400000, self->position.y)->velocity.x = -0x8000;
 
-        EntityPhantomHand *hand = CREATE_ENTITY(PhantomHand, self, self->position.x + 0x400000, self->position.y);
+        hand = CREATE_ENTITY(PhantomHand, self, self->position.x + 0x400000, self->position.y);
         hand->direction         = FLIP_X;
         hand->velocity.x        = 0x8000;
     }
@@ -1001,6 +1044,7 @@ void PhantomEgg_State_Destroyed(void)
 
     if (!RSDK.GetEntityCount(TMZCable->classID, true)) {
         int32 id = 0;
+        int32 i;
         foreach_active(PhantomMissile, missile)
         {
             switch (id++) {
@@ -1034,16 +1078,18 @@ void PhantomEgg_State_Destroyed(void)
             missile->state = PhantomMissile_State_Destroyed;
         }
 
-        foreach_active(PhantomShield, shield)
         {
-            RSDK.SetSpriteAnimation(PhantomShield->aniFrames, 2, &shield->animator, true, 0);
-            shield->state = PhantomShield_State_Disappear;
+            foreach_active(PhantomShield, shield)
+            {
+                RSDK.SetSpriteAnimation(PhantomShield->aniFrames, 2, &shield->animator, true, 0);
+                shield->state = PhantomShield_State_Disappear;
+            }
         }
 
         CREATE_ENTITY(TMZ2Outro, NULL, self->position.x, self->position.y);
         RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 8, &self->legAnimator, true, 1);
 
-        for (int32 i = 0; i < 0x100; ++i) RSDK.SetPaletteEntry(7, i, RSDK.GetPaletteEntry(1, i) & 0xFF0000);
+        for (i = 0; i < 0x100; ++i) RSDK.SetPaletteEntry(7, i, RSDK.GetPaletteEntry(1, i) & 0xFF0000);
 
         self->state = PhantomEgg_State_Exploding;
     }
@@ -1062,11 +1108,12 @@ void PhantomEgg_State_Exploding(void)
     PhantomEgg_Explode(&self->hitbox);
 
     if (++self->timer == 152) {
+        bool32 goodEnd; 
         self->timer      = 0;
         self->position.x = PhantomEgg->boundsM;
         self->position.y = PhantomEgg->boundsB - 0x400000;
 
-        bool32 goodEnd = (CHECK_CHARACTER_ID(ID_SONIC, 1) || (CHECK_CHARACTER_ID(ID_KNUCKLES, 1) && CHECK_CHARACTER_ID(ID_KNUCKLES, 2)))
+        goodEnd = (CHECK_CHARACTER_ID(ID_SONIC, 1) || (CHECK_CHARACTER_ID(ID_KNUCKLES, 1) && CHECK_CHARACTER_ID(ID_KNUCKLES, 2)))
                          && SaveGame_AllChaosEmeralds();
 
 #if MANIA_USE_PLUS
@@ -1088,13 +1135,14 @@ void PhantomEgg_State_StartBadEnd(void)
     RSDK_THIS(PhantomEgg);
 
     if (++self->timer == 30) {
+        EntityPhantomRuby *ruby;
         self->timer = 0;
         RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 1, &self->crackAnimator, false, 0);
         self->stateDraw = PhantomEgg_Draw_Cracked;
 
         RSDK.PlaySfx(PhantomEgg->sfxRocketJet, false, 255);
 
-        EntityPhantomRuby *ruby = CREATE_ENTITY(PhantomRuby, NULL, self->position.x, self->position.y + 0x100000);
+        ruby = CREATE_ENTITY(PhantomRuby, NULL, self->position.x, self->position.y + 0x100000);
         ruby->state             = PhantomRuby_State_MoveRotateGravity_CheckGround;
         ruby->velocity.x        = -0x10000;
         ruby->velocity.y        = -0x20000;
@@ -1117,22 +1165,25 @@ void PhantomEgg_State_CrackOpen(void)
     }
 
     if (self->timer == 64) {
+        EntityEggman *eggman;
         RSDK.SetSpriteAnimation(PhantomEgg->aniFrames, 2, &self->crackAnimator, false, 0);
 
         self->drawGroup = Zone->objectDrawGroup[0] + 1;
         self->stateDraw = StateMachine_None;
 
-        EntityEggman *eggman = CREATE_ENTITY(Eggman, NULL, self->position.x, self->position.y + 0x100000);
+        eggman = CREATE_ENTITY(Eggman, NULL, self->position.x, self->position.y + 0x100000);
         RSDK.SetSpriteAnimation(Eggman->aniFrames, 7, &eggman->animator, true, 0);
         eggman->onGround = false;
         eggman->state    = Eggman_State_FallAndCollide;
     }
 
-    foreach_active(Eggman, eggman)
     {
-        eggman->position.x = self->position.x;
-        eggman->position.y = self->position.y;
-        eggman->velocity.y = 0;
+        foreach_active(Eggman, eggman)
+        {
+            eggman->position.x = self->position.x;
+            eggman->position.y = self->position.y;
+            eggman->velocity.y = 0;
+        }
     }
 
     if (self->timer == 96) {

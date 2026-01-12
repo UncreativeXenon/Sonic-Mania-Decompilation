@@ -19,10 +19,12 @@ void LightBarrier_LateUpdate(void)
         if (self->barrierAlpha < 0xA0)
             self->barrierAlpha += 4;
 
-        foreach_active(Player, player)
         {
-            if (self->position.x > (ScreenInfo->position.x + ScreenInfo->center.x) << 16 || player->velocity.x < 0)
-                Player_CheckCollisionBox(player, self, &self->hitboxBarrier);
+            foreach_active(Player, player)
+            {
+                if (self->position.x > (ScreenInfo->position.x + ScreenInfo->center.x) << 16 || player->velocity.x < 0)
+                    Player_CheckCollisionBox(player, self, &self->hitboxBarrier);
+            }
         }
 
         self->timer = (self->timer + 2) & 0x3F;
@@ -49,13 +51,17 @@ void LightBarrier_Draw(void)
 
     self->direction = FLIP_NONE;
     if (self->enabled) {
+        int32 timer;
+        SpriteFrame *frame;
+        int32 size;
+        int32 i;
         self->inkEffect    = INK_ADD;
-        int32 timer        = self->timer;
-        SpriteFrame *frame = RSDK.GetFrame(LightBarrier->aniFrames, 0, 1);
+        timer        = self->timer;
+        frame = RSDK.GetFrame(LightBarrier->aniFrames, 0, 1);
         drawPos.y += 0x80000;
 
-        int32 size = self->size - 8;
-        for (int32 i = 8; i < size;) {
+        size = self->size - 8;
+        for (i = 8; i < size;) {
             int32 height = 64 - timer;
             if (64 - timer + i > size)
                 height = size - i;
@@ -77,6 +83,7 @@ void LightBarrier_Create(void *data)
 
     self->drawFX = FX_FLIP;
     if (!SceneInfo->inEditor) {
+        SpriteFrame *frame;
         self->active        = ACTIVE_BOUNDS;
         self->visible       = true;
         self->drawGroup     = Zone->objectDrawGroup[1];
@@ -85,7 +92,7 @@ void LightBarrier_Create(void *data)
 
         RSDK.SetSpriteAnimation(LightBarrier->aniFrames, 0, &self->emitterAnimator, true, 0);
         RSDK.SetSpriteAnimation(LightBarrier->aniFrames, 0, &self->barrierAnimator, true, 1);
-        SpriteFrame *frame = RSDK.GetFrame(LightBarrier->aniFrames, 0, 1);
+        frame = RSDK.GetFrame(LightBarrier->aniFrames, 0, 1);
         self->sprY         = frame->sprY;
 
         self->hitboxBarrier.left   = -8;

@@ -49,7 +49,8 @@ void AIZSetup_StaticUpdate(void)
         }
 
         if (!(Zone->timer & 1)) {
-            for (int32 i = Zone->fgLayer[0]; i <= Zone->fgLayer[1]; ++i) {
+            int32 i; 
+            for (i = Zone->fgLayer[0]; i <= Zone->fgLayer[1]; ++i) {
                 RSDK.GetTileLayer(i)->deformationOffsetW++;
             }
         }
@@ -137,11 +138,17 @@ void AIZSetup_StageLoad(void)
         // AIZSetup->background4 = NULL;
         // (though you should prolly clear the other 3 as well)
 
-        for (int32 i = Zone->fgLayer[0]; i <= Zone->fgLayer[1]; ++i) {
-            int32 *deformData = RSDK.GetTileLayer(i)->deformationDataW;
+        int32 i;
+        int32 d;
+        int32 id;
+        int32 angle;
+        int32 deform;
+        int32 *deformData;
+        for (i = Zone->fgLayer[0]; i <= Zone->fgLayer[1]; ++i) {
+            deformData = RSDK.GetTileLayer(i)->deformationDataW;
 
-            int32 angle = 0;
-            for (int32 d = 0; d < 0x200; ++d) {
+            angle = 0;
+            for (d = 0; d < 0x200; ++d) {
                 deformData[d] = (2 * RSDK.Sin1024(angle)) >> 10;
                 angle += 16;
             }
@@ -149,13 +156,13 @@ void AIZSetup_StageLoad(void)
             memcpy(&deformData[0x200], &deformData[0], (0x200 * sizeof(int32)));
         }
 
-        int32 *deformData = RSDK.GetTileLayer(0)->deformationDataW;
-        for (int32 d = 0; d < 0x200; d += 16) {
-            int32 id = MAX(d, 0);
+        deformData = RSDK.GetTileLayer(0)->deformationDataW;
+        for (d = 0; d < 0x200; d += 16) {
+            id = MAX(d, 0);
 
-            int32 angle  = 0;
-            int32 deform = RSDK.Rand(0, 4);
-            for (int32 i = 0; i < 16; ++i) {
+            angle  = 0;
+            deform = RSDK.Rand(0, 4);
+            for (i = 0; i < 16; ++i) {
                 deformData[id + i] = (deform * RSDK.Sin1024(angle)) >> 10;
                 angle += 64;
             }
@@ -164,17 +171,18 @@ void AIZSetup_StageLoad(void)
     }
     else {
 #endif
+        int32 i;
         AIZSetup->background1 = RSDK.GetTileLayer(RSDK.GetTileLayerID("Background 1"));
         AIZSetup->background2 = RSDK.GetTileLayer(RSDK.GetTileLayerID("Background 2"));
         AIZSetup->background3 = RSDK.GetTileLayer(RSDK.GetTileLayerID("Background 3"));
         AIZSetup->background4 = RSDK.GetTileLayer(RSDK.GetTileLayerID("Background 4"));
 
-        for (int32 i = 0; i < AIZSetup->background2->scrollInfoCount; ++i) {
+        for (i = 0; i < AIZSetup->background2->scrollInfoCount; ++i) {
             int32 parallaxFactor                           = AIZSetup->background2->scrollInfo[i].parallaxFactor;
             AIZSetup->background2->scrollInfo[i].scrollPos = -TO_FIXED(0x700) - (TO_FIXED(34) * parallaxFactor);
         }
 
-        for (int32 i = 0; i < AIZSetup->background3->scrollInfoCount; ++i) {
+        for (i = 0; i < AIZSetup->background3->scrollInfoCount; ++i) {
             int32 parallaxFactor                           = AIZSetup->background3->scrollInfo[i].parallaxFactor;
             AIZSetup->background3->scrollInfo[i].scrollPos = -TO_FIXED(0x700) - (TO_FIXED(34) * parallaxFactor);
         }
@@ -193,8 +201,12 @@ void AIZSetup_StageLoad(void)
     AIZSetup->sfxHeliWoosh = RSDK.GetSfx("SPZ1/HeliWooshIn.wav");
 
     if (CHECK_CHARACTER_ID(ID_KNUCKLES, 1)) {
-        foreach_all(AIZTornado, tornado) { destroyEntity(tornado); }
-        foreach_all(AIZTornadoPath, node) { destroyEntity(node); }
+        {
+            foreach_all(AIZTornado, tornado) { destroyEntity(tornado); }
+        }
+        {
+            foreach_all(AIZTornadoPath, node) { destroyEntity(node); }
+        }
     }
 
 #if MANIA_USE_PLUS
@@ -270,35 +282,45 @@ void AIZSetup_HandleHeavyMovement(void)
 
 void AIZSetup_SetupObjects(void)
 {
-    foreach_all(AIZTornado, tornado)
     {
-        AIZSetup->tornado = tornado;
-        foreach_break;
-    }
-
-    foreach_all(Platform, platform)
-    {
-        if (!platform->frameID) {
-            platform->drawGroup = Zone->objectDrawGroup[1] - 1;
-            AIZSetup->platform  = platform;
+        foreach_all(AIZTornado, tornado)
+        {
+            AIZSetup->tornado = tornado;
             foreach_break;
         }
     }
 
-    foreach_all(AIZKingClaw, claw)
     {
-        AIZSetup->claw = claw;
-        foreach_break;
+        foreach_all(Platform, platform)
+        {
+            if (!platform->frameID) {
+                platform->drawGroup = Zone->objectDrawGroup[1] - 1;
+                AIZSetup->platform  = platform;
+                foreach_break;
+            }
+        }
     }
 
-    foreach_all(PhantomRuby, ruby)
     {
-        AIZSetup->phantomRuby = ruby;
-        foreach_break;
+        foreach_all(AIZKingClaw, claw)
+        {
+            AIZSetup->claw = claw;
+            foreach_break;
+        }
     }
 
-    int32 id = 0;
-    foreach_all(Decoration, decoration) { AIZSetup->decorations[id++] = decoration; }
+    {
+        foreach_all(PhantomRuby, ruby)
+        {
+            AIZSetup->phantomRuby = ruby;
+            foreach_break;
+        }
+    }
+
+    {
+        int32 id = 0;
+        foreach_all(Decoration, decoration) { AIZSetup->decorations[id++] = decoration; }
+    }
 }
 
 void AIZSetup_GetCutsceneSetupPtr(void)
@@ -345,8 +367,9 @@ void AIZSetup_CutsceneST_Setup(void)
 
 bool32 AIZSetup_CutsceneSonic_EnterAIZ(EntityCutsceneSeq *host)
 {
+    EntityAIZTornado *tornado;
     MANIA_GET_PLAYER(player1, player2, camera);
-    EntityAIZTornado *tornado = AIZSetup->tornado;
+    tornado = AIZSetup->tornado;
 
     if (!host->timer) {
         CutsceneSeq_LockAllPlayerControl();
@@ -500,13 +523,18 @@ bool32 AIZSetup_CutsceneSonic_WatchClaw(EntityCutsceneSeq *host)
 }
 bool32 AIZSetup_CutsceneSonic_RubyGrabbed(EntityCutsceneSeq *host)
 {
+    EntityAIZKingClaw *claw;
+    EntityPlatform *platform;
+    EntityPhantomRuby *ruby;
+    int32 i;
+
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player1);
     UNUSED(camera);
 
-    EntityAIZKingClaw *claw  = AIZSetup->claw;
-    EntityPlatform *platform = AIZSetup->platform;
-    EntityPhantomRuby *ruby  = AIZSetup->phantomRuby;
+    claw  = AIZSetup->claw;
+    platform = AIZSetup->platform;
+    ruby  = AIZSetup->phantomRuby;
 
     if (!host->timer) {
         claw->grabbedEntities[0] = (Entity *)platform;
@@ -522,7 +550,7 @@ bool32 AIZSetup_CutsceneSonic_RubyGrabbed(EntityCutsceneSeq *host)
 
         claw->position.y -= 0x4000;
 
-        for (int32 i = 0; i < 3; ++i) {
+        for (i = 0; i < 3; ++i) {
             EntityDecoration *decor = AIZSetup->decorations[i];
             decor->drawFX |= FX_ROTATE;
             decor->rotation = ((2 * (!(i & 1)) - 1) * RSDK.Sin256(16 * host->timer)) >> 7;
@@ -582,12 +610,15 @@ bool32 AIZSetup_CutsceneSonic_RubyAppear(EntityCutsceneSeq *host)
 }
 bool32 AIZSetup_CutsceneSonic_RubyFX(EntityCutsceneSeq *host)
 {
+    EntityPhantomRuby *ruby;
+    EntityFXRuby *fxRuby;
+
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityPhantomRuby *ruby = AIZSetup->phantomRuby;
+    ruby = AIZSetup->phantomRuby;
 
-    EntityFXRuby *fxRuby = NULL;
+    fxRuby = NULL;
     if (host->timer) {
         fxRuby = AIZSetup->fxRuby;
     }
@@ -625,15 +656,19 @@ bool32 AIZSetup_CutsceneSonic_RubyFX(EntityCutsceneSeq *host)
             }
 
             if (host->timer >= host->storedTimer + 32) {
+                int32 angle;
                 int32 id = 0;
-                for (int32 angle = 0; angle < 0x80; angle += 0x40) {
+                for (angle = 0; angle < 0x80; angle += 0x40) {
+                    int32 moveX;
+                    int32 moveY;
+
                     EntityPlayer *player = RSDK_GET_ENTITY(id++, Player);
                     if (!player || player->classID == TYPE_BLANK)
                         break;
                     RSDK.SetSpriteAnimation(player->aniFrames, ANI_FAN, &player->animator, false, 0);
 
-                    int32 moveX = (player->position.x - player->position.x) >> 3;
-                    int32 moveY = (0xA00 * RSDK.Sin256(2 * (host->timer + angle - host->storedTimer)) + ruby->position.y - player->position.y) >> 3;
+                    moveX = (player->position.x - player->position.x) >> 3;
+                    moveY = (0xA00 * RSDK.Sin256(2 * (host->timer + angle - host->storedTimer)) + ruby->position.y - player->position.y) >> 3;
 
                     player->position.x += moveX;
                     player->position.y += moveY;
@@ -738,10 +773,12 @@ bool32 AIZSetup_CutsceneKnux_PrepareForTrouble(EntityCutsceneSeq *host)
 
     if (!host->timer) {
         RSDK.SetSpriteAnimation(AIZSetup->knuxFrames, 3, &player1->animator, true, 0);
-        foreach_active(Animals, animal)
         {
-            animal->active    = ACTIVE_NORMAL;
-            animal->behaviour = ANIMAL_BEHAVE_FREE;
+            foreach_active(Animals, animal)
+            {
+                animal->active    = ACTIVE_NORMAL;
+                animal->behaviour = ANIMAL_BEHAVE_FREE;
+            }
         }
     }
 
@@ -772,12 +809,14 @@ bool32 AIZSetup_CutsceneKnux_EnterThreat(EntityCutsceneSeq *host)
 }
 bool32 AIZSetup_CutsceneKnux_HeaviesAppear(EntityCutsceneSeq *host)
 {
+    EntityAIZKingClaw *claw;
+    EntityPhantomRuby *ruby;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player2);
     UNUSED(camera);
 
-    EntityAIZKingClaw *claw = AIZSetup->claw;
-    EntityPhantomRuby *ruby = AIZSetup->phantomRuby;
+    claw = AIZSetup->claw;
+    ruby = AIZSetup->phantomRuby;
 
     if (!host->timer) {
         claw->grabbedEntities[0] = (Entity *)AIZSetup->platform;
@@ -798,17 +837,19 @@ bool32 AIZSetup_CutsceneKnux_HeaviesAppear(EntityCutsceneSeq *host)
 }
 bool32 AIZSetup_CutsceneKnux_RubyImpact(EntityCutsceneSeq *host)
 {
+    EntityPhantomRuby *ruby;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(camera);
 
-    EntityPhantomRuby *ruby = AIZSetup->phantomRuby;
+    ruby = AIZSetup->phantomRuby;
 
     if (!host->timer) {
+        EntityFXRuby *fxRuby;
         RSDK.PlaySfx(AIZSetup->sfxImpact, false, 0x00);
         PhantomRuby_PlaySfx(RUBYSFX_REDCUBE);
         Music_TransitionTrack(TRACK_EGGMAN1, 1.0);
 
-        EntityFXRuby *fxRuby     = CREATE_ENTITY(FXRuby, NULL, ruby->position.x, ruby->position.y);
+        fxRuby     = CREATE_ENTITY(FXRuby, NULL, ruby->position.x, ruby->position.y);
         fxRuby->drawGroup        = Zone->playerDrawGroup[1];
         AIZSetup->fxRuby         = fxRuby;
         player1->velocity.x      = 0x20000;
@@ -851,11 +892,12 @@ bool32 AIZSetup_CutsceneKnux_RubyImpact(EntityCutsceneSeq *host)
 }
 bool32 AIZSetup_CutsceneKnux_RubyFX(EntityCutsceneSeq *host)
 {
+    EntityFXRuby *fxRuby;
     MANIA_GET_PLAYER(player1, player2, camera);
     UNUSED(player2);
     UNUSED(camera);
 
-    EntityFXRuby *fxRuby = AIZSetup->fxRuby;
+    fxRuby = AIZSetup->fxRuby;
 
     if (player1->velocity.x > 0)
         player1->velocity.x -= 0x1000;

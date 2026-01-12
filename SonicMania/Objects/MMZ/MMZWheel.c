@@ -11,6 +11,8 @@ ObjectMMZWheel *MMZWheel;
 
 void MMZWheel_Update(void)
 {
+    int32 id;
+    int32 i;
     RSDK_THIS(MMZWheel);
 
     RSDK.ProcessAnimation(&self->animator);
@@ -40,8 +42,8 @@ void MMZWheel_Update(void)
     self->offset.x += self->position.x;
     self->offset.y += self->position.y;
 
-    int32 id = SceneInfo->entitySlot;
-    for (int32 i = 0; i < self->childCount; ++i) {
+    id = SceneInfo->entitySlot;
+    for (i = 0; i < self->childCount; ++i) {
         Entity *child = RSDK_GET_ENTITY_GEN(++id);
         child->position.x += self->offset.x;
         child->position.y += self->offset.y;

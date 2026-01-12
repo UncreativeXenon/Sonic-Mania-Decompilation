@@ -114,14 +114,16 @@ void MegaChopper_CheckOffScreen(void)
     if (!RSDK.CheckOnScreen(self, NULL) && RSDK.CheckPosOnScreen(&self->startPos, &self->updateRange) == false) {
         self->position = self->startPos;
 
-        EntityPlayer *player = self->grabbedPlayer;
-        if (player) {
-            if (player->stateInput == MegaChopper_Input_GrabbedP1)
-                player->stateInput = Player_Input_P1;
-            else if (player->stateInput == MegaChopper_Input_GrabbedP2)
-                player->stateInput = Player_Input_P2_Player;
-            else if (player->stateInput == MegaChopper_Input_GrabbedP2_AI)
-                player->stateInput = Player_Input_P2_AI;
+        {
+            EntityPlayer *player = self->grabbedPlayer;
+            if (player) {
+                if (player->stateInput == MegaChopper_Input_GrabbedP1)
+                    player->stateInput = Player_Input_P1;
+                else if (player->stateInput == MegaChopper_Input_GrabbedP2)
+                    player->stateInput = Player_Input_P2_Player;
+                else if (player->stateInput == MegaChopper_Input_GrabbedP2_AI)
+                    player->stateInput = Player_Input_P2_AI;
+            }
         }
 
         self->nibbleTimer = 0;
@@ -193,6 +195,7 @@ void MegaChopper_State_Init(void)
 
 void MegaChopper_State_InWater(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(MegaChopper);
 
     if (++self->animator.frameID == 6)
@@ -201,7 +204,7 @@ void MegaChopper_State_InWater(void)
     if (self->animator.frameID == 12)
         self->animator.frameID = 6;
 
-    EntityPlayer *player = Player_GetNearestPlayer();
+    player = Player_GetNearestPlayer();
     if (self->position.x >= player->position.x) {
         self->velocity.x -= 0x800;
 
@@ -280,6 +283,7 @@ void MegaChopper_State_OutOfWater(void)
 
 void MegaChopper_State_Chopping(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(MegaChopper);
 
     if (++self->animator.timer == 3) {
@@ -287,7 +291,7 @@ void MegaChopper_State_Chopping(void)
         self->animator.frameID = (self->animator.frameID + 6) % 12;
     }
 
-    EntityPlayer *player = self->grabbedPlayer;
+    player = self->grabbedPlayer;
 
     if (!player) {
         self->velocity.x = self->direction == FLIP_NONE ? 0x20000 : -0x20000;
@@ -349,9 +353,10 @@ void MegaChopper_State_Chopping(void)
                         self->lastShakeFlags = 0;
                     }
                     else {
+                        uint8 shakeFlags;
                         self->shakeTimer--;
 
-                        uint8 shakeFlags = 0;
+                        shakeFlags = 0;
                         if (player->left)
                             shakeFlags = 1;
                         if (player->right)

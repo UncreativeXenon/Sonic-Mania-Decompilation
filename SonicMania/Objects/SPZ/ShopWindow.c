@@ -87,10 +87,12 @@ void ShopWindow_Create(void *data)
             RSDK.SetSpriteAnimation(ShopWindow->aniFrames, 0, &self->animator, false, 0);
         }
 
-        foreach_all(CircleBumper, bumper)
-        {
-            if (RSDK.CheckObjectCollisionTouchBox(bumper, &CircleBumper->hitboxBumper, self, &self->hitboxItem))
-                bumper->drawGroup = Zone->objectDrawGroup[0];
+{
+            foreach_all(CircleBumper, bumper)
+            {
+                if (RSDK.CheckObjectCollisionTouchBox(bumper, &CircleBumper->hitboxBumper, self, &self->hitboxItem))
+                    bumper->drawGroup = Zone->objectDrawGroup[0];
+            }
         }
     }
 }
@@ -128,13 +130,15 @@ void ShopWindow_State_Shattered(void)
     RSDK_THIS(ShopWindow);
 
     if (++self->animator.timer == 2) {
+        int32 y;
         int32 cntY = (self->size.y >> 3) + 1;
         int32 cntX = (self->size.x >> 3) + 1;
 
         int32 posY = self->position.y - (self->size.y << 16) + 0x80000;
-        for (int32 y = 0; y < cntY; ++y) {
+        for (y = 0; y < cntY; ++y) {
+            int32 x;
             int32 posX = self->position.x - (self->size.x << 16) + 0x80000;
-            for (int32 x = 0; x < cntX; ++x) {
+            for (x = 0; x < cntX; ++x) {
                 EntityShopWindow *shard =
                     CREATE_ENTITY(ShopWindow, INT_TO_VOID(true), posX + ((RSDK.Rand(0, 8) - 4) << 16), posY + ((RSDK.Rand(0, 8) - 4) << 16));
 

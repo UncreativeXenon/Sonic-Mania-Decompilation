@@ -29,11 +29,13 @@ void TitleEggman_Draw(void)
         RSDK.DrawSprite(&self->smokeAnimator, NULL, false);
     }
     else {
+        int32 angle;
+        int32 i;
         Vector2 drawPos;
         self->drawFX = FX_NONE;
-        int32 angle  = RSDK.Sin256(2 * self->timer) >> 1;
+        angle  = RSDK.Sin256(2 * self->timer) >> 1;
 
-        for (int32 i = 1; i < 5; ++i) {
+        for (i = 1; i < 5; ++i) {
             drawPos.x = (i << 8) * RSDK.Sin1024(angle) + self->position.x;
             drawPos.y = self->position.y + 0x80000 + (i << 8) * RSDK.Cos1024(angle);
             RSDK.DrawSprite(&self->chainAnimator, &drawPos, false);

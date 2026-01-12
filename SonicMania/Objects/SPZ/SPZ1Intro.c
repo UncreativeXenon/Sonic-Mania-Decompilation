@@ -53,11 +53,13 @@ void SPZ1Intro_StageLoad(void)
 
 bool32 SPZ1Intro_Cutscene_SetupAct(EntityCutsceneSeq *host)
 {
+    Entity *curEnt;
     RSDK_THIS(SPZ1Intro);
     MANIA_GET_PLAYER(player1, player2, camera);
 
-    Entity *curEnt = host->activeEntity;
+    curEnt = host->activeEntity;
     if (!host->timer) {
+        EntityDebris *lid;
         player1->position.x = self->position.x;
         camera->position.x  = self->position.x;
         player1->position.y += 0x250000;
@@ -80,7 +82,7 @@ bool32 SPZ1Intro_Cutscene_SetupAct(EntityCutsceneSeq *host)
             RSDK.SetSpriteAnimation(player2->aniFrames, ANI_JUMP, &player2->animator, false, 0);
         }
 
-        EntityDebris *lid  = CREATE_ENTITY(Debris, NULL, curEnt->position.x, curEnt->position.y + 0x390000);
+        lid  = CREATE_ENTITY(Debris, NULL, curEnt->position.x, curEnt->position.y + 0x390000);
         lid->drawGroup     = Zone->playerDrawGroup[1];
         lid->state         = StateMachine_None;
         lid->drawFX        = FX_SCALE | FX_ROTATE;
@@ -118,6 +120,7 @@ bool32 SPZ1Intro_Cutscene_ExitPipe(EntityCutsceneSeq *host)
     UNUSED(camera);
 
     if (!host->timer) {
+        EntityDebris *lid;
         player1->velocity.x      = 0;
         player1->velocity.y      = -0x80000;
         player1->state           = Player_State_Air;
@@ -127,7 +130,7 @@ bool32 SPZ1Intro_Cutscene_ExitPipe(EntityCutsceneSeq *host)
         RSDK.PlaySfx(SPZ1Intro->sfxPon, false, 0xFF);
         RSDK.StopSfx(Player->sfxRoll);
         Camera_ShakeScreen(0, 0, 2);
-        EntityDebris *lid    = SPZ1Intro->sewerLid;
+        lid    = SPZ1Intro->sewerLid;
         lid->state           = Debris_State_Fall;
         lid->velocity.y      = -0x60000;
         lid->velocity.x      = -0x18000;

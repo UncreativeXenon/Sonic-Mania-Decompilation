@@ -125,11 +125,12 @@ void SilverSonic_CheckPlayerCollisions_Badnik(void)
         if (Player_CheckBadnikTouch(player, self, self->innerBox)) {
 #if MANIA_USE_PLUS
             if (Player_CheckBadnikBreak(player, self, false)) {
+                EntityMSBomb *bomb;
                 int32 x = self->position.x;
                 int32 y = self->position.y;
                 RSDK.ResetEntity(self, MSBomb->classID, NULL);
 
-                EntityMSBomb *bomb = (EntityMSBomb *)self;
+                bomb = (EntityMSBomb *)self;
                 bomb->position.x   = x;
                 bomb->position.y   = y;
 
@@ -177,11 +178,12 @@ void SilverSonic_CheckPlayerCollisions_Ball(void)
                     }
                     else {
                         if (abs(player->velocity.x) + abs(player->velocity.y) <= 0x40000) {
+                            int32 angle;
                             player->groundVel  = self->velocity.x;
                             player->velocity.x = self->velocity.x;
                             player->velocity.y = self->velocity.y;
 
-                            int32 angle      = RSDK.ATan2(self->position.x - player->position.x, self->position.y - player->position.y);
+                            angle      = RSDK.ATan2(self->position.x - player->position.x, self->position.y - player->position.y);
                             self->velocity.x = RSDK.Cos256(angle) << 10;
                             self->velocity.y = RSDK.Sin256(angle) << 10;
                         }
@@ -227,11 +229,12 @@ void SilverSonic_CheckPlayerCollisions_Arm(void)
                     Player_Hurt(player, self);
                 }
                 else if (Player_CheckBadnikBreak(player, self, false)) {
+                    EntityMSBomb *bomb;
                     int32 x = self->position.x;
                     int32 y = self->position.y;
                     RSDK.ResetEntity(self, MSBomb->classID, NULL);
 
-                    EntityMSBomb *bomb = (EntityMSBomb *)self;
+                    bomb = (EntityMSBomb *)self;
                     bomb->position.x   = x;
                     bomb->position.y   = y;
 
@@ -245,11 +248,12 @@ void SilverSonic_CheckPlayerCollisions_Arm(void)
                     Player_Hurt(player, self);
                 }
                 else if (Player_CheckBadnikBreak(player, self, false)) {
+                    EntityMSBomb *bomb;
                     int32 x = self->position.x;
                     int32 y = self->position.y;
                     RSDK.ResetEntity(self, MSBomb->classID, NULL);
 
-                    EntityMSBomb *bomb = (EntityMSBomb *)self;
+                    bomb = (EntityMSBomb *)self;
                     bomb->position.x   = x;
                     bomb->position.y   = y;
 
@@ -438,20 +442,22 @@ void SilverSonic_State_RollRebound(void)
         }
     }
 
-    foreach_active(MetalSonic, metal)
-    {
-        if (RSDK.CheckObjectCollisionTouchBox(metal, metal->outerBox, self, self->outerBox)) {
-            self->velocity.x = 0;
-            self->velocity.y = 0;
-            self->state      = SilverSonic_State_Explode;
+{
+        foreach_active(MetalSonic, metal)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(metal, metal->outerBox, self, self->outerBox)) {
+                self->velocity.x = 0;
+                self->velocity.y = 0;
+                self->state      = SilverSonic_State_Explode;
 
-            MetalSonic->invincibilityTimerPanel = 32;
-            Camera_ShakeScreen(0, -4, 1);
-            metal->health -= MANIA_USE_PLUS ? 2 : 1;
+                MetalSonic->invincibilityTimerPanel = 32;
+                Camera_ShakeScreen(0, -4, 1);
+                metal->health -= MANIA_USE_PLUS ? 2 : 1;
 
-            if (metal->health <= 0) {
-                metal->timer = 0;
-                metal->state = MetalSonic_State_PanelExplosion;
+                if (metal->health <= 0) {
+                    metal->timer = 0;
+                    metal->state = MetalSonic_State_PanelExplosion;
+                }
             }
         }
     }

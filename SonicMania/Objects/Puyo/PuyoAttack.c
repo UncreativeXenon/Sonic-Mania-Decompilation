@@ -11,6 +11,9 @@ ObjectPuyoAttack *PuyoAttack;
 
 void PuyoAttack_Update(void)
 {
+    int32 angle;
+    int32 rot;
+    int32 targetRotation;
     RSDK_THIS(PuyoAttack);
 
     if (self->delay > 0) {
@@ -22,9 +25,9 @@ void PuyoAttack_Update(void)
 
     RSDK.ProcessAnimation(&self->animator);
 
-    int32 angle          = RSDK.ATan2((self->targetPos.x - self->position.x) >> 16, (self->targetPos.y - self->position.y) >> 16);
-    int32 rot            = 2 * angle;
-    int32 targetRotation = rot - self->rotation;
+    angle          = RSDK.ATan2((self->targetPos.x - self->position.x) >> 16, (self->targetPos.y - self->position.y) >> 16);
+    rot            = 2 * angle;
+    targetRotation = rot - self->rotation;
 
     if (abs(rot - self->rotation) >= abs(targetRotation - 0x200)) {
         if (abs(targetRotation - 0x200) < abs(targetRotation + 0x200))

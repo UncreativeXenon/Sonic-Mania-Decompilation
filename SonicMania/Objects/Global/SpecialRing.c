@@ -84,42 +84,46 @@ void SpecialRing_StageLoad(void)
 
     DEBUGMODE_ADD_OBJ(SpecialRing);
 
-    foreach_all(SpecialRing, ring)
     {
-        if (ring->id <= 0 || globals->gameMode == MODE_TIMEATTACK || globals->gameMode == MODE_COMPETITION) {
-            ring->enabled = false;
-        }
-        else {
-            ring->enabled = !SaveGame_GetCollectedSpecialRing(ring->id);
+        foreach_all(SpecialRing, ring)
+        {
+            if (ring->id <= 0 || globals->gameMode == MODE_TIMEATTACK || globals->gameMode == MODE_COMPETITION) {
+                ring->enabled = false;
+            }
+            else {
+                ring->enabled = !SaveGame_GetCollectedSpecialRing(ring->id);
 
-            if (globals->specialRingID == ring->id) {
-                for (int32 p = 0; p < Player->playerCount; ++p) {
-                    EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
+                if (globals->specialRingID == ring->id) {
+                    int32 p;
+                    for (p = 0; p < Player->playerCount; ++p) {
+                        EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
 
-                    player->position.x = ring->position.x;
-                    player->position.y = ring->position.y + TO_FIXED(16);
-                    if (!p) {
-                        EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
-                        if (globals->gameMode != MODE_COMPETITION) {
-                            player2->position.x = player->position.x;
-                            player2->position.y = player->position.y;
-                            player2->direction  = player->direction;
-                            if (player->direction)
-                                player2->position.x += TO_FIXED(16);
-                            else
-                                player2->position.x -= TO_FIXED(16);
+                        player->position.x = ring->position.x;
+                        player->position.y = ring->position.y + TO_FIXED(16);
+                        if (!p) {
+                            EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+                            if (globals->gameMode != MODE_COMPETITION) {
+                                int32 f;
+                                player2->position.x = player->position.x;
+                                player2->position.y = player->position.y;
+                                player2->direction  = player->direction;
+                                if (player->direction)
+                                    player2->position.x += TO_FIXED(16);
+                                else
+                                    player2->position.x -= TO_FIXED(16);
 
-                            for (int32 f = 0; f < 0x10; ++f) {
-                                Player->leaderPositionBuffer[f].x = player->position.x;
-                                Player->leaderPositionBuffer[f].y = player->position.y;
+                                for (f = 0; f < 0x10; ++f) {
+                                    Player->leaderPositionBuffer[f].x = player->position.x;
+                                    Player->leaderPositionBuffer[f].y = player->position.y;
+                                }
                             }
                         }
                     }
-                }
 
-                SceneInfo->milliseconds = globals->tempMilliseconds;
-                SceneInfo->seconds      = globals->tempSeconds;
-                SceneInfo->minutes      = globals->tempMinutes;
+                    SceneInfo->milliseconds = globals->tempMilliseconds;
+                    SceneInfo->seconds      = globals->tempSeconds;
+                    SceneInfo->minutes      = globals->tempMinutes;
+                }
             }
         }
     }
@@ -142,12 +146,12 @@ void SpecialRing_DebugSpawn(void)
 
 void SpecialRing_State_Idle(void)
 {
+    Vector2 range;
     RSDK_THIS(SpecialRing);
 
     self->angleZ = (self->angleZ + 1) & 0x3FF;
     self->angleY = (self->angleY + 4) & 0x3FF;
 
-    Vector2 range;
     range.x = TO_FIXED(128);
     range.y = TO_FIXED(128);
     if (!RSDK.CheckOnScreen(self, &range))
@@ -209,7 +213,9 @@ void SpecialRing_State_Flash(void)
     RSDK.ProcessAnimation(&self->warpAnimator);
 
     if (!(Zone->timer & 3)) {
-        for (int32 i = 0; i < 3; ++i) {
+        int32 i;
+        for (i = 0; i < 3; ++i) {
+            int32 cnt;
             int32 x             = self->position.x + RSDK.Rand(-TO_FIXED(32), TO_FIXED(2)) + self->sparkleRadius;
             int32 y             = self->position.y + RSDK.Rand(-TO_FIXED(32), TO_FIXED(32));
             EntityRing *sparkle = CREATE_ENTITY(Ring, NULL, x, y);
@@ -220,7 +226,7 @@ void SpecialRing_State_Flash(void)
             sparkle->visible   = false;
             sparkle->drawGroup = Zone->objectDrawGroup[0];
             RSDK.SetSpriteAnimation(Ring->aniFrames, i % 3 + 2, &sparkle->animator, true, 0);
-            int32 cnt = sparkle->animator.frameCount;
+            cnt = sparkle->animator.frameCount;
             if (sparkle->animator.animationID == 2) {
                 sparkle->alpha = 0xE0;
                 cnt >>= 1;
@@ -253,11 +259,12 @@ void SpecialRing_State_Warp(void)
     RSDK_THIS(SpecialRing);
 
     if (++self->warpTimer == 30) {
+        SaveRAM *saveRAM;
         SaveGame_SaveGameState();
         RSDK.PlaySfx(SpecialRing->sfxSpecialWarp, false, 0xFE);
         destroyEntity(self);
 
-        SaveRAM *saveRAM       = SaveGame_GetSaveRAM();
+        saveRAM       = SaveGame_GetSaveRAM();
         saveRAM->storedStageID = SceneInfo->listPos;
         RSDK.SetScene("Special Stage", "");
         SceneInfo->listPos += saveRAM->nextSpecialStage;

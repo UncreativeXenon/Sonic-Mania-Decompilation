@@ -16,11 +16,12 @@ void PSZ2Setup_LateUpdate(void) {}
 void PSZ2Setup_StaticUpdate(void)
 {
     if (--PSZ2Setup->petalAniDuration < 1) {
+        int32 sheetY;
         ++PSZ2Setup->petalAniFrame;
         PSZ2Setup->petalAniFrame &= 7;
         PSZ2Setup->petalAniDuration = PSZ2Setup->petalAniDurationTable[PSZ2Setup->petalAniFrame];
 
-        int32 sheetY = 32 * PSZ2Setup->petalAniFrame;
+        sheetY = 32 * PSZ2Setup->petalAniFrame;
         RSDK.DrawAniTiles(PSZ2Setup->aniTiles1, 260, 0, sheetY, 64, 32);
         RSDK.DrawAniTiles(PSZ2Setup->aniTiles1, 268, 80, sheetY, 48, 16);
         RSDK.DrawAniTiles(PSZ2Setup->aniTiles1, 271, 64, sheetY + 16, 64, 16);
@@ -106,7 +107,7 @@ void PSZ2Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE)
-        RSDK.LoadPalette(0, "EncorePSZ2.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncorePSZ2.act", 0xFF);
 
     // Fun Fact: Pre-Plus didn't have animal types set for PGZ! It'd always be flickies due to that being the default value!
     Animals->animalTypes[0] = ANIMAL_POCKY;

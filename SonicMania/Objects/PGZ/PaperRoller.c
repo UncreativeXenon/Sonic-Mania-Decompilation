@@ -11,16 +11,22 @@ ObjectPaperRoller *PaperRoller;
 
 void PaperRoller_Update(void)
 {
+    int32 startX;
+    int32 startY;
+    int32 endX;
+    int32 endY;
+    int32 centerX;
+    int32 centerY;
     RSDK_THIS(PaperRoller);
 
     RSDK.ProcessAnimation(&self->rollerAnimator);
 
-    int32 startX  = self->position.x - (RSDK.Cos256(self->angle) << 7) * self->length;
-    int32 startY  = self->position.y - (RSDK.Sin256(self->angle) << 7) * self->length;
-    int32 endX    = self->position.x + (RSDK.Cos256(self->angle) << 7) * self->length;
-    int32 endY    = self->position.y + (RSDK.Sin256(self->angle) << 7) * self->length;
-    int32 centerX = self->position.x;
-    int32 centerY = self->position.y;
+    startX  = self->position.x - (RSDK.Cos256(self->angle) << 7) * self->length;
+    startY  = self->position.y - (RSDK.Sin256(self->angle) << 7) * self->length;
+    endX    = self->position.x + (RSDK.Cos256(self->angle) << 7) * self->length;
+    endY    = self->position.y + (RSDK.Sin256(self->angle) << 7) * self->length;
+    centerX = self->position.x;
+    centerY = self->position.y;
 
     // left roller
     self->position.x = startX;
@@ -93,11 +99,12 @@ void PaperRoller_Create(void *data)
 
 void PaperRoller_StageLoad(void)
 {
+    color colors[]         = { 0x0F0F0E8, 0x0D0B898, 0x987870, 0x586868 };
+    int32 i;
 
     PaperRoller->aniFrames = RSDK.LoadSpriteAnimation("PSZ1/PaperRoller.bin", SCOPE_STAGE);
 
-    color colors[] = { 0x0F0F0E8, 0x0D0B898, 0x987870, 0x586868 };
-    for (int32 i = 0; i < 0x40; ++i) PaperRoller->colors[i] = colors[i & 3];
+    for (i = 0; i < 0x40; ++i) PaperRoller->colors[i] = colors[i & 3];
 
     PaperRoller->sfxPaper = RSDK.GetSfx("PSZ/Paper.wav");
 }
@@ -109,6 +116,7 @@ void PaperRoller_DrawDeformedLine(int32 startX, int32 startY, int32 endX, int32 
 
     int32 count = (self->length / 4) + ((self->length % 4) > 0);
     if (count) {
+        int32 i;
         int32 negAngle = -self->angle & 0xFF;
 
         int32 currentX = startX;
@@ -116,7 +124,7 @@ void PaperRoller_DrawDeformedLine(int32 startX, int32 startY, int32 endX, int32 
         int32 moveX    = (endX - startX) / count;
         int32 moveY    = (endY - startY) / count;
 
-        for (int32 i = 0; i < count; ++i) {
+        for (i = 0; i < count; ++i) {
             int32 colorID = self->direction ? (len % count) : (count - len % count - 1);
 
             uint32 lineColor = color ? *color : PaperRoller->colors[(Zone->timer + colorID) % count];
@@ -126,6 +134,8 @@ void PaperRoller_DrawDeformedLine(int32 startX, int32 startY, int32 endX, int32 
                               INK_NONE, false);
             }
             else {
+                Vector2 offset1;
+                Vector2 offset2;
                 int32 distX = (currentX - self->position.x) >> 8;
                 int32 distY = (currentY - self->position.y) >> 8;
 
@@ -150,7 +160,6 @@ void PaperRoller_DrawDeformedLine(int32 startX, int32 startY, int32 endX, int32 
                 distX = angValX >> 8;
                 distY = (lenY + angValY) >> 8;
 
-                Vector2 offset1;
                 offset1.x = self->position.x + distY * RSDK.Sin256(negAngle) + distX * RSDK.Cos256(negAngle);
                 offset1.y = self->position.y - distX * RSDK.Sin256(negAngle) + distY * RSDK.Cos256(negAngle);
 
@@ -177,7 +186,6 @@ void PaperRoller_DrawDeformedLine(int32 startX, int32 startY, int32 endX, int32 
                 distX          = angValX >> 8;
                 distY          = (lenY + angValY) >> 8;
 
-                Vector2 offset2;
                 offset2.x = self->position.x + distY * RSDK.Sin256(negAngle) + distX * RSDK.Cos256(negAngle);
                 offset2.y = self->position.y - distX * RSDK.Sin256(negAngle) + distY * RSDK.Cos256(negAngle);
 
@@ -194,6 +202,9 @@ void PaperRoller_DrawDeformedLine(int32 startX, int32 startY, int32 endX, int32 
 
 void PaperRoller_DrawPaperLines(void)
 {
+    int32 angle;
+    int32 offsetY1, offsetY2, offsetX2, offsetX1;
+    color color;
     RSDK_THIS(PaperRoller);
 
     int32 x1 = self->position.x - (RSDK.Cos256(self->angle) << 7) * self->length;
@@ -215,11 +226,11 @@ void PaperRoller_DrawPaperLines(void)
     PaperRoller_DrawDeformedLine(startX1, startY1, endX1, endY1, 0, 0, self->deformPosTop.x, self->deformPosTop.y, 0, NULL);
     PaperRoller_DrawDeformedLine(startX2, startY2, endX2, endY2, 0, 0, self->deformPosBottom.x, self->deformPosBottom.y, len, NULL);
 
-    int32 angle = self->angle + 32;
+    angle = self->angle + 32;
     if (angle < 0)
         angle = ((-1 - (self->angle + 32)) & 0xFFFFFF00) + self->angle + 288;
 
-    int32 offsetY1 = 0, offsetY2 = 0, offsetX2 = 0, offsetX1 = 0;
+    offsetY1 = 0, offsetY2 = 0, offsetX2 = 0, offsetX1 = 0;
     switch (angle >> 6) {
         case 0:
             offsetY1 = 0x10000;
@@ -244,7 +255,7 @@ void PaperRoller_DrawPaperLines(void)
     PaperRoller_DrawDeformedLine(startX1, startY1, endX1, endY1, offsetX1, offsetY1, self->deformPosTop.x, self->deformPosTop.y, 0, NULL);
     PaperRoller_DrawDeformedLine(startX2, startY2, endX2, endY2, offsetX2, offsetY2, self->deformPosBottom.x, self->deformPosBottom.y, len, NULL);
 
-    color color = 0xD0B898;
+    color = 0xD0B898;
     offsetX1 <<= 1;
     offsetY1 <<= 1;
     offsetX2 <<= 1;
@@ -302,10 +313,12 @@ void PaperRoller_HandleRollerCollisions(void)
             int32 distX = abs(self->position.x - player->position.x) >> 16;
             int32 distY = abs(self->position.y - player->position.y) >> 16;
             if (MathHelpers_SquareRoot(distX * distX + distY * distY) <= 40 && !self->playerTimer[playerID]) {
+                int32 angle;
+                int32 ang;
                 RSDK.PlaySfx(Player->sfxRelease, false, 255);
-                int32 angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
+                angle = RSDK.ATan2(player->position.x - self->position.x, player->position.y - self->position.y);
 
-                int32 ang = angle + (self->direction == FLIP_NONE ? 64 : -64);
+                ang = angle + (self->direction == FLIP_NONE ? 64 : -64);
 
                 player->position.x = self->position.x + 0x2800 * RSDK.Cos256(angle);
                 player->position.y = self->position.y + 0x2800 * RSDK.Sin256(angle);
@@ -347,133 +360,144 @@ void PaperRoller_HandlePrintCollisions(void)
     self->deformPosBottom.x = 0;
     self->deformPosBottom.y = 0;
 
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
+        foreach_active(Player, player)
+        {
+            Vector2 pivotPos;
+            int32 pivotX;
+            int32 pivotY;
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (player->jumpPress)
-            self->lastJumpTimer[playerID] = 0;
-        else
-            ++self->lastJumpTimer[playerID];
+            if (player->jumpPress)
+                self->lastJumpTimer[playerID] = 0;
+            else
+                ++self->lastJumpTimer[playerID];
 
-        Vector2 pivotPos = player->position;
-        Zone_RotateOnPivot(&pivotPos, &self->position, self->angle);
+            pivotPos = player->position;
+            Zone_RotateOnPivot(&pivotPos, &self->position, self->angle);
 
-        int32 pivotX = pivotPos.x - self->position.x;
-        int32 pivotY = pivotPos.y - self->position.y;
+            pivotX = pivotPos.x - self->position.x;
+            pivotY = pivotPos.y - self->position.y;
 
-        if (abs(pivotX) <= self->length << 15 && abs(pivotY) <= 0x280000) {
-            int32 deformY = 0;
-            if (pivotY < 0) {
-                if (abs(pivotY) > 0x180000) {
-                    deformY = pivotY + 0x280000;
-                }
-                else {
-                    Vector2 playerPos;
-                    playerPos.x = self->position.x + pivotX;
-                    playerPos.y = self->position.y - 0x180000;
-                    Zone_RotateOnPivot(&playerPos, &self->position, negAngle);
+            if (abs(pivotX) <= self->length << 15 && abs(pivotY) <= 0x280000) {
+                int32 deformY = 0;
+                if (pivotY < 0) {
+                    if (abs(pivotY) > 0x180000) {
+                        deformY = pivotY + 0x280000;
+                    }
+                    else {
+                        Vector2 playerPos;
+                        Vector2 pivotPos = { 0, 0 };
+                        Vector2 playerVel;
+                        int32 angle;
+                        int32 force;
+                        playerPos.x = self->position.x + pivotX;
+                        playerPos.y = self->position.y - 0x180000;
+                        Zone_RotateOnPivot(&playerPos, &self->position, negAngle);
 
-                    Vector2 pivotPos = { 0, 0 };
-                    player->position = playerPos;
+                        player->position = playerPos;
 
-                    Vector2 playerVel = player->velocity;
-                    Zone_RotateOnPivot(&playerVel, &pivotPos, self->angle);
-                    int32 angle = RSDK.ATan2(playerVel.x, -playerVel.y);
+                        playerVel = player->velocity;
+                        Zone_RotateOnPivot(&playerVel, &pivotPos, self->angle);
+                        angle = RSDK.ATan2(playerVel.x, -playerVel.y);
 
-                    int32 force = player->jumpHold ? 12 : 6;
+                        force = player->jumpHold ? 12 : 6;
 
-                    playerVel.x = force * (RSDK.Cos256(angle) << 8);
-                    playerVel.y = force * (RSDK.Sin256(angle) << 8);
-                    if (abs(playerVel.x) < 0x10000)
-                        playerVel.x += ((2 * (self->direction == FLIP_NONE) - 1) << 16);
+                        playerVel.x = force * (RSDK.Cos256(angle) << 8);
+                        playerVel.y = force * (RSDK.Sin256(angle) << 8);
+                        if (abs(playerVel.x) < 0x10000)
+                            playerVel.x += ((2 * (self->direction == FLIP_NONE) - 1) << 16);
 
-                    Zone_RotateOnPivot(&playerVel, &pivotPos, negAngle);
-                    player->velocity = playerVel;
+                        Zone_RotateOnPivot(&playerVel, &pivotPos, negAngle);
+                        player->velocity = playerVel;
 
-                    player->state = Player_State_Air;
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                        player->state = Player_State_Air;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
-                    player->nextAirState     = StateMachine_None;
-                    player->nextGroundState  = StateMachine_None;
-                    player->onGround         = false;
-                    player->groundVel        = 0;
-                    // bug details: fixes a bug where knux can touch this without tile collisions enabled lol
+                        player->nextAirState    = StateMachine_None;
+                        player->nextGroundState = StateMachine_None;
+                        player->onGround        = false;
+                        player->groundVel       = 0;
+                        // bug details: fixes a bug where knux can touch this without tile collisions enabled lol
 #if GAME_VERSION != VER_100
-                    player->tileCollisions = TILECOLLISION_DOWN;
+                        player->tileCollisions = TILECOLLISION_DOWN;
 #endif
-                    player->applyJumpCap     = false;
-                    player->jumpAbilityState = 0;
-                    RSDK.PlaySfx(PaperRoller->sfxPaper, false, 0xFF);
+                        player->applyJumpCap     = false;
+                        player->jumpAbilityState = 0;
+                        RSDK.PlaySfx(PaperRoller->sfxPaper, false, 0xFF);
 
-                    deformY = 0x100000;
-                }
+                        deformY = 0x100000;
+                    }
 
-                if (player->sidekick) {
-                    if (!hasDeformedTop) {
+                    if (player->sidekick) {
+                        if (!hasDeformedTop) {
+                            self->deformPosTop.x = pivotX;
+                            self->deformPosTop.y = deformY;
+                        }
+                    }
+                    else {
                         self->deformPosTop.x = pivotX;
                         self->deformPosTop.y = deformY;
+                        hasDeformedTop       = true;
                     }
                 }
                 else {
-                    self->deformPosTop.x = pivotX;
-                    self->deformPosTop.y = deformY;
-                    hasDeformedTop       = true;
-                }
-            }
-            else {
-                if (abs(pivotY) > 0x180000) {
-                    deformY = pivotY - 0x280000;
-                }
-                else {
-                    Vector2 playerPos;
-                    playerPos.x = self->position.x + pivotX;
-                    playerPos.y = self->position.y + 0x180000;
-                    Zone_RotateOnPivot(&playerPos, &self->position, negAngle);
+                    if (abs(pivotY) > 0x180000) {
+                        deformY = pivotY - 0x280000;
+                    }
+                    else {
+                        Vector2 playerPos;
+                        Vector2 pivotPos = { 0, 0 };
+                        Vector2 playerVel;
+                        int32 angle;
+                        int32 force;
+                        playerPos.x = self->position.x + pivotX;
+                        playerPos.y = self->position.y + 0x180000;
+                        Zone_RotateOnPivot(&playerPos, &self->position, negAngle);
 
-                    Vector2 pivotPos = { 0, 0 };
-                    player->position = playerPos;
+                        player->position = playerPos;
 
-                    Vector2 playerVel = player->velocity;
-                    Zone_RotateOnPivot(&playerVel, &pivotPos, self->angle);
+                        playerVel = player->velocity;
+                        Zone_RotateOnPivot(&playerVel, &pivotPos, self->angle);
 
-                    int32 angle = RSDK.ATan2(playerVel.x, -playerVel.y);
-                    int32 force = player->jumpHold ? 12 : 6;
+                        angle = RSDK.ATan2(playerVel.x, -playerVel.y);
+                        force = player->jumpHold ? 12 : 6;
 
-                    playerVel.x = force * (RSDK.Cos256(angle) << 8);
-                    playerVel.y = force * (RSDK.Sin256(angle) << 8);
-                    if ((self->direction == FLIP_NONE && playerVel.x > -0x10000) || (self->direction == FLIP_X && playerVel.x < 0x10000))
-                        playerVel.x += ((2 * (self->direction != FLIP_NONE) - 1) << 18);
+                        playerVel.x = force * (RSDK.Cos256(angle) << 8);
+                        playerVel.y = force * (RSDK.Sin256(angle) << 8);
+                        if ((self->direction == FLIP_NONE && playerVel.x > -0x10000) || (self->direction == FLIP_X && playerVel.x < 0x10000))
+                            playerVel.x += ((2 * (self->direction != FLIP_NONE) - 1) << 18);
 
-                    Zone_RotateOnPivot(&playerVel, &pivotPos, negAngle);
-                    player->velocity = playerVel;
+                        Zone_RotateOnPivot(&playerVel, &pivotPos, negAngle);
+                        player->velocity = playerVel;
 
-                    player->state = Player_State_Air;
-                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
+                        player->state = Player_State_Air;
+                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
-                    player->nextAirState     = StateMachine_None;
-                    player->nextGroundState  = StateMachine_None;
-                    player->onGround         = false;
-                    player->groundVel        = 0;
-                    // bug details: fixes a bug where knux can touch this without tile collisions enabled lol
+                        player->nextAirState    = StateMachine_None;
+                        player->nextGroundState = StateMachine_None;
+                        player->onGround        = false;
+                        player->groundVel       = 0;
+                        // bug details: fixes a bug where knux can touch this without tile collisions enabled lol
 #if GAME_VERSION != VER_100
-                    player->tileCollisions = TILECOLLISION_DOWN;
+                        player->tileCollisions = TILECOLLISION_DOWN;
 #endif
-                    player->applyJumpCap     = false;
-                    player->jumpAbilityState = 0;
-                    RSDK.PlaySfx(PaperRoller->sfxPaper, false, 0xFF);
+                        player->applyJumpCap     = false;
+                        player->jumpAbilityState = 0;
+                        RSDK.PlaySfx(PaperRoller->sfxPaper, false, 0xFF);
 
-                    deformY = -0x100000;
-                }
+                        deformY = -0x100000;
+                    }
 
-                if (!player->sidekick) {
-                    self->deformPosBottom.x = pivotX;
-                    self->deformPosBottom.y = deformY;
-                    hasDeformedBottom       = true;
-                }
-                else if (!hasDeformedBottom) {
-                    self->deformPosBottom.x = pivotX;
-                    self->deformPosBottom.y = deformY;
+                    if (!player->sidekick) {
+                        self->deformPosBottom.x = pivotX;
+                        self->deformPosBottom.y = deformY;
+                        hasDeformedBottom       = true;
+                    }
+                    else if (!hasDeformedBottom) {
+                        self->deformPosBottom.x = pivotX;
+                        self->deformPosBottom.y = deformY;
+                    }
                 }
             }
         }

@@ -171,12 +171,13 @@ void Aquis_State_Idle(void)
 
 void Aquis_State_Moving(void)
 {
+    EntityPlayer *playerPtr;
     RSDK_THIS(Aquis);
 
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    EntityPlayer *playerPtr = Player_GetNearestPlayer();
+    playerPtr = Player_GetNearestPlayer();
     if (playerPtr) {
         bool32 changeDir = false;
         if (playerPtr->position.x >= self->position.x) {
@@ -359,10 +360,12 @@ void Aquis_State_Shot(void)
     if (RSDK.CheckOnScreen(self, NULL)) {
         RSDK.ProcessAnimation(&self->mainAnimator);
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Aquis->hitboxProjectile))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Aquis->hitboxProjectile))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
     else {

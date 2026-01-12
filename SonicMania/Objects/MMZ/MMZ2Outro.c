@@ -40,6 +40,7 @@ void MMZ2Outro_StageLoad(void)
 
 void MMZ2Outro_StartCutscene(void)
 {
+    int32 i;
     RSDK_THIS(MMZ2Outro);
 
     CutsceneSeq_StartSequence(self, MMZ2Outro_Cutscene_PowerDown, MMZ2Outro_Cutscene_Rumble, MMZ2Outro_Cutscene_CameraMoveToWindow,
@@ -52,8 +53,8 @@ void MMZ2Outro_StartCutscene(void)
 
     RSDK.CopyPalette(0, 1, 1, 1, 0xFF);
 
-    for (int32 i = 128; i < 256; ++i) RSDK.SetPaletteEntry(2, i, 0x000000);
-    for (int32 i = 0; i < 256; ++i) RSDK.SetPaletteEntry(5, i, 0xFFFFFF);
+    for (i = 128; i < 256; ++i) RSDK.SetPaletteEntry(2, i, 0x000000);
+    for (i = 0; i < 256; ++i) RSDK.SetPaletteEntry(5, i, 0xFFFFFF);
 
     RSDK.GetTileLayer(0)->drawGroup[0] = DRAWGROUP_COUNT;
     RSDK.GetTileLayer(1)->drawGroup[0] = DRAWGROUP_COUNT;
@@ -72,17 +73,19 @@ bool32 MMZ2Outro_Cutscene_PowerDown(EntityCutsceneSeq *host)
         self->timer = 0;
         Camera_ShakeScreen(0, 0, 4);
 
-        foreach_active(Player, player)
-        {
-            player->stateInput = StateMachine_None;
+{
+            foreach_active(Player, player)
+            {
+                player->stateInput = StateMachine_None;
 
-            if (player->onGround) {
-                player->state = Player_State_Static;
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_BALANCE_1, &player->animator, false, 0);
-            }
-            else {
-                player->state      = Player_State_Air;
-                player->velocity.x = 0;
+                if (player->onGround) {
+                    player->state = Player_State_Static;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_BALANCE_1, &player->animator, false, 0);
+                }
+                else {
+                    player->state      = Player_State_Air;
+                    player->velocity.x = 0;
+                }
             }
         }
 
@@ -106,7 +109,9 @@ bool32 MMZ2Outro_Cutscene_Rumble(EntityCutsceneSeq *host)
     RSDK.SetLimitedFade(0, 1, 2, self->timer, 224, 256);
     if (self->timer == 1024) {
         self->timer = -256;
-        foreach_active(Player, player) { player->state = Player_State_Ground; }
+        {
+            foreach_active(Player, player) { player->state = Player_State_Ground; }
+        }
         return true;
     }
     else {
@@ -125,23 +130,26 @@ bool32 MMZ2Outro_Cutscene_Rumble(EntityCutsceneSeq *host)
 
 bool32 MMZ2Outro_Cutscene_CameraMoveToWindow(EntityCutsceneSeq *host)
 {
+    int32 p;
     RSDK_THIS(MMZ2Outro);
 
     CutsceneSeq_LockAllPlayerControl();
 
-    foreach_active(Player, player)
     {
-        player->state     = Player_State_Ground;
-        player->right     = true;
-        player->groundVel = 1;
+        foreach_active(Player, player)
+        {
+            player->state     = Player_State_Ground;
+            player->right     = true;
+            player->groundVel = 1;
 
-        if (player->camera) {
-            player->camera->boundsR += 0x240;
-            player->camera = NULL;
+            if (player->camera) {
+                player->camera->boundsR += 0x240;
+                player->camera = NULL;
+            }
         }
     }
 
-    for (int32 p = 0; p < Player->playerCount; ++p) {
+    for (p = 0; p < Player->playerCount; ++p) {
         Zone->cameraBoundsR[p] += 0x240;
         Zone->playerBoundsR[p] += 0x2400000;
     }
@@ -222,13 +230,15 @@ bool32 MMZ2Outro_Cutscene_ViewMonarch(EntityCutsceneSeq *host)
         RSDK.PlaySfx(MMZ2Outro->sfxThunda, false, 255);
         self->flashTimer = RSDK.Rand(120, 240);
 
-        foreach_active(Player, player)
-        {
-            if (player->characterID == ID_TAILS) {
-                player->state      = Player_State_Air;
-                player->onGround   = false;
-                player->velocity.y = -0x30000;
-                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, false, 0);
+{
+            foreach_active(Player, player)
+            {
+                if (player->characterID == ID_TAILS) {
+                    player->state      = Player_State_Air;
+                    player->onGround   = false;
+                    player->velocity.y = -0x30000;
+                    RSDK.SetSpriteAnimation(player->aniFrames, ANI_HURT, &player->animator, false, 0);
+                }
             }
         }
     }

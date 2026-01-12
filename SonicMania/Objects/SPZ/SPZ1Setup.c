@@ -67,18 +67,21 @@ void SPZ1Setup_Create(void *data) {}
 
 void SPZ1Setup_StageLoad(void)
 {
+    int32 pos;
+    int32 i;
     SPZ1Setup->aniTiles = RSDK.LoadSpriteSheet("SPZ1/AniTiles.gif", SCOPE_STAGE);
 
     SPZ1Setup->cityBGLow  = RSDK.GetTileLayer(0); // Background 1
     SPZ1Setup->cityBGHigh = RSDK.GetTileLayer(1); // Background 2
 
-    int32 pos = 0;
-    for (int32 i = 0; i < 0x200; ++i) {
+    pos = 0;
+    for (i = 0; i < 0x200; ++i) {
+        int32 d;
         int32 off    = CLAMP(pos, 0, 0x200);
         int32 deform = RSDK.Rand(0, 4);
 
         int32 angle = 0;
-        for (int32 d = 0; d < 0x10; ++d) {
+        for (d = 0; d < 0x10; ++d) {
             SPZ1Setup->cityBGLow->deformationData[off + d]  = deform * RSDK.Sin1024(angle) >> 10;
             SPZ1Setup->cityBGHigh->deformationData[off + d] = deform * RSDK.Sin1024(angle) >> 10;
             angle += 0x40;
@@ -102,10 +105,10 @@ void SPZ1Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreSPZ1.act", 0b0000000011111111);
-        RSDK.LoadPalette(1, "EncoreSPZ1b1.act", 0b0000000011111111);
-        RSDK.LoadPalette(2, "EncoreSPZ1b2.act", 0b0000000011111111);
-        RSDK.LoadPalette(3, "EncoreSPZ1b3.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreSPZ1.act", 0xFF);
+        RSDK.LoadPalette(1, "EncoreSPZ1b1.act", 0xFF);
+        RSDK.LoadPalette(2, "EncoreSPZ1b2.act", 0xFF);
+        RSDK.LoadPalette(3, "EncoreSPZ1b3.act", 0xFF);
     }
 #endif
 }

@@ -121,6 +121,7 @@ void Motobug_State_Fall(void)
 }
 void Motobug_State_Move(void)
 {
+    bool32 collided;
     RSDK_THIS(Motobug);
 
     self->position.x += self->velocity.x;
@@ -129,7 +130,7 @@ void Motobug_State_Move(void)
         RSDK.SetSpriteAnimation(Motobug->aniFrames, 1, &self->animator, true, 0);
         self->turnTimer = 0;
 
-        bool32 collided = false;
+        collided = false;
         if (self->direction)
             collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, -0x10000, 0xF0000, 8);
         else
@@ -142,8 +143,9 @@ void Motobug_State_Move(void)
     }
 
     if (!--self->timer) {
+        EntityMotobug *smoke;
         self->timer          = 16;
-        EntityMotobug *smoke = CREATE_ENTITY(Motobug, INT_TO_VOID(true), self->position.x, self->position.y);
+        smoke = CREATE_ENTITY(Motobug, INT_TO_VOID(true), self->position.x, self->position.y);
         if (self->direction == FLIP_X)
             smoke->position.x -= 0x140000;
         else
@@ -157,11 +159,12 @@ void Motobug_State_Move(void)
 }
 void Motobug_State_Idle(void)
 {
+    bool32 collided;
     RSDK_THIS(Motobug);
 
     RSDK.ProcessAnimation(&self->animator);
 
-    bool32 collided = false;
+    collided = false;
     if (self->direction)
         collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, -0x10000, 0xF0000, 8);
     else
@@ -207,11 +210,12 @@ void Motobug_State_Smoke(void)
 }
 void Motobug_State_Turn(void)
 {
+    bool32 collided;
     RSDK_THIS(Motobug);
 
     RSDK.ProcessAnimation(&self->animator);
 
-    bool32 collided = false;
+    collided = false;
     if (self->direction)
         collided = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, -0x10000, 0xF0000, 8);
     else

@@ -61,6 +61,8 @@ void RPlaneShifter_StageLoad(void)
 
 void RPlaneShifter_DrawSprites(void)
 {
+    uint8 poleAngles[3];
+    uint32 i;
     RSDK_THIS(RPlaneShifter);
 
     Vector2 drawPos = self->position;
@@ -69,14 +71,14 @@ void RPlaneShifter_DrawSprites(void)
 
     drawPos.y -= 0x80000;
 
-    uint8 poleAngles[3];
     poleAngles[0] = self->angle + 21;
     poleAngles[1] = self->angle + 106;
     poleAngles[2] = self->angle - 64;
 
-    for (uint32 i = 0; i < self->height; ++i) {
+    for (i = 0; i < self->height; ++i) {
+        int32 p;
         drawPos.y -= 0x100000;
-        for (int32 p = 0; p < 3; ++p) {
+        for (p = 0; p < 3; ++p) {
             drawPos.x = self->position.x;
 
             if (SceneInfo->inEditor) {
@@ -104,6 +106,7 @@ void RPlaneShifter_DrawSprites(void)
 
 void RPlaneShifter_HandlePlaneShift(EntityPlayer *player)
 {
+    EntityPlayer *player1;
     RSDK_THIS(RPlaneShifter);
 
     player->state           = Player_State_Ground;
@@ -114,7 +117,7 @@ void RPlaneShifter_HandlePlaneShift(EntityPlayer *player)
 
     RSDK.SetSpriteAnimation(player->aniFrames, ANI_IDLE, &player->animator, false, 0);
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     if (player->sidekick && (!player->sidekick || (self->prevActivePlayers & 1))) {
         player->collisionPlane = player1->collisionPlane;
         player->drawGroup      = player1->drawGroup - 1;
@@ -228,13 +231,14 @@ void RPlaneShifter_State_Spinning(void)
     RSDK_THIS(RPlaneShifter);
 
     if (abs(self->spinAngle >> 16) < 128) {
+        int32 speed;
         uint8 updateSpinSpeed = 1;
         if (self->rotateDir && self->spinAngle >> 16 > -65)
             updateSpinSpeed = 0;
         else if (!self->rotateDir && self->spinAngle >> 16 < 65)
             updateSpinSpeed = 0;
 
-        int32 speed = self->rotateDir ? -0x3800 : 0x3800;
+        speed = self->rotateDir ? -0x3800 : 0x3800;
 
         if (updateSpinSpeed) {
             self->spinSpeed -= speed;
@@ -279,50 +283,55 @@ void RPlaneShifter_State_Spinning(void)
         self->state = RPlaneShifter_State_FinishSpin;
     }
 
-    foreach_active(Player, player)
-    {
-        int32 playerID = RSDK.GetEntitySlot(player);
+{
+        foreach_active(Player, player)
+        {
+            int32 playerID = RSDK.GetEntitySlot(player);
 
-        if (!((1 << playerID) & self->activePlayers) && !((1 << playerID) & self->stoodPlayers)
-            && Player_CheckCollisionTouch(player, self, &self->hitbox) && player->onGround && !player->isChibi) {
-            self->activePlayers |= 1 << playerID;
-            player->groundVel  = 0;
-            player->velocity.x = 0;
-            player->velocity.y = 0;
-            player->position.x = self->position.x;
+            if (!((1 << playerID) & self->activePlayers) && !((1 << playerID) & self->stoodPlayers)
+                && Player_CheckCollisionTouch(player, self, &self->hitbox) && player->onGround && !player->isChibi) {
+                self->activePlayers |= 1 << playerID;
+                player->groundVel  = 0;
+                player->velocity.x = 0;
+                player->velocity.y = 0;
+                player->position.x = self->position.x;
 
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_IDLE, &player->animator, false, 0);
-            player->state           = Player_State_Static;
-            player->nextGroundState = StateMachine_None;
-            player->nextAirState    = StateMachine_None;
-            player->onGround        = true;
-        }
-
-        if ((1 << playerID) & self->activePlayers) {
-            RSDK.SetSpriteAnimation(player->aniFrames, ANI_TWISTER, &player->animator, false, 0);
-
-            int32 angle    = (self->spinAngle >> 16) & 0xFF;
-            int32 negAngle = 0xFF - angle;
-            if (player->direction)
-                negAngle = angle;
-
-            int32 frame = 0;
-            switch (negAngle >> 6) {
-                case 0:
-                case 1: frame = 9 * negAngle / 128; break;
-                case 2:
-                case 3: frame = 16 * (negAngle - 128) / 128 + 9; break;
-                default: break;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_IDLE, &player->animator, false, 0);
+                player->state           = Player_State_Static;
+                player->nextGroundState = StateMachine_None;
+                player->nextAirState    = StateMachine_None;
+                player->onGround        = true;
             }
 
-            player->animator.frameID = frame % 24;
-            player->animator.speed   = 0;
-        }
+            if ((1 << playerID) & self->activePlayers) {
+                int32 angle;
+                int32 negAngle;
+                int32 frame;
+                RSDK.SetSpriteAnimation(player->aniFrames, ANI_TWISTER, &player->animator, false, 0);
 
-        if (Player_CheckCollisionTouch(player, self, &self->hitbox))
-            self->stoodPlayers |= 1 << playerID;
-        else
-            self->stoodPlayers &= ~(1 << playerID);
+                angle    = (self->spinAngle >> 16) & 0xFF;
+                negAngle = 0xFF - angle;
+                if (player->direction)
+                    negAngle = angle;
+
+                frame = 0;
+                switch (negAngle >> 6) {
+                    case 0:
+                    case 1: frame = 9 * negAngle / 128; break;
+                    case 2:
+                    case 3: frame = 16 * (negAngle - 128) / 128 + 9; break;
+                    default: break;
+                }
+
+                player->animator.frameID = frame % 24;
+                player->animator.speed   = 0;
+            }
+
+            if (Player_CheckCollisionTouch(player, self, &self->hitbox))
+                self->stoodPlayers |= 1 << playerID;
+            else
+                self->stoodPlayers &= ~(1 << playerID);
+        }
     }
 }
 

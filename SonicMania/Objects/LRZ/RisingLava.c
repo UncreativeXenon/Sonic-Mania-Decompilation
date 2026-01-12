@@ -66,11 +66,13 @@ void RisingLava_State_RiseShake(void)
     TileLayer *move = RSDK.GetTileLayer(Zone->moveLayer);
 
     move->scrollPos += 0x8000;
-    foreach_active(Player, player)
     {
-        player->collisionLayers |= Zone->moveLayerMask;
-        player->moveLayerPosition.x = move->scrollInfo[0].scrollPos;
-        player->moveLayerPosition.y = move->scrollPos;
+        foreach_active(Player, player)
+        {
+            player->collisionLayers |= Zone->moveLayerMask;
+            player->moveLayerPosition.x = move->scrollInfo[0].scrollPos;
+            player->moveLayerPosition.y = move->scrollPos;
+        }
     }
 
     if (!(Zone->timer & 3))

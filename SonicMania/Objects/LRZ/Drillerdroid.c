@@ -335,7 +335,8 @@ void Drillerdroid_State_Dropping(void)
         self->startY = self->position.y + 0x100000;
 
         if (!Drillerdroid->canBreakSegment) {
-            for (int32 i = 0; i < 4; ++i) {
+            int32 i;
+            for (i = 0; i < 4; ++i) {
                 Drillerdroid_SpawnDebris(-0x300000);
                 Drillerdroid_SpawnDebris(0x300000);
                 Drillerdroid_SpawnDebris(-0x190000);
@@ -463,13 +464,16 @@ void Drillerdroid_State_Jumping(void)
                 self->state = Drillerdroid_State_PrepareJump;
             }
             else {
+                EntityPlayer *player1;
+                EntityBuckwildBall *ball;
+                int32 ballSlot;
                 RSDK.PlaySfx(Drillerdroid->sfxDrop, false, 255);
-                EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+                player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
-                EntityBuckwildBall *ball = CREATE_ENTITY(BuckwildBall, NULL, self->position.x, ScreenInfo->position.y << 16);
+                ball = CREATE_ENTITY(BuckwildBall, NULL, self->position.x, ScreenInfo->position.y << 16);
                 ball->startPos.x         = 0;
 
-                int32 ballSlot = 0;
+                ballSlot = 0;
                 if (Drillerdroid->arenaSegment) {
                     if (Drillerdroid->arenaSegment == 4 || player1->position.x < self->position.x) {
                         ball->position.x -= 0x800000;
@@ -505,12 +509,14 @@ void Drillerdroid_State_Jumping(void)
 
 void Drillerdroid_State_Drilling(void)
 {
+    int32 i;
+    EntityCamera *camera;
     RSDK_THIS(Drillerdroid);
 
     ++Drillerdroid->drillSfxTimer;
     RSDK.ProcessAnimation(&self->mainAnimator);
 
-    for (int32 i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
         if (Drillerdroid->pistonDelay[i]) {
             Drillerdroid->pistonDelay[i]--;
         }
@@ -571,7 +577,7 @@ void Drillerdroid_State_Drilling(void)
         Drillerdroid_SpawnDebris(0x190000);
     }
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     if (!camera->shakePos.y)
         camera->shakePos.y = 4;
 
@@ -636,10 +642,11 @@ void Drillerdroid_State_Overheat(void)
 
     if (--self->timer <= 0) {
         if (Drillerdroid->canBreakSegment) {
+            EntityDebris *debris;
             Drillerdroid->canBreakSegment = false;
             RSDK.PlaySfx(Drillerdroid->sfxSizzle, false, 255);
 
-            EntityDebris *debris = NULL;
+            debris = NULL;
             switch (Drillerdroid->armorHealth) {
                 default: break;
 
@@ -649,6 +656,7 @@ void Drillerdroid_State_Overheat(void)
                     break;
 
                 case 1: {
+                    int32 spawnX;
                     debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
                     RSDK.SetSpriteAnimation(Drillerdroid->aniFrames, 5, &debris->animator, true, 6);
                     debris->velocity.x      = -0x10000;
@@ -669,7 +677,7 @@ void Drillerdroid_State_Overheat(void)
                     debris->updateRange.x   = 0x400000;
                     debris->updateRange.y   = 0x400000;
 
-                    int32 spawnX = self->position.x - 0x300000;
+                    spawnX = self->position.x - 0x300000;
                     debris       = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, spawnX, self->position.y);
                     RSDK.SetSpriteAnimation(Drillerdroid->aniFrames, 5, &debris->animator, true, 7);
                     debris->velocity.x      = -0x30000;
@@ -806,6 +814,7 @@ void Drillerdroid_State_JumpTargeting(void)
     self->velocity.y += 0x3800;
 
     if (self->velocity.y >= 0) {
+        EntityPlayer *player1;
         Drillerdroid->pistonPos[0] = 0;
         Drillerdroid->pistonPos[1] = 0;
 
@@ -826,7 +835,7 @@ void Drillerdroid_State_JumpTargeting(void)
 
         self->position.x = 0;
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         CREATE_ENTITY(Drillerdroid, INT_TO_VOID(DRILLERDROID_TARGET), player1->position.x, player1->position.y)->target = player1;
         RSDK.PlaySfx(Drillerdroid->sfxTargeting, false, 255);
         self->state = Drillerdroid_State_DecidingDropPos;
@@ -838,13 +847,15 @@ void Drillerdroid_State_DecidingDropPos(void)
     RSDK_THIS(Drillerdroid);
 
     if (self->position.x) {
+        bool32 failed;
+        bool32 platformActive;
         self->timer      = 240;
         self->velocity.y = -0x40000;
         self->state      = Drillerdroid_State_Dropping;
         self->position.x = (RSDK_GET_ENTITY(SLOT_PLAYER1, Player)->position.x + 0x400000) & 0xFF800000;
 
-        bool32 failed         = self->position.x < Zone->cameraBoundsL[0] << 16 || self->position.x > Zone->cameraBoundsR[0] << 16;
-        bool32 platformActive = false;
+        failed         = self->position.x < Zone->cameraBoundsL[0] << 16 || self->position.x > Zone->cameraBoundsR[0] << 16;
+        platformActive = false;
         if (!failed) {
             Drillerdroid->arenaSegment = (((self->position.x >> 16) - Zone->cameraBoundsL[0] + 64) >> 7) - 1;
             platformActive             = Drillerdroid->platformActive[Drillerdroid->arenaSegment];
@@ -1033,6 +1044,7 @@ void Drillerdroid_State_Destroyed(void)
         debris->updateRange.y   = 0x400000;
 
         if (Drillerdroid->armorHealth == 1) {
+            int32 spawnX;
             debris = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, self->position.x, self->position.y);
             RSDK.SetSpriteAnimation(Drillerdroid->aniFrames, 5, &debris->animator, true, 6);
             debris->velocity.x      = RSDK.Rand(-6, 6) << 15;
@@ -1053,7 +1065,7 @@ void Drillerdroid_State_Destroyed(void)
             debris->updateRange.x   = 0x400000;
             debris->updateRange.y   = 0x400000;
 
-            int32 spawnX = self->position.x - 0x300000;
+            spawnX = self->position.x - 0x300000;
             debris       = CREATE_ENTITY(Debris, Debris_State_FallAndFlicker, spawnX, self->position.y);
             RSDK.SetSpriteAnimation(Drillerdroid->aniFrames, 5, &debris->animator, true, 7);
             debris->velocity.x      = RSDK.Rand(-6, 6) << 15;
@@ -1099,7 +1111,9 @@ void Drillerdroid_State_Destroyed(void)
         self->stateDraw            = Drillerdroid_Draw_Simple;
         self->state                = Drillerdroid_State_Finish;
 
-        foreach_active(SignPost, signPost) { signPost->position.x = self->position.x; }
+        {
+            foreach_active(SignPost, signPost) { signPost->position.x = self->position.x; }
+        }
     }
 }
 
@@ -1141,6 +1155,7 @@ void Drillerdroid_State_DropSignPost(void)
 
 void Drillerdroid_Draw_Boss(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(Drillerdroid);
 
     RSDK.SetLimitedFade(0, 1, 2, self->alpha, 32, 41);
@@ -1152,7 +1167,6 @@ void Drillerdroid_Draw_Boss(void)
 
     // Piston (L1)
     self->mainAnimator.frameID = 1;
-    Vector2 drawPos;
     drawPos.x = self->position.x - 0x300000;
     drawPos.y = self->position.y - Drillerdroid->pistonPos[0];
     RSDK.DrawSprite(&self->mainAnimator, &drawPos, false);
@@ -1350,6 +1364,7 @@ void Drillerdroid_State_Target(void)
 
 void Drillerdroid_Draw_Target(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(Drillerdroid);
 
     int32 x = ((self->position.x + 0x400000) & 0xFF800000) - 0x400000;
@@ -1363,7 +1378,6 @@ void Drillerdroid_Draw_Target(void)
     self->mainAnimator.frameID = 0;
     self->inkEffect            = INK_ALPHA;
     self->direction            = FLIP_NONE;
-    Vector2 drawPos;
     drawPos.x = self->position.x - self->targetEdgeOffset.x;
     drawPos.y = self->position.y - self->targetEdgeOffset.y;
     RSDK.DrawSprite(&self->mainAnimator, &drawPos, false);

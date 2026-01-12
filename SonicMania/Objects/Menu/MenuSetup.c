@@ -38,18 +38,21 @@ void MenuSetup_StaticUpdate(void)
 {
 #if MANIA_USE_PLUS
     if (!MenuSetup->initializedAPI) {
+        String tag;
+        EntityUIControl *mainMenu;
         MenuSetup->fxFade->speedOut = 0;
 
-        String tag;
         INIT_STRING(tag);
         RSDK.SetString(&tag, "Main Menu");
 
-        EntityUIControl *mainMenu = NULL; // this will crash if no entities have "Main Menu" as the tag, make sure one does!!!
-        foreach_all(UIControl, control)
+        mainMenu = NULL; // this will crash if no entities have "Main Menu" as the tag, make sure one does!!!
         {
-            if (RSDK.CompareStrings(&tag, &control->tag, false)) {
-                mainMenu = control;
-                foreach_break;
+            foreach_all(UIControl, control)
+            {
+                if (RSDK.CompareStrings(&tag, &control->tag, false)) {
+                    mainMenu = control;
+                    foreach_break;
+                }
             }
         }
 
@@ -58,10 +61,10 @@ void MenuSetup_StaticUpdate(void)
             return;
         }
         else {
+            String message;
             mainMenu->selectionDisabled = false;
             MenuSetup->initializedAPI  = true;
 
-            String message;
             Localization_GetString(&message, STR_RPC_MENU);
             API_SetRichPresence(PRESENCE_MENU, &message);
         }
@@ -204,7 +207,9 @@ void MenuSetup_StageLoad(void)
 
     RSDK.SetVideoSetting(VIDEOSETTING_SCREENCOUNT, 1);
 
-    foreach_all(FXFade, fade) { MenuSetup->fxFade = fade; }
+{
+        foreach_all(FXFade, fade) { MenuSetup->fxFade = fade; }
+    }
 }
 
 void MenuSetup_StartTransition(void (*callback)(void), int32 delay)

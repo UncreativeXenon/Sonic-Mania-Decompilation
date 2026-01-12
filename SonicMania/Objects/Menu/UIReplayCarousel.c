@@ -12,6 +12,7 @@ ObjectUIReplayCarousel *UIReplayCarousel;
 
 void UIReplayCarousel_Update(void)
 {
+    EntityUIControl *parent;
     RSDK_THIS(UIReplayCarousel);
     self->sortedRowCount = API.GetSortedUserDBRowCount(globals->replayTableID);
     UIReplayCarousel_SetupButtonCallbacks();
@@ -42,7 +43,7 @@ void UIReplayCarousel_Update(void)
         self->prevReplayOffset = self->visibleReplayOffset;
     }
 
-    EntityUIControl *parent = (EntityUIControl *)self->parent;
+    parent = (EntityUIControl *)self->parent;
     if (self->curReplayID > 0) {
         UIControl_SetTargetPos(parent, 0, self->position.y);
 
@@ -95,7 +96,8 @@ void UIReplayCarousel_Create(void *data)
     self->sortedRowCount  = 0;
     UIReplayCarousel_HandlePositions();
     if (!SceneInfo->inEditor) {
-        for (int32 i = 0; i < 4; ++i) {
+        int32 i;
+        for (i = 0; i < 4; ++i) {
             RSDK.InitString(&self->zoneNameText[i], "", 0);
             RSDK.InitString(&self->createdAtText[i], "", 0);
         }
@@ -127,17 +129,21 @@ void UIReplayCarousel_ProcessButtonCB(void)
     EntityUIControl *parent = (EntityUIControl *)self->parent;
 
     if (!self->isMoving && self->state != UIReplayCarousel_State_StartAction) {
-        int32 rowID = 0;
+        int32 rowID    = 0;
+        int32 columnID;
+        int32 id;
+        bool32 movedUp;
+        bool32 movedDown;
         if (parent->rowCount && parent->columnCount)
             rowID = parent->buttonID / parent->columnCount;
 
-        int32 columnID = 0;
+        columnID = 0;
         if (parent->columnCount)
             columnID = parent->buttonID % parent->columnCount;
 
-        int32 id         = self->curReplayID;
-        bool32 movedUp   = false;
-        bool32 movedDown = false;
+        id         = self->curReplayID;
+        movedUp   = false;
+        movedDown = false;
         if (UIControl->anyUpPress) {
             if (self->curReplayID) {
                 --id;
@@ -155,12 +161,13 @@ void UIReplayCarousel_ProcessButtonCB(void)
         }
 
         if (movedUp) {
+            int32 selection;
             if (rowID < 0)
                 rowID += parent->rowCount;
             if (rowID >= parent->rowCount)
                 rowID -= parent->rowCount;
 
-            int32 selection = (parent->buttonCount - 1);
+            selection = (parent->buttonCount - 1);
             if (rowID * parent->columnCount + columnID < selection)
                 selection = (rowID * parent->columnCount + columnID);
 
@@ -203,9 +210,10 @@ void UIReplayCarousel_HandlePositions(void)
     RSDK_THIS(UIReplayCarousel);
 
     if (self->curViewOffset) {
+        int32 pos;
         self->visibleReplayOffset = self->curViewOffset / 102;
 
-        int32 pos        = 102 * (self->curViewOffset / 102) - self->curViewOffset - 102;
+        pos        = 102 * (self->curViewOffset / 102) - self->curViewOffset - 102;
         self->popoverPos = pos << 16;
         if (pos < 153) {
             self->visibleReplayCount = (152 - pos) / 0x66 + 1;
@@ -253,11 +261,16 @@ void UIReplayCarousel_HandleTouchPositions(void)
     RSDK_THIS(UIReplayCarousel);
 
     if (self->touchCB) {
-        self->touchPosCount = self->visibleReplayCount;
-        int32 posX          = self->position.x;
-        int32 posY          = self->popoverPos + self->position.y;
+        int32 posX;
+        int32 posY;
 
-        int32 i = 0;
+        int32 i;
+
+        self->touchPosCount = self->visibleReplayCount;
+        posX          = self->position.x;
+        posY          = self->popoverPos + self->position.y;
+
+        i = 0;
         for (; i < self->visibleReplayCount; ++i) {
             if (i + self->visibleReplayOffset >= self->sortedRowCount)
                 break;
@@ -282,8 +295,9 @@ void UIReplayCarousel_HandleTouchPositions(void)
 
 void UIReplayCarousel_TouchedCB(void)
 {
+    int32 id;
     RSDK_THIS(UIReplayCarousel);
-    int32 id = self->touchPosID + self->visibleReplayOffset;
+    id = self->touchPosID + self->visibleReplayOffset;
     if (self->curReplayID == id)
         UIReplayCarousel_StartAction();
     else
@@ -294,13 +308,16 @@ void UIReplayCarousel_SetupVisibleReplayButtons(void)
 {
     RSDK_THIS(UIReplayCarousel);
     if (!SceneInfo->inEditor) {
+        int32 i;
         char buffer[0x20];
-        for (int32 i = 0; i < 4; ++i) {
+        for (i = 0; i < 4; ++i) {
+            int32 row;
+            uint8 zoneID;
             int32 id = i + self->visibleReplayOffset;
             if (id >= self->sortedRowCount)
                 break;
-            int32 row    = API.GetSortedUserDBRowID(globals->replayTableID, id);
-            uint8 zoneID = 0xFF;
+            row    = API.GetSortedUserDBRowID(globals->replayTableID, id);
+            zoneID = 0xFF;
             API.GetUserDBValue(globals->replayTableID, row, DBVAR_UINT8, "zoneID", &zoneID);
             API.GetUserDBRowCreationTime(globals->replayTableID, row, buffer, sizeof(buffer) - 1, "%D");
             if (zoneID != 0xFF) {
@@ -320,6 +337,7 @@ void UIReplayCarousel_SetupVisibleReplayButtons(void)
 
 void UIReplayCarousel_DrawBGShapes(int32 drawX, int32 drawY, bool32 isEncore, int16 replayID)
 {
+    uint32 color;
     RSDK_THIS(UIReplayCarousel);
     if (!SceneInfo->inEditor)
         RSDK.DrawRect(drawX - 0x990000, drawY - 0x2A8000, 0x1320000, 0x550000, 0xFFFFFF, 127, INK_BLEND, false);
@@ -328,7 +346,7 @@ void UIReplayCarousel_DrawBGShapes(int32 drawX, int32 drawY, bool32 isEncore, in
     RSDK.DrawRect(drawX + 0x790000, (drawY + 0x298000) - 0x550000, 0x200000, 0x550000, 0x5870E0, 255, INK_NONE, false);
     RSDK.DrawRect(drawX - 10027008, drawY - 2785280, 20054016, 0x2C0000, 0, 255, INK_NONE, false);
 
-    uint32 color = 0xF0F0F0;
+    color = 0xF0F0F0;
     if (isEncore)
         color = 0xF26C4F;
     UIWidgets_DrawParallelogram(drawX - 0xA0000, drawY + 0xE0000, 128, 16, 16, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
@@ -353,12 +371,13 @@ void UIReplayCarousel_DrawStageInfo(int32 drawX, int32 drawY, uint8 act, uint8 c
     Vector2 drawPos;
     uint32 colors[] = { 0xE82858, 0x5870E0, 0xF0D808, 0x010101 };
     int32 widths[]  = { 60, 82, 52, 70 };
+    int32 i;
+    Vector2 drawOffsets[4];
 
     drawPos.x = drawX - 0x990000;
     drawPos.y = drawY + 0x1D8000;
 
-    Vector2 drawOffsets[4];
-    for (int32 i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         RSDK.DrawRect(drawPos.x, drawPos.y, widths[i] << 16, 0xD0000, colors[i], 255, INK_NONE, false);
 
         drawOffsets[i].x = drawPos.x + 0x10000;
@@ -374,10 +393,11 @@ void UIReplayCarousel_DrawStageInfo(int32 drawX, int32 drawY, uint8 act, uint8 c
     }
 
     if (!SceneInfo->inEditor) {
+        int32 width;
         int32 id    = replayID - self->visibleReplayOffset;
         drawPos.x   = drawOffsets[0].x + 0x1E0000;
         drawPos.y   = drawOffsets[0].y;
-        int32 width = RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &self->createdAtText[id], 0, self->createdAtText[id].length, 0);
+        width = RSDK.GetStringWidth(UIWidgets->fontFrames, 0, &self->createdAtText[id], 0, self->createdAtText[id].length, 0);
         drawPos.x -= width << 15;
         drawPos.y -= 0x60000;
         RSDK.DrawText(&self->createTimeAnimator, &drawPos, &self->createdAtText[id], 0, self->createdAtText[id].length, ALIGN_LEFT, 0, INT_TO_VOID(2),
@@ -441,11 +461,11 @@ void UIReplayCarousel_DrawZoneIcon(int32 drawX, int32 drawY, uint8 zoneID, int16
 void UIReplayCarousel_DrawReplayInfo(int32 drawX, int32 drawY, uint8 zoneID, uint8 act, uint8 characterID, bool32 isEncore, int32 score,
                                      int32 replayID)
 {
+    Vector2 drawPos;
     RSDK_THIS(UIReplayCarousel);
     UIReplayCarousel_DrawStageInfo(drawX, drawY, act, characterID, score, replayID);
     UIReplayCarousel_DrawZoneIcon(drawX, drawY, zoneID, replayID);
 
-    Vector2 drawPos;
     drawPos.x = drawX;
     drawPos.y = drawY - 0x160000;
     if ((self->state != UIReplayCarousel_State_StartAction || self->curReplayID != replayID || !(self->timer & 2)) && !SceneInfo->inEditor) {
@@ -518,22 +538,29 @@ void UIReplayCarousel_Draw_NoReplays(void)
 
 void UIReplayCarousel_Draw_Carousel(void)
 {
+    int32 i;
     RSDK_THIS(UIReplayCarousel);
     EntityUIControl *parent = (EntityUIControl *)self->parent;
 
     int32 posY = self->popoverPos + self->position.y;
-    for (int32 i = 0; i < self->visibleReplayCount; ++i) {
+    for (i = 0; i < self->visibleReplayCount; ++i) {
+        int32 score;
+        uint8 zoneID;
+        uint8 act;
+        uint8 characterID;
+        uint8 encore;
+        int32 row;
         int32 id = i + self->visibleReplayOffset;
         if (id >= self->sortedRowCount)
             break;
 
-        int32 score       = 0;
-        uint8 zoneID      = 0;
-        uint8 act         = 0;
-        uint8 characterID = 0;
-        uint8 encore      = 0;
+        score       = 0;
+        zoneID      = 0;
+        act         = 0;
+        characterID = 0;
+        encore      = 0;
 
-        int32 row = API.GetSortedUserDBRowID(globals->replayTableID, id);
+        row = API.GetSortedUserDBRowID(globals->replayTableID, id);
         API.GetUserDBValue(globals->replayTableID, row, DBVAR_UINT32, "score", &score);
         API.GetUserDBValue(globals->replayTableID, row, DBVAR_UINT8, "zoneID", &zoneID);
         API.GetUserDBValue(globals->replayTableID, row, DBVAR_UINT8, "act", &act);

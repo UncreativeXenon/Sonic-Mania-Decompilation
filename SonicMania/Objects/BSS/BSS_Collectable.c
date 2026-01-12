@@ -100,13 +100,14 @@ void BSS_Collectable_Create(void *data)
     RSDK_THIS(BSS_Collectable);
 
     if (!SceneInfo->inEditor) {
+        int32 i;
         self->active        = ACTIVE_NORMAL;
         self->visible       = true;
         self->drawGroup     = 3;
         self->updateRange.x = 0x800000;
         self->updateRange.y = 0x800000;
 
-        for (int32 i = 0; i < 8; ++i) RSDK.SetSpriteAnimation(BSS_Collectable->aniFrames, i, &BSS_Collectable->sphereAnimator[i + 1], true, 0);
+        for (i = 0; i < 8; ++i) RSDK.SetSpriteAnimation(BSS_Collectable->aniFrames, i, &BSS_Collectable->sphereAnimator[i + 1], true, 0);
 
         RSDK.SetSpriteAnimation(BSS_Collectable->ringFrames, 0, &BSS_Collectable->sphereAnimator[BSS_RING], true, 0);
         RSDK.SetSpriteAnimation(BSS_Collectable->ringFrames, 1, &BSS_Collectable->sphereAnimator[BSS_RING_SPARKLE], true, 0);
@@ -123,18 +124,22 @@ void BSS_Collectable_StageLoad(void)
     BSS_Collectable->ringFrames = RSDK.LoadSpriteAnimation("SpecialBS/Ring.bin", SCOPE_STAGE);
 
     if (!BSS_Collectable->initializedTables) {
+        int32 id;
+        int32 i;
+        int32 scale;
+        int32 scaleX;
         BSS_Collectable->initializedTables = true;
 
-        int32 id = 0x20;
-        for (int32 i = 0; i < 0x20; ++i) {
+        id = 0x20;
+        for (i = 0; i < 0x20; ++i) {
             BSS_Collectable->ringScaleTableX[i] *= 14;
             BSS_Collectable->ringScaleTableY[i] *= 14;
             BSS_Collectable->medalScaleTable[i] *= 16;
             BSS_Collectable->screenYValues[i]    = id * (BSS_Collectable->ringScaleTableY[i] << 6);
             BSS_Collectable->medalScreenYVals[i] = id * (BSS_Collectable->medalScaleTable[i] << 6);
 
-            int32 scale                         = i * (BSS_Collectable->ringScaleTableY[i] - BSS_Collectable->ringScaleTableX[i]);
-            int32 scaleX                        = BSS_Collectable->ringScaleTableX[i];
+            scale                         = i * (BSS_Collectable->ringScaleTableY[i] - BSS_Collectable->ringScaleTableX[i]);
+            scaleX                        = BSS_Collectable->ringScaleTableX[i];
             BSS_Collectable->ringScaleTableY[i] = scaleX + (scale >> 5);
 
             --id;

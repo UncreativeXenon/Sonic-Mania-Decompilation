@@ -38,13 +38,15 @@ void Smog_Update(void)
     if (OOZSetup->smogTimer > 1800) {
         ++self->timer;
 
-        foreach_active(Player, player)
-        {
-            if (player->superState != SUPERSTATE_SUPER) {
-                HUD_EnableRingFlash();
+{
+            foreach_active(Player, player)
+            {
+                if (player->superState != SUPERSTATE_SUPER) {
+                    HUD_EnableRingFlash();
 
-                if (self->timer == 60 && !player->sidekick && player->rings > 0)
-                    Player_GiveRings(player, -1, true);
+                    if (self->timer == 60 && !player->sidekick && player->rings > 0)
+                        Player_GiveRings(player, -1, true);
+                }
             }
         }
 
@@ -67,13 +69,14 @@ void Smog_StaticUpdate(void)
 
 void Smog_Draw(void)
 {
+    int32 i; 
     RSDK_THIS(Smog);
 
     int32 y          = (Zone->timer + (ScreenInfo->position.y << 1)) << 14;
     uint8 scanlineID = ((ScreenInfo->position.y >> 1) + 2 * Zone->timer);
 
     ScanlineInfo *scanline = Smog->scanlines;
-    for (int32 i = 0; i < ScreenInfo->size.y; ++i) {
+    for (i = 0; i < ScreenInfo->size.y; ++i) {
         scanline->position.x = TO_FIXED(ScreenInfo->position.x) + Smog->scanlineList[scanlineID].position.x;
         scanline->position.y = y;
         scanline->deform.x   = Smog->scanlineList[scanlineID].deform.x;
@@ -111,6 +114,7 @@ void Smog_Create(void *data)
         else {
             if (isMainGameMode() && globals->enableIntro) {
                 if (CutsceneRules_CheckStageReload()) {
+                    EntityZone *zone;
                     if (SceneInfo->minutes == globals->tempMinutes && SceneInfo->seconds == globals->tempSeconds
                         && SceneInfo->milliseconds == globals->tempMilliseconds) {
                         OOZSetup->useSmogEffect = globals->tempFlags;
@@ -119,7 +123,7 @@ void Smog_Create(void *data)
                         OOZSetup->useSmogEffect = globals->restartFlags;
                     }
 
-                    EntityZone *zone = RSDK_GET_ENTITY(SLOT_ZONE, Zone);
+                    zone = RSDK_GET_ENTITY(SLOT_ZONE, Zone);
                     zone->fadeColor  = 0x000000;
                     zone->timer      = 0;
                     zone->visible    = true;
@@ -134,6 +138,7 @@ void Smog_Create(void *data)
                 }
             }
             else {
+                EntityZone *zone;
                 if (SceneInfo->minutes == globals->tempMinutes && SceneInfo->seconds == globals->tempSeconds
                     && SceneInfo->milliseconds == globals->tempMilliseconds) {
                     OOZSetup->useSmogEffect = globals->tempFlags;
@@ -142,7 +147,7 @@ void Smog_Create(void *data)
                     OOZSetup->useSmogEffect = globals->restartFlags;
                 }
 
-                EntityZone *zone = RSDK_GET_ENTITY(SLOT_ZONE, Zone);
+                zone = RSDK_GET_ENTITY(SLOT_ZONE, Zone);
                 zone->fadeColor  = 0x000000;
                 zone->timer      = 0;
                 zone->visible    = true;
@@ -155,12 +160,15 @@ void Smog_Create(void *data)
 
 void Smog_StageLoad(void)
 {
+    ScanlineInfo *scanline;
+    int32 angle;
+    int32 i;
     Smog->aniFrames = RSDK.LoadSpriteSheet("OOZ/Smog.gif", SCOPE_STAGE);
     Smog->scanlines = RSDK.GetScanlines();
 
-    ScanlineInfo *scanline = (ScanlineInfo *)Smog->scanlineList;
-    int32 angle            = 0;
-    for (int32 i = 0; i < 0x100; ++i) {
+    scanline = (ScanlineInfo *)Smog->scanlineList;
+    angle            = 0;
+    for (i = 0; i < 0x100; ++i) {
         scanline[i].deform.x   = (RSDK.Sin256(angle >> 1) << 6) + 0x10000;
         scanline[i].deform.y   = (RSDK.Sin256(angle >> 1) << 5) + 0x10000;
         scanline[i].position.x = (RSDK.Sin256(angle) << 10) - scanline[i].deform.x * ScreenInfo->center.x;

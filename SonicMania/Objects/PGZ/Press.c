@@ -20,9 +20,10 @@ void Press_LateUpdate(void) {}
 
 void Press_StaticUpdate(void)
 {
+    EntityPlayer *player;
 #if MANIA_USE_PLUS
     Press->canSuper      = true;
-    EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
     if (player->classID == Player->classID) {
         foreach_active(Press, press)
@@ -45,17 +46,20 @@ void Press_StaticUpdate(void)
 
 void Press_Draw(void)
 {
+    Vector2 drawPos;
+    SpriteFrame *frame;
+    uint32 i;
     RSDK_THIS(Press);
 
     if (self->rotation <= 0x100)
         Press_DrawHandle();
 
     // threads
-    Vector2 drawPos    = self->drawPos;
-    SpriteFrame *frame = RSDK.GetFrame(Press->aniFrames, 1, self->threadAnimator.frameID);
+    drawPos    = self->drawPos;
+    frame = RSDK.GetFrame(Press->aniFrames, 1, self->threadAnimator.frameID);
     frame->height      = 56;
     frame->sprY        = (self->threadSprY >> 8) + 182;
-    for (uint32 i = 0; i < self->threads; ++i) {
+    for (i = 0; i < self->threads; ++i) {
         RSDK.DrawSprite(&self->threadAnimator, &drawPos, false);
         drawPos.y += 0x380000;
     }
@@ -99,11 +103,14 @@ void Press_Create(void *data)
     self->drawGroup = Zone->objectDrawGroup[0];
 
     if (!SceneInfo->inEditor) {
+        int32 size;
+        int32 step;
+        int32 count;
         self->size *= 8;
-        int32 size = self->size;
+        size = self->size;
         self->speed <<= 15;
-        int32 step    = size / 7;
-        int32 count   = (size - step) / 2;
+        step    = size / 7;
+        count   = (size - step) / 2;
         self->threads = (step + count) / 32;
         self->scale.y = 0x200;
         self->height  = size - 0x38 * self->threads;
@@ -147,12 +154,13 @@ bool32 Press_CheckCanSuper(bool32 isHUD) { return Press->canSuper; }
 
 void Press_DrawHandle(void)
 {
+    int32 scaleX;
     RSDK_THIS(Press);
 
     Vector2 drawPos = self->drawPos;
 
     self->scale.x = abs(RSDK.Cos512(self->rotation)) + 1;
-    int32 scaleX  = abs(RSDK.Sin512(self->rotation)) + 1;
+    scaleX  = abs(RSDK.Sin512(self->rotation)) + 1;
 
     drawPos.x += 0x2500 * RSDK.Cos512(self->rotation);
     drawPos.y -= 0x80000;
@@ -193,38 +201,42 @@ void Press_DrawHandle(void)
 
 void Press_Move(void)
 {
+    int32 playerID;
     RSDK_THIS(Press);
 
     self->stoodPlayersRoof  = 0;
     self->stoodPlayersFloor = 0;
 
-    int32 playerID = 0;
-    foreach_active(Player, player)
+    playerID = 0;
     {
-        self->position.y += self->offBottom;
+        foreach_active(Player, player)
+        {
+            int32 collide;
+            self->position.y += self->offBottom;
 
-        if (Player_CheckCollisionBox(player, self, &Press->hitbox) == C_TOP) {
-            if (self->state == Press_State_Crush && !player->sidekick) {
-                if (abs(self->position.x - player->position.x) <= 0x600000) {
-                    RSDK.PlaySfx(Press->sfxPress, false, 255);
-                    self->state  = Press_HandleMovement;
-                    self->active = ACTIVE_NORMAL;
+            if (Player_CheckCollisionBox(player, self, &Press->hitbox) == C_TOP) {
+                if (self->state == Press_State_Crush && !player->sidekick) {
+                    if (abs(self->position.x - player->position.x) <= 0x600000) {
+                        RSDK.PlaySfx(Press->sfxPress, false, 255);
+                        self->state  = Press_HandleMovement;
+                        self->active = ACTIVE_NORMAL;
+                    }
                 }
+
+                self->stoodPlayersFloor |= 1 << playerID;
             }
 
-            self->stoodPlayersFloor |= 1 << playerID;
+            self->position.y += self->offTop - self->offBottom;
+
+            collide = Player_CheckCollisionBox(player, self, &Press->hitbox);
+            if (collide == C_BOTTOM)
+                player->collisionFlagV |= 2;
+            else if (collide == C_TOP)
+                self->stoodPlayersRoof |= 1 << playerID;
+
+            ++playerID;
+            self->position.y -= self->offTop;
         }
-
-        self->position.y += self->offTop - self->offBottom;
-
-        int32 collide = Player_CheckCollisionBox(player, self, &Press->hitbox);
-        if (collide == C_BOTTOM)
-            player->collisionFlagV |= 2;
-        else if (collide == C_TOP)
-            self->stoodPlayersRoof |= 1 << playerID;
-
-        ++playerID;
-        self->position.y -= self->offTop;
     }
 }
 
@@ -240,6 +252,16 @@ void Press_State_FinalCrush(void)
 }
 void Press_HandleMovement(void)
 {
+    int32 oldBottom;
+    int32 newBottom;
+    int32 oldTop;
+    int32 newTop;
+    uint32 waitTime;
+    bool32 top, bottom;
+    int32 floorOffset;
+    int32 actualPos;
+    int32 playerID;
+    int32 roofOffset;
     RSDK_THIS(Press);
 
     RSDK.ProcessAnimation(&self->threadAnimator);
@@ -247,15 +269,15 @@ void Press_HandleMovement(void)
 
     Press_Move();
 
-    int32 oldBottom = self->offBottom;
-    int32 newBottom = oldBottom - self->speed;
+    oldBottom = self->offBottom;
+    newBottom = oldBottom - self->speed;
     self->offBottom = oldBottom - self->speed;
 
     self->threadSprY += (self->speed >> 11);
     self->threadSprY &= 0x7FF;
 
-    int32 oldTop = self->offTop;
-    int32 newTop = self->speed + self->offTop + self->topOffset;
+    oldTop = self->offTop;
+    newTop = self->speed + self->offTop + self->topOffset;
 
     self->rotation  = (self->rotation - (self->speed >> 15)) & 0x1FF;
     self->offTop    = newTop;
@@ -275,37 +297,39 @@ void Press_HandleMovement(void)
         self->state = Press_State_FinalCrush;
     }
 
-    uint32 waitTime = 0;
+    waitTime = 0;
     self->topOffset = self->offTop;
 
-    bool32 top = false, bottom = false;
-    int32 floorOffset = (oldBottom & 0xFFFF0000) - (self->offBottom & 0xFFFF0000);
-    int32 actualPos   = self->position.y;
+    top = false, bottom = false;
+    floorOffset = (oldBottom & 0xFFFF0000) - (self->offBottom & 0xFFFF0000);
+    actualPos   = self->position.y;
 
-    foreach_active(Crate, crate)
     {
-        self->position.y += self->offBottom;
+        foreach_active(Crate, crate)
+        {
+            self->position.y += self->offBottom;
 
-        if (MathHelpers_CheckBoxCollision(self, &Press->hitbox, crate, &crate->hitbox) == C_TOP) {
-            bottom = true;
-            Crate_MoveY(crate, -floorOffset);
-        }
-
-        self->position.y += self->offTop - self->offBottom;
-        if (MathHelpers_CheckBoxCollision(crate, &crate->hitbox, self, &Press->hitbox) == C_TOP) {
-            top = true;
-
-            switch (crate->frameID) {
-                default: break;
-                case 0: waitTime += 60; break;
-                case 1: waitTime += 30; break;
-                case 2: waitTime += 90; break;
-                case 3: waitTime += 60; break;
+            if (MathHelpers_CheckBoxCollision(self, &Press->hitbox, crate, &crate->hitbox) == C_TOP) {
+                bottom = true;
+                Crate_MoveY(crate, -floorOffset);
             }
-        }
 
-        self->offTop     = self->position.y - actualPos;
-        self->position.y = actualPos;
+            self->position.y += self->offTop - self->offBottom;
+            if (MathHelpers_CheckBoxCollision(crate, &crate->hitbox, self, &Press->hitbox) == C_TOP) {
+                top = true;
+
+                switch (crate->frameID) {
+                    default: break;
+                    case 0: waitTime += 60; break;
+                    case 1: waitTime += 30; break;
+                    case 2: waitTime += 90; break;
+                    case 3: waitTime += 60; break;
+                }
+            }
+
+            self->offTop     = self->position.y - actualPos;
+            self->position.y = actualPos;
+        }
     }
 
     self->topOffset -= self->offTop;
@@ -319,16 +343,18 @@ void Press_HandleMovement(void)
         self->timer      = waitTime;
     }
 
-    int32 playerID   = 1;
-    int32 roofOffset = (oldTop & 0xFFFF0000) - (self->offTop & 0xFFFF0000);
-    foreach_active(Player, player)
+    playerID   = 1;
+    roofOffset = (oldTop & 0xFFFF0000) - (self->offTop & 0xFFFF0000);
     {
-        if (playerID & self->stoodPlayersFloor)
-            player->position.y -= floorOffset;
-        if (playerID & self->stoodPlayersRoof)
-            player->position.y -= roofOffset;
+        foreach_active(Player, player)
+        {
+            if (playerID & self->stoodPlayersFloor)
+                player->position.y -= floorOffset;
+            if (playerID & self->stoodPlayersRoof)
+                player->position.y -= roofOffset;
 
-        playerID <<= 1;
+            playerID <<= 1;
+        }
     }
 }
 

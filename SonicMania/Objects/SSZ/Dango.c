@@ -159,6 +159,7 @@ void Dango_CheckPlayerCollisions(void)
 
 bool32 Dango_HandleMovement(StateMachine(nextState), uint8 anim)
 {
+    bool32 collidedWall;
     RSDK_THIS(Dango);
 
     bool32 changeState = false;
@@ -167,7 +168,7 @@ bool32 Dango_HandleMovement(StateMachine(nextState), uint8 anim)
     int32 storeY = self->position.y;
     self->position.x += self->groundVel;
 
-    bool32 collidedWall = false;
+    collidedWall = false;
     if (self->groundVel <= 0)
         collidedWall = RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_RWALL, 0, Dango->hitboxBadnik.left << 16, 0, 4);
     else
@@ -389,16 +390,18 @@ void Dango_StateTaunt_RollIn(void)
     self->position.x += self->groundVel;
     RSDK.ObjectTileGrip(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0xE0000, 14);
 
-    foreach_active(PhantomRuby, ruby)
-    {
-        if (abs(self->position.x - ruby->position.x) < 0x120000) {
-            RSDK.PlaySfx(Dango->sfxBumper, false, 255);
-            self->state      = Dango_StateTaunt_KnockedRuby;
-            ruby->state      = PhantomRuby_State_MoveGravity;
-            ruby->velocity.x = self->groundVel;
-            ruby->velocity.y = -0x80000;
+{
+        foreach_active(PhantomRuby, ruby)
+        {
+            if (abs(self->position.x - ruby->position.x) < 0x120000) {
+                RSDK.PlaySfx(Dango->sfxBumper, false, 255);
+                self->state      = Dango_StateTaunt_KnockedRuby;
+                ruby->state      = PhantomRuby_State_MoveGravity;
+                ruby->velocity.x = self->groundVel;
+                ruby->velocity.y = -0x80000;
 
-            RSDK.SetSpriteAnimation(Dango->aniFrames, 4, &self->animator, true, 0);
+                RSDK.SetSpriteAnimation(Dango->aniFrames, 4, &self->animator, true, 0);
+            }
         }
     }
 }

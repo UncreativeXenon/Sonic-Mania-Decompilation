@@ -30,28 +30,33 @@ void ExtrasMenu_Initialize(void)
 
     LogHelpers_Print("ManiaModeMenu_Initialize()");
 
-    foreach_all(UIControl, control)
     {
-        if (RSDK.CompareStrings(&tag, &control->tag, false))
-            ExtrasMenu->extrasControl = control;
+        foreach_all(UIControl, control)
+        {
+            if (RSDK.CompareStrings(&tag, &control->tag, false))
+                ExtrasMenu->extrasControl = control;
+        }
     }
 }
 
 void ExtrasMenu_HandleUnlocks(void)
 {
+    EntityUIButton *bssButton;
+    EntityUIButton *puyoButton;
+    EntityUIButton *daGardenButton;
     EntityUIControl *control = (EntityUIControl *)ExtrasMenu->extrasControl;
 
-    EntityUIButton *bssButton = control->buttons[0];
+    bssButton = control->buttons[0];
     bssButton->disabled       = !GameProgress_CheckUnlock(GAMEPROGRESS_UNLOCK_BLUESPHERES);
     if (bssButton->disabled)
         UIButton_ManageChoices(bssButton);
 
-    EntityUIButton *puyoButton = control->buttons[1];
+    puyoButton = control->buttons[1];
     puyoButton->disabled       = !GameProgress_CheckUnlock(GAMEPROGRESS_UNLOCK_MEANBEAN);
     if (puyoButton->disabled)
         UIButton_ManageChoices(puyoButton);
 
-    EntityUIButton *daGardenButton = control->buttons[2];
+    daGardenButton = control->buttons[2];
     daGardenButton->disabled       = !GameProgress_CheckUnlock(GAMEPROGRESS_UNLOCK_DAGARDEN) && !globals->medallionDebug;
 }
 
@@ -61,50 +66,54 @@ void ExtrasMenu_SetupActions(void)
 
     control->processButtonInputCB = ExtrasMenu_ProcessInputs;
 
-    foreach_all(UIButton, button)
     {
-        if (button->listID == 7) {
-            switch (button->frameID) {
-                default: break;
+        foreach_all(UIButton, button)
+        {
+            if (button->listID == 7) {
+                switch (button->frameID) {
+                    default: break;
 
-                case 4:
-                    button->actionCB         = ExtrasMenu_DAGarden_ActionCB;
-                    button->clearParentState = true;
-                    break;
+                    case 4:
+                        button->actionCB         = ExtrasMenu_DAGarden_ActionCB;
+                        button->clearParentState = true;
+                        break;
 
-                case 8:
-                    button->actionCB         = ExtrasMenu_CreditsButton_ActionCB;
-                    button->clearParentState = true;
-                    break;
+                    case 8:
+                        button->actionCB         = ExtrasMenu_CreditsButton_ActionCB;
+                        button->clearParentState = true;
+                        break;
+                }
             }
         }
     }
 
-    foreach_all(UIChoice, choice)
     {
-        if (choice->listID == 7) {
-            switch (choice->frameID) {
-                default: break;
+        foreach_all(UIChoice, choice)
+        {
+            if (choice->listID == 7) {
+                switch (choice->frameID) {
+                    default: break;
 
-                case 2:
-                    choice->actionCB         = ExtrasMenu_Puyo_vsAI_ActionCB;
-                    choice->clearParentState = true;
-                    break;
+                    case 2:
+                        choice->actionCB         = ExtrasMenu_Puyo_vsAI_ActionCB;
+                        choice->clearParentState = true;
+                        break;
 
-                case 3:
-                    choice->actionCB         = ExtrasMenu_Puyo_vs2P_ActionCB;
-                    choice->clearParentState = true;
-                    break;
+                    case 3:
+                        choice->actionCB         = ExtrasMenu_Puyo_vs2P_ActionCB;
+                        choice->clearParentState = true;
+                        break;
 
-                case 6:
-                    choice->actionCB         = ExtrasMenu_BSS_S3_ActionCB;
-                    choice->clearParentState = true;
-                    break;
+                    case 6:
+                        choice->actionCB         = ExtrasMenu_BSS_S3_ActionCB;
+                        choice->clearParentState = true;
+                        break;
 
-                case 7:
-                    choice->actionCB         = ExtrasMenu_BSS_Mania_ActionCB;
-                    choice->clearParentState = true;
-                    break;
+                    case 7:
+                        choice->actionCB         = ExtrasMenu_BSS_Mania_ActionCB;
+                        choice->clearParentState = true;
+                        break;
+                }
             }
         }
     }
@@ -119,7 +128,8 @@ void ExtrasMenu_ProcessMedallionCheat(void)
         key = 2;
 
     if (key) {
-        for (int32 i = 0; i < 7; ++i) ExtrasMenu->cheatCode[i] = ExtrasMenu->cheatCode[i + 1];
+        int32 i;
+        for (i = 0; i < 7; ++i) ExtrasMenu->cheatCode[i] = ExtrasMenu->cheatCode[i + 1];
 
         ExtrasMenu->cheatCode[7] = key;
     }

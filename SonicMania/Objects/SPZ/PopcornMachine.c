@@ -21,6 +21,10 @@ void PopcornMachine_StaticUpdate(void) {}
 
 void PopcornMachine_Draw(void)
 {
+    int32 storeY1;
+    int32 storeY2;
+    int32 y;
+    RSDKScreenInfo *screen;
     RSDK_THIS(PopcornMachine);
     Vector2 drawPos;
 
@@ -69,8 +73,8 @@ void PopcornMachine_Draw(void)
     // Draw Top
     drawPos = self->position;
     drawPos.y += -0xD00000 - 0xA00000 * self->height;
-    int32 storeY1          = drawPos.y;
-    int32 storeY2          = self->position.y - 0x300000;
+    storeY1          = drawPos.y;
+    storeY2          = self->position.y - 0x300000;
     self->animator.frameID = 4;
     RSDK.DrawSprite(&self->animator, &drawPos, false);
 
@@ -85,7 +89,7 @@ void PopcornMachine_Draw(void)
     RSDK.DrawSprite(&self->animator, &drawPos, false);
 
     // Draw Machine Glass Edges
-    for (int32 y = 0; y < self->height; ++y) {
+    for (y = 0; y < self->height; ++y) {
         drawPos.y += 0xA00000;
         self->animator.frameID = 6;
         RSDK.DrawSprite(&self->animator, &drawPos, false);
@@ -94,7 +98,7 @@ void PopcornMachine_Draw(void)
     }
 
     // Draw City Reflection FX
-    RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
+    screen = &ScreenInfo[SceneInfo->currentScreenID];
 
     self->inkEffect        = INK_ADD;
     self->animator.frameID = 8;
@@ -127,6 +131,7 @@ void PopcornMachine_Create(void *data)
             self->state   = PopcornMachine_StateController_ReadyPlayer;
         }
         else {
+            int32 top;
             self->active               = ACTIVE_BOUNDS;
             self->updateRange.x        = 0xB00000;
             self->visible              = true;
@@ -137,7 +142,7 @@ void PopcornMachine_Create(void *data)
             self->dispenserHolderPos.y = -0x100000;
             self->dispenserPos.y       = -0x100000;
 
-            int32 top                = -0x100 - 0xA0 * self->height;
+            top                = -0x100 - 0xA0 * self->height;
             self->hitboxSideL.top    = top;
             self->hitboxSideL.left   = -128;
             self->hitboxSideL.right  = -120;
@@ -180,6 +185,7 @@ void PopcornMachine_StageLoad(void)
 
 void PopcornMachine_LinkPlayer(EntityPlayer *player)
 {
+    EntityPopcornMachine *machine;
     RSDK_THIS(PopcornMachine);
 
     player->nextAirState    = StateMachine_None;
@@ -190,7 +196,7 @@ void PopcornMachine_LinkPlayer(EntityPlayer *player)
     player->tileCollisions  = TILECOLLISION_NONE;
     RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, false, 0);
 
-    EntityPopcornMachine *machine = CREATE_ENTITY(PopcornMachine, player, self->position.x, self->position.y);
+    machine = CREATE_ENTITY(PopcornMachine, player, self->position.x, self->position.y);
     machine->isPermanent          = true;
     machine->parent               = self;
     if (!player->sidekick)

@@ -58,7 +58,8 @@ bool32 CutsceneRules_IsAct1Regular(void) { return isMainGameMode() && CutsceneRu
 bool32 CutsceneRules_CheckStageReload(void)
 {
     if (StarPost) {
-        for (int32 p = 0; p < Player->playerCount; ++p) {
+        int32 p;
+        for (p = 0; p < Player->playerCount; ++p) {
             if (StarPost->postIDs[p])
                 return true;
         }

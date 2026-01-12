@@ -74,13 +74,15 @@ void RTeleporter_State_CheckPlayerCollisions(void)
 
     self->position.y = BadnikHelpers_Oscillate(self->originY, 4, 9);
 
-    foreach_active(Player, player)
-    {
-        if (!player->onGround) {
-            if (Player_CheckCollisionTouch(player, self, &RTeleporter->hitboxTeleporter)) {
-                Player_CheckItemBreak(player, self, false);
-                self->state     = RTeleporter_State_Destroyed;
-                self->stateDraw = RTeleporter_Draw_Exploding;
+{
+        foreach_active(Player, player)
+        {
+            if (!player->onGround) {
+                if (Player_CheckCollisionTouch(player, self, &RTeleporter->hitboxTeleporter)) {
+                    Player_CheckItemBreak(player, self, false);
+                    self->state     = RTeleporter_State_Destroyed;
+                    self->stateDraw = RTeleporter_Draw_Exploding;
+                }
             }
         }
     }

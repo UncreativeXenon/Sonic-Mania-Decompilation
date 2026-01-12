@@ -22,6 +22,9 @@ void ParallaxSprite_StaticUpdate(void) {}
 
 void ParallaxSprite_Draw(void)
 {
+    int32 scrollPosY;
+    int32 loopX;
+    int32 loopY;
     RSDK_THIS(ParallaxSprite);
 
     RSDKScreenInfo *screen = &ScreenInfo[SceneInfo->currentScreenID];
@@ -30,23 +33,24 @@ void ParallaxSprite_Draw(void)
     int32 scrollPosX = ((self->scrollPos.x + self->parallaxFactor.x * screen->position.x) & 0x7FFF0000) % self->loopPoint.x;
     drawPos.x        = self->position.x - scrollPosX;
 
-    int32 scrollPosY = ((self->scrollPos.y + self->parallaxFactor.y * screen->position.y) & 0x7FFF0000) % self->loopPoint.y;
+    scrollPosY = ((self->scrollPos.y + self->parallaxFactor.y * screen->position.y) & 0x7FFF0000) % self->loopPoint.y;
     drawPos.y        = self->position.y - scrollPosY;
 
-    int32 loopX = -self->loopPoint.x >> 2;
+    loopX = -self->loopPoint.x >> 2;
     if (drawPos.x < loopX)
         drawPos.x += self->loopPoint.x;
 
-    int32 loopY = -self->loopPoint.y >> 2;
+    loopY = -self->loopPoint.y >> 2;
     if (drawPos.y < loopY)
         drawPos.y += self->loopPoint.y;
 
     if (self->attribute == PARALLAXSPRITE_ATTR_COLORS) {
+        int32 i;
         int32 x = FROM_FIXED(drawPos.x) - 56;
         int32 y = FROM_FIXED(drawPos.y) - 32;
         RSDK.DrawRect(x, y, 112, 64, self->color1, 255, INK_NONE, true);
 
-        for (int32 i = 0; i < 0xE0; i += 0x20) {
+        for (i = 0; i < 0xE0; i += 0x20) {
             int32 height = MIN((RSDK.Sin256(i + Zone->timer) >> 3) + 48, 64);
             RSDK.DrawRect(x, y - height + 64, 16, height, self->color2, 255, INK_NONE, true);
             x += 16;
@@ -240,11 +244,12 @@ void ParallaxSprite_State_FadeOut(void)
 #if GAME_INCLUDE_EDITOR
 void ParallaxSprite_EditorDraw(void)
 {
+    Vector2 drawPos;
     RSDK_THIS(ParallaxSprite);
 
     RSDK.SetSpriteAnimation(ParallaxSprite->aniFrames, self->aniID, &self->animator, true, 0);
 
-    Vector2 drawPos = self->position;
+    drawPos = self->position;
 
     if (self->attribute == PARALLAXSPRITE_ATTR_COLORS) {
         int32 x = FROM_FIXED(drawPos.x) - 56;

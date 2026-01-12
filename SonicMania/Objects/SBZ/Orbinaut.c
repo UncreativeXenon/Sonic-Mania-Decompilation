@@ -21,9 +21,10 @@ void Orbinaut_StaticUpdate(void) {}
 
 void Orbinaut_Draw(void)
 {
+    int32 o;
     RSDK_THIS(Orbinaut);
 
-    for (int32 o = 0; o < ORBINAUT_ORB_COUNT; ++o) {
+    for (o = 0; o < ORBINAUT_ORB_COUNT; ++o) {
         if ((1 << o) & self->activeOrbs) {
             RSDK.DrawSprite(&self->animatorOrb, &self->orbPositions[o], false);
         }
@@ -100,19 +101,22 @@ void Orbinaut_DebugDraw(void)
 
 void Orbinaut_HandlePlayerInteractions(void)
 {
+    int32 i;
     RSDK_THIS(Orbinaut);
 
     int32 storeX = self->position.x;
     int32 storeY = self->position.y;
-    for (int32 i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
+    for (i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
         if ((1 << i) & self->activeOrbs) {
             self->position.x = self->orbPositions[i].x;
             self->position.y = self->orbPositions[i].y;
-            foreach_active(Player, player)
             {
-                if (self->planeFilter <= 0 || player->collisionPlane == (uint8)((self->planeFilter - 1) & 1)) {
-                    if (Player_CheckCollisionTouch(player, self, &Orbinaut->hitboxOrb)) {
-                        Player_Hurt(player, self);
+                foreach_active(Player, player)
+                {
+                    if (self->planeFilter <= 0 || player->collisionPlane == (uint8)((self->planeFilter - 1) & 1)) {
+                        if (Player_CheckCollisionTouch(player, self, &Orbinaut->hitboxOrb)) {
+                            Player_Hurt(player, self);
+                        }
                     }
                 }
             }
@@ -122,29 +126,34 @@ void Orbinaut_HandlePlayerInteractions(void)
     self->position.x = storeX;
     self->position.y = storeY;
 
-    foreach_active(Player, player)
     {
-        if (Player_CheckBadnikTouch(player, self, &Orbinaut->hitboxBadnik) && Player_CheckBadnikBreak(player, self, false)) {
-            int32 angle = self->angle;
-            for (int32 i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
-                if ((1 << i) & self->activeOrbs) {
-                    self->position.x    = self->orbPositions[i].x;
-                    self->position.y    = self->orbPositions[i].y;
-                    EntityOrbinaut *orb = CREATE_ENTITY(Orbinaut, INT_TO_VOID(true), self->orbPositions[i].x, self->orbPositions[i].y);
+        foreach_active(Player, player)
+        {
+            if (Player_CheckBadnikTouch(player, self, &Orbinaut->hitboxBadnik) && Player_CheckBadnikBreak(player, self, false)) {
+                int32 i;
+                int32 angle = self->angle;
+                for (i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
+                    if ((1 << i) & self->activeOrbs) {
+                        EntityOrbinaut *orb;
+                        self->position.x    = self->orbPositions[i].x;
+                        self->position.y    = self->orbPositions[i].y;
+                        orb = CREATE_ENTITY(Orbinaut, INT_TO_VOID(true), self->orbPositions[i].x, self->orbPositions[i].y);
 
-                    orb->state      = Orbinaut_State_OrbDebris;
-                    orb->velocity.x = 0x380 * RSDK.Cos256(angle);
-                    orb->velocity.y = 0x380 * RSDK.Sin256(angle);
+                        orb->state      = Orbinaut_State_OrbDebris;
+                        orb->velocity.x = 0x380 * RSDK.Cos256(angle);
+                        orb->velocity.y = 0x380 * RSDK.Sin256(angle);
+                    }
+                    angle += (0x100 / ORBINAUT_ORB_COUNT);
                 }
-                angle += (0x100 / ORBINAUT_ORB_COUNT);
+                destroyEntity(self);
             }
-            destroyEntity(self);
         }
     }
 }
 
 void Orbinaut_HandleRotation(void)
 {
+    int32 i;
     RSDK_THIS(Orbinaut);
 
     int32 angle = self->angle;
@@ -153,7 +162,7 @@ void Orbinaut_HandleRotation(void)
     else
         self->angle = (angle + 1) & 0xFF;
 
-    for (int32 i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
+    for (i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
         if ((1 << i) & self->activeOrbs) {
             self->orbPositions[i].x = (RSDK.Cos256(angle) << 12) + self->position.x;
             self->orbPositions[i].y = (RSDK.Sin256(angle) << 12) + self->position.y;
@@ -232,16 +241,18 @@ void Orbinaut_State_Moving(void)
 
 void Orbinaut_State_ReleasingOrbs(void)
 {
+    int32 i;
     RSDK_THIS(Orbinaut);
 
     uint8 angle = self->angle;
     Orbinaut_HandleRotation();
 
-    for (int32 i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
+    for (i = 0; i < ORBINAUT_ORB_COUNT; ++i) {
         if (angle == 64) {
             if ((1 << i) & self->activeOrbs) {
+                EntityOrbinaut *orb;
                 self->activeOrbs &= ~(1 << i);
-                EntityOrbinaut *orb = CREATE_ENTITY(Orbinaut, INT_TO_VOID(true), self->orbPositions[i].x, self->orbPositions[i].y);
+                orb = CREATE_ENTITY(Orbinaut, INT_TO_VOID(true), self->orbPositions[i].x, self->orbPositions[i].y);
                 if (self->direction == FLIP_NONE)
                     orb->velocity.x = -0x20000;
                 else
@@ -285,11 +296,13 @@ void Orbinaut_State_Orb(void)
     if (RSDK.CheckOnScreen(self, &self->updateRange)) {
         self->position.x += self->velocity.x;
 
-        foreach_active(Player, player)
-        {
-            if (self->planeFilter <= 0 || player->collisionPlane == (uint8)((self->planeFilter - 1) & 1)) {
-                if (Player_CheckCollisionTouch(player, self, &Orbinaut->hitboxOrb)) {
-                    Player_Hurt(player, self);
+{
+            foreach_active(Player, player)
+            {
+                if (self->planeFilter <= 0 || player->collisionPlane == (uint8)((self->planeFilter - 1) & 1)) {
+                    if (Player_CheckCollisionTouch(player, self, &Orbinaut->hitboxOrb)) {
+                        Player_Hurt(player, self);
+                    }
                 }
             }
         }

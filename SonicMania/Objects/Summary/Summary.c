@@ -24,11 +24,12 @@ void Summary_LateUpdate(void) {}
 void Summary_StaticUpdate(void)
 {
     if (--Summary->bgAniDuration <= 0) {
+        TileLayer *background;
         ++Summary->bgAniFrame;
         Summary->bgAniFrame &= 3;
         Summary->bgAniDuration = Summary->bgAniDurationTable[Summary->bgAniFrame];
 
-        TileLayer *background = RSDK.GetTileLayer(0);
+        background = RSDK.GetTileLayer(0);
         background->scrollPos = (background->scrollPos + 0x1000000) & 0x7FF0000;
     }
 }
@@ -77,41 +78,45 @@ void Summary_State_SetupText(void)
     self->gameModeLabel = NULL;
     self->saveFileLabel = NULL;
 
-    foreach_all(UIText, text)
-    {
-        switch (text->align) {
-            default:
-            case UITEXT_ALIGN_LEFT: break;
+{
+        foreach_all(UIText, text)
+        {
+            switch (text->align) {
+                default:
+                case UITEXT_ALIGN_LEFT: break;
 
-            case UITEXT_ALIGN_CENTER:
-                if (self->gameModeLabel)
-                    self->saveFileLabel = text;
-                else
-                    self->gameModeLabel = text;
-                break;
+                case UITEXT_ALIGN_CENTER:
+                    if (self->gameModeLabel)
+                        self->saveFileLabel = text;
+                    else
+                        self->gameModeLabel = text;
+                    break;
 
-            case UITEXT_ALIGN_RIGHT:
-                if (text->data1 == 0xFF) {
-                    self->totalTime = text;
-                }
-                else {
-                    if (text->data0 > -1 && text->data0 < 32)
-                        self->zoneLabels[text->data0] = text;
-                }
-                break;
+                case UITEXT_ALIGN_RIGHT:
+                    if (text->data1 == 0xFF) {
+                        self->totalTime = text;
+                    }
+                    else {
+                        if (text->data0 > -1 && text->data0 < 32)
+                            self->zoneLabels[text->data0] = text;
+                    }
+                    break;
+            }
         }
     }
 
     self->leaderCharacterID   = HUD_CharacterIndexFromID(GET_CHARACTER_ID(1)) + 1;
     self->sidekickCharacterID = HUD_CharacterIndexFromID(GET_CHARACTER_ID(2)) + 1;
 
-    foreach_all(UIPicture, picture)
-    {
-        if (picture->listID == 3) {
-            if (picture->frameID == 1)
-                self->player2Icon = picture;
-            else
-                self->player1Icon = picture;
+{
+        foreach_all(UIPicture, picture)
+        {
+            if (picture->listID == 3) {
+                if (picture->frameID == 1)
+                    self->player2Icon = picture;
+                else
+                    self->player1Icon = picture;
+            }
         }
     }
 
@@ -215,6 +220,11 @@ void Summary_GetPlayTime(char *buffer, int32 time)
 
 void Summary_LoadTimes(void)
 {
+    char playTime[0x100];
+    SaveRAM *saveRAM;
+    int32 totalTime;
+    int32 i;
+
     RSDK_THIS(Summary);
 
     if (globals->gameMode == MODE_ENCORE) {
@@ -242,18 +252,18 @@ void Summary_LoadTimes(void)
         Summary_SetTextString(0, self->saveFileLabel, text);
     }
 
-    SaveRAM *saveRAM = SaveGame_GetSaveRAM();
-    char playTime[0x100];
+    saveRAM = SaveGame_GetSaveRAM();
     memset(playTime, 0, 0x100);
-    int32 totalTime = 0;
+    totalTime = 0;
 
-    for (int32 i = 0; i < 0x20; ++i) {
+    for (i = 0; i < 0x20; ++i) {
         if (self->zoneLabels[i]) {
+            int32 newTotal;
             EntityUIText *text = self->zoneLabels[i];
 
             Summary_GetPlayTime(playTime, saveRAM->zoneTimes[text->data0]);
 
-            int32 newTotal = saveRAM->zoneTimes[text->data0] + totalTime;
+            newTotal = saveRAM->zoneTimes[text->data0] + totalTime;
             if (newTotal < totalTime)
                 newTotal = -1;
 

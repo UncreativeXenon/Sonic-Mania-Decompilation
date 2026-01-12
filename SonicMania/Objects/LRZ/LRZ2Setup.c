@@ -57,55 +57,59 @@ void LRZ2Setup_StaticUpdate(void)
     RSDK.SetLimitedFade(0, 5, 6, LRZ2Setup->lavaPalTimer, 224, 227);
 
     // Tile Behaviours
-    foreach_active(Player, player)
     {
-        if (player->onGround) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
-            uint8 behaviour      = LRZ2_TFLAGS_NORMAL;
-            int32 tileInfo       = 0;
+        foreach_active(Player, player)
+        {
+            if (player->onGround) {
+                bool32 conveyorCollided;
+                uint8 conveyorDir;
+                Hitbox *playerHitbox = Player_GetHitbox(player);
+                uint8 behaviour      = LRZ2_TFLAGS_NORMAL;
+                int32 tileInfo       = 0;
 
-            LRZ2Setup_GetTileInfo(player->position.x, player->position.y + (playerHitbox->bottom << 16), player->moveLayerPosition.x,
-                                  player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
+                LRZ2Setup_GetTileInfo(player->position.x, player->position.y + (playerHitbox->bottom << 16), player->moveLayerPosition.x,
+                                      player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
 
-            if (behaviour == LRZ2_TFLAGS_NORMAL) {
-                LRZ2Setup_GetTileInfo(player->position.x + (playerHitbox->right << 16), player->position.y + (playerHitbox->bottom << 16),
-                                      player->moveLayerPosition.x, player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
-            }
-
-            if (behaviour == LRZ2_TFLAGS_NORMAL) {
-                LRZ2Setup_GetTileInfo(player->position.x + (playerHitbox->left << 16), player->position.y + (playerHitbox->bottom << 16),
-                                      player->moveLayerPosition.x, player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
-            }
-
-            bool32 conveyorCollided = false;
-            uint8 conveyorDir       = 0;
-            switch (behaviour) {
-                default: break;
-                case LRZ2_TFLAGS_LAVA: {
-                    int32 solid = 1 << 14;
-                    if (player->collisionPlane)
-                        solid = 1 << 12;
-
-                    if ((solid & tileInfo) && player->shield != SHIELD_FIRE)
-                        Player_HurtFlip(player);
-                    break;
+                if (behaviour == LRZ2_TFLAGS_NORMAL) {
+                    LRZ2Setup_GetTileInfo(player->position.x + (playerHitbox->right << 16), player->position.y + (playerHitbox->bottom << 16),
+                                          player->moveLayerPosition.x, player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
                 }
 
-                case LRZ2_TFLAGS_CONVEYOR_L:
-                    conveyorCollided = true;
-                    conveyorDir      = 0;
-                    break;
+                if (behaviour == LRZ2_TFLAGS_NORMAL) {
+                    LRZ2Setup_GetTileInfo(player->position.x + (playerHitbox->left << 16), player->position.y + (playerHitbox->bottom << 16),
+                                          player->moveLayerPosition.x, player->moveLayerPosition.y, player->collisionPlane, &tileInfo, &behaviour);
+                }
 
-                case LRZ2_TFLAGS_CONVEYOR_R:
-                    conveyorCollided = true;
-                    conveyorDir      = 1;
-                    break;
-            }
+                conveyorCollided = false;
+                conveyorDir       = 0;
+                switch (behaviour) {
+                    default: break;
+                    case LRZ2_TFLAGS_LAVA: {
+                        int32 solid = 1 << 14;
+                        if (player->collisionPlane)
+                            solid = 1 << 12;
 
-            if (!LRZ2Setup->conveyorOff && conveyorCollided) {
-                if (player->onGround) {
-                    player->position.x += (2 * ((((tileInfo & 0x400) != 0) ^ (LRZ2Setup->conveyorDir & 0xFF)) != conveyorDir) - 1) << 17;
-                    player->position.y += 0x10000;
+                        if ((solid & tileInfo) && player->shield != SHIELD_FIRE)
+                            Player_HurtFlip(player);
+                        break;
+                    }
+
+                    case LRZ2_TFLAGS_CONVEYOR_L:
+                        conveyorCollided = true;
+                        conveyorDir      = 0;
+                        break;
+
+                    case LRZ2_TFLAGS_CONVEYOR_R:
+                        conveyorCollided = true;
+                        conveyorDir      = 1;
+                        break;
+                }
+
+                if (!LRZ2Setup->conveyorOff && conveyorCollided) {
+                    if (player->onGround) {
+                        player->position.x += (2 * ((((tileInfo & 0x400) != 0) ^ (LRZ2Setup->conveyorDir & 0xFF)) != conveyorDir) - 1) << 17;
+                        player->position.y += 0x10000;
+                    }
                 }
             }
         }
@@ -122,7 +126,8 @@ void LRZ2Setup_StageLoad(void)
     Animals->animalTypes[1] = ANIMAL_CUCKY;
 
     if (!isMainGameMode() || !globals->atlEnabled || CutsceneRules_CheckStageReload()) {
-        for (int32 p = 0; p < Player->playerCount; ++p) {
+        int32 p;
+        for (p = 0; p < Player->playerCount; ++p) {
             Zone->cameraBoundsL[p] += 0x100;
         }
     }
@@ -132,7 +137,7 @@ void LRZ2Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreLRZ2.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreLRZ2.act", 0xFF);
         RSDK.CopyPalette(0, 128, 1, 128, 128);
     }
 #endif
@@ -150,19 +155,23 @@ void LRZ2Setup_HandleStageReload(void)
 {
     Vector2 pos = { 0, 0 };
 
-    foreach_all(DashLift, lift)
     {
-        pos.x = lift->position.x;
-        pos.y = lift->position.y;
-        foreach_break;
+        foreach_all(DashLift, lift)
+        {
+            pos.x = lift->position.x;
+            pos.y = lift->position.y;
+            foreach_break;
+        }
     }
 
     Zone_ReloadStoredEntities(pos.x, pos.y, false);
 
-    foreach_all(Player, player)
     {
-        player->position.x = pos.x;
-        player->position.y = pos.y - 0x100000;
+        foreach_all(Player, player)
+        {
+            player->position.x = pos.x;
+            player->position.y = pos.y - 0x100000;
+        }
     }
 
     CREATE_ENTITY(LRZ1Outro, NULL, 0, 0);
@@ -179,11 +188,12 @@ void LRZ2Setup_Trigger_StartOutro(void)
 #endif
 
         if (player1->stateInput) {
+            int32 p;
             player1->stateInput = StateMachine_None;
             player1->left       = false;
             player1->right      = true;
 
-            for (int32 p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
+            for (p = 0; p < Player->playerCount; ++p) StarPost->postIDs[p] = 0;
 
             SaveGame_SavePlayerState();
 
@@ -267,14 +277,18 @@ void LRZ2Setup_GetTileInfo(int32 x, int32 y, int32 moveOffsetX, int32 moveOffset
 
     int32 tileMove  = 0;
     int32 flagsMove = 0;
+    
+    int32 tileSolidLow;
+    int32 tileSolidHigh;
+    int32 tileSolidMove;
     if (Zone->moveLayer) {
         tileMove  = RSDK.GetTile(Zone->moveLayer, (moveOffsetX + x) >> 20, (moveOffsetY + y) >> 20);
         flagsMove = RSDK.GetTileFlags(tileMove, cPlane);
     }
 
-    int32 tileSolidLow  = 0;
-    int32 tileSolidHigh = 0;
-    int32 tileSolidMove = 0;
+    tileSolidLow  = 0;
+    tileSolidHigh = 0;
+    tileSolidMove = 0;
     if (cPlane) {
         tileSolidHigh = (tileHigh >> 14) & 3;
         tileSolidLow  = (tileLow >> 14) & 3;

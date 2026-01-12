@@ -171,11 +171,12 @@ void Chopper_State_Jump(void)
 
 void Chopper_State_Swim(void)
 {
+    bool32 hitWall;
     RSDK_THIS(Chopper);
 
     self->position.x += self->velocity.x;
 
-    bool32 hitWall = false;
+    hitWall = false;
     if (self->direction) {
         hitWall = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_LWALL, 0, 0x100000, 0, true);
         hitWall |= RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_LWALL, 0, 0x100000, -0xF0000, true);
@@ -237,11 +238,12 @@ void Chopper_State_ChargeDelay(void)
 
 void Chopper_State_Charge(void)
 {
+    bool32 hitWall;
     RSDK_THIS(Chopper);
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    bool32 hitWall = false;
+    hitWall = false;
     if (self->direction) {
         hitWall = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_LWALL, 0, 0x100000, 0, true);
         hitWall |= RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_LWALL, 0, 0x100000, -0xF0000, true);
@@ -272,10 +274,12 @@ void Chopper_State_Charge(void)
     }
     else {
         hitWall = RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_ROOF, 0, 0, -0x100000, true);
-        foreach_active(Water, water)
         {
-            if (water->type == WATER_POOL)
-                hitWall |= !RSDK.CheckObjectCollisionTouchBox(water, &water->hitbox, self, &Chopper->hitboxWater);
+            foreach_active(Water, water)
+            {
+                if (water->type == WATER_POOL)
+                    hitWall |= !RSDK.CheckObjectCollisionTouchBox(water, &water->hitbox, self, &Chopper->hitboxWater);
+            }
         }
     }
 

@@ -61,14 +61,19 @@ void PhantomMissile_StageLoad(void)
 
 void PhantomMissile_GetTargetPos(void)
 {
+    int32 p;
     RSDK_THIS(PhantomMissile);
 
     int32 distance = 0x7FFFFFFF;
 
-    for (int32 p = SLOT_PLAYER1; p < Player->playerCount; ++p) {
+    for (p = SLOT_PLAYER1; p < Player->playerCount; ++p) {
+        int32 rx;
+        int32 ry;
+        int32 dist;
         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
 
         if (player->sidekick == true && player->stateInput != Player_Input_P2_Player) {
+            int32 y;
             int32 storeX     = self->position.x;
             int32 storeY     = self->position.y;
             self->position.x = self->targetPos.x;
@@ -78,16 +83,16 @@ void PhantomMissile_GetTargetPos(void)
                 self->position.y += 0x100000;
             }
 
-            int32 y           = self->position.y;
+            y           = self->position.y;
             self->position.x  = storeX;
             self->position.y  = storeY;
             self->targetPos.y = y;
             foreach_break;
         }
 
-        int32 rx   = (self->position.x - player->position.x) >> 16;
-        int32 ry   = (self->position.y - player->position.y) >> 16;
-        int32 dist = rx * rx + ry * ry;
+        rx   = (self->position.x - player->position.x) >> 16;
+        ry   = (self->position.y - player->position.y) >> 16;
+        dist = rx * rx + ry * ry;
         if (dist < distance) {
             distance          = dist;
             self->targetPos.x = player->position.x;
@@ -116,10 +121,11 @@ void PhantomMissile_State_Attached(void)
     RSDK_THIS(PhantomMissile);
 
     if (self->parent) {
+        int32 off;
         self->position.x     = self->parent->position.x;
         self->position.y     = self->parent->position.y;
         self->oscillateAngle = (self->oscillateAngle + 6) & 0xFF;
-        int32 off            = 8 * RSDK.Sin256(self->oscillateAngle) + 0x2000;
+        off            = 8 * RSDK.Sin256(self->oscillateAngle) + 0x2000;
 
         self->position.x += off * RSDK.Sin256(self->angle);
         self->position.y -= off * RSDK.Cos256(self->angle);
@@ -181,6 +187,12 @@ void PhantomMissile_State_Launched(void)
 
 void PhantomMissile_State_Attacking(void)
 {
+
+    int32 shift;
+    int32 rx;
+    int32 ry;
+    int32 angle;
+    int32 rot;
     RSDK_THIS(PhantomMissile);
 
     RSDK.ProcessAnimation(&self->missileAnimator);
@@ -194,11 +206,11 @@ void PhantomMissile_State_Attacking(void)
     if (self->timer > 4)
         self->timer--;
 
-    int32 shift = self->timer >> 2;
-    int32 rx    = (self->targetPos.x - self->position.x) >> 16;
-    int32 ry    = (self->targetPos.y - self->position.y) >> 16;
-    int32 angle = RSDK.ATan2(-ry, rx);
-    int32 rot   = 2 * angle - self->rotation;
+    shift = self->timer >> 2;
+    rx    = (self->targetPos.x - self->position.x) >> 16;
+    ry    = (self->targetPos.y - self->position.y) >> 16;
+    angle = RSDK.ATan2(-ry, rx);
+    rot   = 2 * angle - self->rotation;
 
     if (abs(rot) >= abs(rot - 0x200)) {
         if (abs(rot - 0x200) < abs(rot + 0x200))

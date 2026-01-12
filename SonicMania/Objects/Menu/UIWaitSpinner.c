@@ -75,9 +75,10 @@ void UIWaitSpinner_StageLoad(void)
 
 void UIWaitSpinner_StartWait(void)
 {
+    EntityUIWaitSpinner *spinner;
     ++UIWaitSpinner->timer;
 
-    EntityUIWaitSpinner *spinner = UIWaitSpinner->activeSpinner;
+    spinner = UIWaitSpinner->activeSpinner;
 
     if (UIWaitSpinner->timer <= 0) {
         if (spinner)
@@ -96,10 +97,11 @@ void UIWaitSpinner_StartWait(void)
 }
 void UIWaitSpinner_FinishWait(void)
 {
+    EntityUIWaitSpinner *spinner;
     if (UIWaitSpinner->timer > 0)
         UIWaitSpinner->timer--;
 
-    EntityUIWaitSpinner *spinner = UIWaitSpinner->activeSpinner;
+    spinner = UIWaitSpinner->activeSpinner;
 
     if (UIWaitSpinner->timer <= 0) {
         if (spinner)

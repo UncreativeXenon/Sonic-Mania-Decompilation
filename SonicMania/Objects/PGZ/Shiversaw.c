@@ -26,11 +26,12 @@ void Shiversaw_StaticUpdate(void)
 
 void Shiversaw_Draw(void)
 {
+    int32 s;
     RSDK_THIS(Shiversaw);
     Vector2 drawPos;
 
     self->sawID = SHIVERSAW_SAW_COUNT;
-    for (int32 s = 0; s < SHIVERSAW_SAW_COUNT; ++s) {
+    for (s = 0; s < SHIVERSAW_SAW_COUNT; ++s) {
         --self->sawID;
         self->direction = self->sawID;
 
@@ -44,22 +45,26 @@ void Shiversaw_Draw(void)
         drawPos.y = self->position.y + 0x70000;
 
         if (self->sawRadius[self->sawID] >> 19 < 0) {
+            int32 cnt;
+            int32 i;
             drawPos.x -= ((-self->sawRadius[self->sawID] >> 9) & 0x380) * RSDK.Cos512(self->rotation + (self->sawID << 8));
             drawPos.y -= ((-self->sawRadius[self->sawID] >> 9) & 0x380) * RSDK.Sin512(self->rotation + (self->sawID << 8));
 
-            int32 cnt = ~(self->sawRadius[self->sawID] >> 19);
-            for (int32 i = cnt; i > 0; --i) {
+            cnt = ~(self->sawRadius[self->sawID] >> 19);
+            for (i = cnt; i > 0; --i) {
                 drawPos.x += -0x400 * RSDK.Cos512(self->rotation + (self->sawID << 8));
                 drawPos.y += -0x400 * RSDK.Sin512(self->rotation + (self->sawID << 8));
             }
         }
         else {
+            int32 cnt;
+            int32 i;
             drawPos.x += ((self->sawRadius[self->sawID] >> 9) & 0x380) * RSDK.Cos512(self->rotation + (self->sawID << 8));
             drawPos.y += ((self->sawRadius[self->sawID] >> 9) & 0x380) * RSDK.Sin512(self->rotation + (self->sawID << 8));
             RSDK.DrawSprite(&self->armAnimator, &drawPos, false);
 
-            int32 cnt = (self->sawRadius[self->sawID] >> 19) - 1;
-            for (int32 i = cnt; i >= 0; --i) {
+            cnt = (self->sawRadius[self->sawID] >> 19) - 1;
+            for (i = cnt; i >= 0; --i) {
                 drawPos.x += RSDK.Cos512(self->rotation + (self->sawID << 8)) << 10;
                 drawPos.y += RSDK.Sin512(self->rotation + (self->sawID << 8)) << 10;
                 RSDK.DrawSprite(&self->armAnimator, &drawPos, false);
@@ -99,6 +104,7 @@ void Shiversaw_Create(void *data)
 
     if (!SceneInfo->inEditor) {
         if (globals->gameMode < MODE_TIMEATTACK) {
+            int32 s;
             self->active    = ACTIVE_BOUNDS;
             self->visible   = false;
             self->drawGroup = Zone->objectDrawGroup[0];
@@ -113,7 +119,7 @@ void Shiversaw_Create(void *data)
 
             self->updateRange.x = 0x800000;
             self->updateRange.y = 0x800000;
-            for (int32 s = 0; s < SHIVERSAW_SAW_COUNT; ++s) {
+            for (s = 0; s < SHIVERSAW_SAW_COUNT; ++s) {
                 self->stateSaw[s]  = Shiversaw_StateSaw_Setup;
                 self->sawAngles[s] = 0x80 + ((s & 1) != 0) * 0x100;
             }
@@ -192,6 +198,8 @@ bool32 Shiversaw_CheckSawHit(EntityPlayer *player, int32 sawID)
 
 #if MANIA_USE_PLUS
     if (player->characterID == ID_MIGHTY) {
+        int32 storeX;
+        int32 storeY;
         int32 anim = player->animator.animationID;
         if (anim != ANI_JUMP && anim != ANI_SPINDASH && anim != ANI_HAMMERDROP)
             return Player_Hurt(player, &self->sawPos[sawID]);
@@ -216,8 +224,8 @@ bool32 Shiversaw_CheckSawHit(EntityPlayer *player, int32 sawID)
             RSDK.PlaySfx(Spikes->sfxSpike, false, 255);
         }
 
-        int32 storeX     = self->position.x;
-        int32 storeY     = self->position.y;
+        storeX     = self->position.x;
+        storeY     = self->position.y;
         self->position.x = self->sawPos[sawID].x;
         self->position.y = self->sawPos[sawID].y;
         RSDK.PlaySfx(Ice->sfxWindowShatter, false, 255);
@@ -248,7 +256,8 @@ void Shiversaw_CheckPlayerCollisions(void)
 
         foreach_active(Player, player)
         {
-            for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+            int32 i;
+            for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
                 if (self->sawAnimator[i].animationID == 3) {
                     self->position = self->sawPos[i];
                     if (Player_CheckCollisionTouch(player, self, &Shiversaw->hitboxSaw)) {
@@ -272,9 +281,10 @@ void Shiversaw_CheckPlayerCollisions(void)
 
 void Shiversaw_SetupSawPos(void)
 {
+    int32 i;
     RSDK_THIS(Shiversaw);
 
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         if (i & 1)
             self->sawPos[i].x = self->position.x - 0x210000;
         else
@@ -303,15 +313,20 @@ void Shiversaw_Hit(void)
         }
     }
     else {
+        int32 storeX;
+        int32 storeY;
+        int32 i;
+        EntityPlayer *player1;
+
         RSDK.PlaySfx(Shiversaw->sfxExplosion2, false, 255);
 
         Shiversaw->invincibilityTimer = 30;
-        int32 storeX                  = self->position.x;
-        int32 storeY                  = self->position.y;
+        storeX                  = self->position.x;
+        storeY                  = self->position.y;
 
         self->sawID = 0;
 
-        for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+        for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
             if (self->stateSaw[self->sawID] != Shiversaw_StateSaw_Destroyed) {
                 RSDK.PlaySfx(Ice->sfxWindowShatter, false, 255);
                 self->position.x = self->sawPos[self->sawID].x;
@@ -333,7 +348,7 @@ void Shiversaw_Hit(void)
         self->state            = Shiversaw_State_Destroyed;
         SceneInfo->timeEnabled = false;
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         Player_GiveScore(player1, 1000);
     }
 }
@@ -358,6 +373,7 @@ void Shiversaw_Explode(void)
 
 void Shiversaw_CheckBoxCollisions(EntityPlayer *player)
 {
+    uint8 collisionSideMask;
     RSDK_THIS(Shiversaw);
 
     self->position.y = self->origin.y;
@@ -402,72 +418,74 @@ void Shiversaw_CheckBoxCollisions(EntityPlayer *player)
         }
     }
 
-    uint8 collisionSideMask = 0;
-    foreach_all(Crate, crate)
+    collisionSideMask = 0;
     {
-        if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxT) && !(collisionSideMask & 1)) {
-            if (player->position.x >= self->position.x) {
-                if (self->velocity.x >= 0 && self->velocity.x < 0x8000) {
-                    self->velocity.x = 0x8000;
-                    collisionSideMask |= 1;
+        foreach_all(Crate, crate)
+        {
+            if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxT) && !(collisionSideMask & 1)) {
+                if (player->position.x >= self->position.x) {
+                    if (self->velocity.x >= 0 && self->velocity.x < 0x8000) {
+                        self->velocity.x = 0x8000;
+                        collisionSideMask |= 1;
+                    }
+                    else if (self->velocity.x < 0) {
+                        self->velocity.x = 0;
+                        collisionSideMask |= 1;
+                    }
                 }
-                else if (self->velocity.x < 0) {
+                else {
+                    if (Shiversaw->timer > 0 && self->stateSaw[1] == Shiversaw_StateSaw_Active) {
+                        self->sawTimers[1]    = 0;
+                        self->sawRadiusVel[1] = -0x20000;
+                        RSDK.PlaySfx(Shiversaw->sfxTargeting, false, 255);
+                        self->stateSaw[1] = Shiversaw_StateSaw_Extend;
+                    }
+
                     self->velocity.x = 0;
                     collisionSideMask |= 1;
                 }
             }
-            else {
-                if (Shiversaw->timer > 0 && self->stateSaw[1] == Shiversaw_StateSaw_Active) {
-                    self->sawTimers[1]    = 0;
-                    self->sawRadiusVel[1] = -0x20000;
-                    RSDK.PlaySfx(Shiversaw->sfxTargeting, false, 255);
-                    self->stateSaw[1] = Shiversaw_StateSaw_Extend;
+            else if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxL) && !(collisionSideMask & 2)) {
+                if (player->position.x <= self->position.x) {
+                    if (self->velocity.x <= 0 && self->velocity.x > -0x8000)
+                        self->velocity.x = -0x8000;
+                    else if (self->velocity.x > 0)
+                        self->velocity.x = 0;
                 }
+                else {
+                    if (Shiversaw->timer > 0 && self->stateSaw[0] == Shiversaw_StateSaw_Active) {
+                        self->sawTimers[0]    = 0;
+                        self->sawRadiusVel[0] = -0x20000;
+                        RSDK.PlaySfx(Shiversaw->sfxTargeting, false, 255);
+                        self->stateSaw[0] = Shiversaw_StateSaw_Extend;
+                    }
 
-                self->velocity.x = 0;
-                collisionSideMask |= 1;
-            }
-        }
-        else if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxL) && !(collisionSideMask & 2)) {
-            if (player->position.x <= self->position.x) {
-                if (self->velocity.x <= 0 && self->velocity.x > -0x8000)
-                    self->velocity.x = -0x8000;
-                else if (self->velocity.x > 0)
                     self->velocity.x = 0;
-            }
-            else {
-                if (Shiversaw->timer > 0 && self->stateSaw[0] == Shiversaw_StateSaw_Active) {
-                    self->sawTimers[0]    = 0;
-                    self->sawRadiusVel[0] = -0x20000;
-                    RSDK.PlaySfx(Shiversaw->sfxTargeting, false, 255);
-                    self->stateSaw[0] = Shiversaw_StateSaw_Extend;
                 }
 
-                self->velocity.x = 0;
+                collisionSideMask |= 2;
             }
 
-            collisionSideMask |= 2;
-        }
+            if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxR) && !(collisionSideMask & 4)) {
+                if (self->velocity.y >= 0 && self->velocity.y < 0x8000)
+                    self->velocity.y = 0x8000;
+                else if (self->velocity.y < 0)
+                    self->velocity.y = 0;
 
-        if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxR) && !(collisionSideMask & 4)) {
-            if (self->velocity.y >= 0 && self->velocity.y < 0x8000)
-                self->velocity.y = 0x8000;
-            else if (self->velocity.y < 0)
-                self->velocity.y = 0;
+                collisionSideMask |= 4;
+            }
+            else if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxB) && !(collisionSideMask & 8)) {
+                if (self->velocity.y <= 0 && self->velocity.y > -0x8000)
+                    self->velocity.y = -0x8000;
+                else if (self->velocity.y > 0)
+                    self->velocity.y = 0;
 
-            collisionSideMask |= 4;
-        }
-        else if (RSDK.CheckObjectCollisionTouchBox(crate, &crate->hitbox, self, &Shiversaw->hitboxB) && !(collisionSideMask & 8)) {
-            if (self->velocity.y <= 0 && self->velocity.y > -0x8000)
-                self->velocity.y = -0x8000;
-            else if (self->velocity.y > 0)
-                self->velocity.y = 0;
+                collisionSideMask |= 8;
+            }
 
-            collisionSideMask |= 8;
-        }
-
-        if (collisionSideMask == (1 | 2 | 4)) {
-            foreach_break;
+            if (collisionSideMask == (1 | 2 | 4)) {
+                foreach_break;
+            }
         }
     }
 }
@@ -477,6 +495,7 @@ void Shiversaw_State_Entry(void)
     RSDK_THIS(Shiversaw);
 
     if (++self->timer >= 2) {
+        EntityPlayer *player1;
 #if MANIA_USE_PLUS
         foreach_active(Player, player)
         {
@@ -489,9 +508,10 @@ void Shiversaw_State_Entry(void)
             Player_CheckCollisionBox(player, self, &Shiversaw->hitboxEntryBounds);
         }
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         if (player1->classID == Player->classID && player1->position.x < self->position.x - 0x380000) {
             if (player1->position.y > self->position.y + 0x400000 && player1->onGround) {
+                EntityPlayer *player2;
                 self->timer                 = 0;
                 Zone->playerBoundActiveR[0] = true;
                 Zone->cameraBoundsR[0]      = (self->position.x >> 16) + 416;
@@ -517,7 +537,7 @@ void Shiversaw_State_Entry(void)
                 player1->down            = false;
                 player1->up              = true;
 
-                EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+                player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
                 if (player2->classID == Player->classID) {
                     if (Player_CheckValidState(player2)) {
                         player2->direction       = FLIP_X;
@@ -541,6 +561,7 @@ void Shiversaw_State_Entry(void)
             }
             else if (player->position.x < self->position.x - 0x380000) {
                 if (player1->position.y > self->position.y - 0x1000000) {
+                    EntityPlayer *player2;
                     player1->stateInput = StateMachine_None;
                     player1->jumpPress  = false;
                     player1->jumpHold   = false;
@@ -549,7 +570,7 @@ void Shiversaw_State_Entry(void)
                     player1->down       = false;
                     player1->up         = true;
 
-                    EntityPlayer *player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+                    player2 = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
                     if (player2->classID == Player->classID) {
                         if (Player_CheckValidState(player2)) {
                             player2->stateInput = StateMachine_None;
@@ -586,12 +607,13 @@ void Shiversaw_State_SetupBounds(void)
 
 #if MANIA_USE_PLUS
     if (++self->timer >= 60) {
+        EntityPlayer *player1;
         self->timer = 0;
 #endif
         Zone->playerBoundActiveL[0] = true;
         Zone->cameraBoundsL[0]      = ScreenInfo->position.x;
 
-        EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+        player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         if (player1->position.x > self->position.x + 0x500000) {
             if (player1->position.y > self->startY) {
                 Zone->playerBoundActiveL[0] = true;
@@ -609,6 +631,7 @@ void Shiversaw_State_SetupBounds(void)
 
 void Shiversaw_State_EnterShiversaw(void)
 {
+    int32 i;
     RSDK_THIS(Shiversaw);
 
     self->position.y += 0x30000;
@@ -624,7 +647,7 @@ void Shiversaw_State_EnterShiversaw(void)
         self->state      = Shiversaw_State_Idle;
     }
 
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         self->sawID = i;
         StateMachine_Run(self->stateSaw[i]);
     }
@@ -632,14 +655,16 @@ void Shiversaw_State_EnterShiversaw(void)
 
 void Shiversaw_State_HitRecoil_Tutorial(void)
 {
+    int32 id;
+    int32 i;
     RSDK_THIS(Shiversaw);
 
     RSDK.ProcessAnimation(&self->bellowsAnimator);
 
     self->position.y = BadnikHelpers_Oscillate(self->origin.y, 2, 10);
 
-    int32 id = 0;
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    id = 0;
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         self->sawID = i;
 
         if (self->stateSaw[i]) {
@@ -656,12 +681,14 @@ void Shiversaw_State_HitRecoil_Tutorial(void)
         self->timer = 120;
         self->state = Shiversaw_State_Idle;
 
-        foreach_active(Player, player)
-        {
-            if (player->sidekick)
-                player->stateInput = Player_Input_P2_AI;
-            else
-                player->stateInput = Player_Input_P1;
+{
+            foreach_active(Player, player)
+            {
+                if (player->sidekick)
+                    player->stateInput = Player_Input_P2_AI;
+                else
+                    player->stateInput = Player_Input_P1;
+            }
         }
     }
 
@@ -670,6 +697,7 @@ void Shiversaw_State_HitRecoil_Tutorial(void)
 
 void Shiversaw_State_Idle(void)
 {
+    int32 i;
     RSDK_THIS(Shiversaw);
 
     if (self->bellowsAnimator.frameID != 7)
@@ -677,7 +705,7 @@ void Shiversaw_State_Idle(void)
 
     self->position.y = BadnikHelpers_Oscillate(self->origin.y, 2, 10);
 
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         self->sawID = i;
         StateMachine_Run(self->stateSaw[i]);
     }
@@ -690,16 +718,19 @@ void Shiversaw_State_Idle(void)
 
 void Shiversaw_State_MoveToPlayer(void)
 {
+    bool32 isActive;
+    int32 i;
     RSDK_THIS(Shiversaw);
 
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     self->velocity.x      = 0;
     self->velocity.y      = 0;
 
-    bool32 isActive = true;
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) isActive &= self->stateSaw[i] == Shiversaw_StateSaw_Active;
+    isActive = true;
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) isActive &= self->stateSaw[i] == Shiversaw_StateSaw_Active;
 
     if (isActive) {
+        int32 distY;
         int32 x = self->position.x;
         int32 y = self->origin.y;
 
@@ -717,7 +748,7 @@ void Shiversaw_State_MoveToPlayer(void)
         else
             self->velocity.x = -0xC000;
 
-        int32 distY = self->origin.y - player1->position.y;
+        distY = self->origin.y - player1->position.y;
         if (distY < 0) {
             if (distY <= -0x540000) {
                 if (distY < -0x550000)
@@ -748,7 +779,7 @@ void Shiversaw_State_MoveToPlayer(void)
     }
 
     self->position.y = BadnikHelpers_Oscillate(self->origin.y, 2, 10);
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         self->sawID = i;
         StateMachine_Run(self->stateSaw[i]);
     }
@@ -758,11 +789,16 @@ void Shiversaw_State_MoveToPlayer(void)
 
 void Shiversaw_State_HitRecoil(void)
 {
+    EntityPlayer *player1;
+    int32 x;
+    int32 y;
+    int32 id;
+    int32 i;
     RSDK_THIS(Shiversaw);
 
     RSDK.ProcessAnimation(&self->bellowsAnimator);
 
-    EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+    player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
     if (self->position.x <= player1->position.x)
         self->velocity.x = -0x1000 * (11 - Shiversaw->health);
@@ -773,8 +809,8 @@ void Shiversaw_State_HitRecoil(void)
     if (self->position.y <= player1->position.y)
         self->velocity.y = -self->velocity.y;
 
-    int32 x = self->position.x;
-    int32 y = self->origin.y;
+    x = self->position.x;
+    y = self->origin.y;
     self->position.x += self->velocity.x;
     self->origin.y += self->velocity.y;
 
@@ -785,8 +821,8 @@ void Shiversaw_State_HitRecoil(void)
 
     self->position.y = BadnikHelpers_Oscillate(self->origin.y, 2, 10);
 
-    int32 id = 0;
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    id = 0;
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         self->sawID = i;
 
         if (self->stateSaw[i]) {
@@ -815,10 +851,11 @@ void Shiversaw_State_HitRecoil(void)
 
 void Shiversaw_State_Destroyed(void)
 {
+    int32 i;
     RSDK_THIS(Shiversaw);
     RSDK.ProcessAnimation(&self->bellowsAnimator);
 
-    for (int32 i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
+    for (i = 0; i < SHIVERSAW_SAW_COUNT; ++i) {
         self->sawID = i;
         StateMachine_Run(self->stateSaw[i]);
     }
@@ -917,6 +954,7 @@ void Shiversaw_State_DropSignPost(void)
 
 void Shiversaw_CheckCrateCollisions(void)
 {
+    bool32 shatteredSaw;
     RSDK_THIS(Shiversaw);
 
     int32 sawID  = self->sawID;
@@ -926,7 +964,7 @@ void Shiversaw_CheckCrateCollisions(void)
     self->position.x = self->sawPos[sawID].x;
     self->position.y = self->sawPos[sawID].y;
 
-    bool32 shatteredSaw = false;
+    shatteredSaw = false;
     if (self->state != Shiversaw_State_EnterShiversaw) {
         foreach_all(InvisibleBlock, block)
         {

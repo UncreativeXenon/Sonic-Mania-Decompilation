@@ -97,11 +97,13 @@ void MSZSpotlight_State_Idle(void)
 
     if (++self->timer == 30) {
         self->timer = 0;
-        foreach_active(HeavyMystic, mystic)
         {
-            if (mystic->type == MYSTIC_BOX) {
-                self->startPos.x = mystic->position.x;
-                self->startPos.y = mystic->position.y;
+            foreach_active(HeavyMystic, mystic)
+            {
+                if (mystic->type == MYSTIC_BOX) {
+                    self->startPos.x = mystic->position.x;
+                    self->startPos.y = mystic->position.y;
+                }
             }
         }
 
@@ -113,13 +115,15 @@ void MSZSpotlight_State_Idle(void)
 
 void MSZSpotlight_State_MoveToBox(void)
 {
+    int32 rx;
+    int32 ry;
     RSDK_THIS(MSZSpotlight);
 
     self->position.x += self->velocity.x;
     self->position.y += self->velocity.y;
 
-    int32 rx = (self->startPos.x - self->position.x) >> 16;
-    int32 ry = (self->startPos.y - self->position.y) >> 16;
+    rx = (self->startPos.x - self->position.x) >> 16;
+    ry = (self->startPos.y - self->position.y) >> 16;
 
     if (rx * rx + ry * ry < 16) {
         foreach_active(HeavyMystic, mystic)

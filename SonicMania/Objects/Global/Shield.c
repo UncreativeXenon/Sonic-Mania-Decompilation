@@ -11,10 +11,11 @@ ObjectShield *Shield;
 
 void Shield_Update(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Shield);
     StateMachine_Run(self->state);
 
-    EntityPlayer *player = self->player;
+    player = self->player;
     if (player) {
         // bit 0 = flipX
         // bit 1 = flipY
@@ -35,9 +36,11 @@ void Shield_StaticUpdate(void) {}
 
 void Shield_Draw(void)
 {
+    EntityPlayer *player;
+    Hitbox *playerHitbox;
     RSDK_THIS(Shield);
 
-    EntityPlayer *player = self->player;
+    player = self->player;
     if (player) {
         if (player->isChibi) {
             self->drawFX |= FX_SCALE;
@@ -55,7 +58,7 @@ void Shield_Draw(void)
 
         self->position = player->position;
 
-        Hitbox *playerHitbox = RSDK.GetHitbox(&player->animator, 0);
+        playerHitbox = RSDK.GetHitbox(&player->animator, 0);
         if (playerHitbox) {
             if (player->direction & FLIP_X)
                 self->position.x += (playerHitbox->left << 15) - (playerHitbox->right << 15) - (playerHitbox->left << 16);
@@ -180,6 +183,7 @@ void Shield_State_FireDash(void)
 
 void Shield_State_LightningSparks(void)
 {
+    EntityDebris *debris;
     RSDK_THIS(Shield);
 
     RSDK.ProcessAnimation(&self->shieldAnimator);
@@ -191,7 +195,7 @@ void Shield_State_LightningSparks(void)
         self->position.y = self->player->position.y;
     }
 
-    EntityDebris *debris = CREATE_ENTITY(Debris, Debris_State_Move, self->position.x, self->position.y);
+    debris = CREATE_ENTITY(Debris, Debris_State_Move, self->position.x, self->position.y);
     debris->timer        = 22;
     debris->velocity.x   = -TO_FIXED(2);
     debris->velocity.y   = -TO_FIXED(2);

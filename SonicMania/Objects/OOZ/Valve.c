@@ -16,10 +16,12 @@ void Valve_Update(void)
     RSDK.ProcessAnimation(&self->valveAnimator);
     RSDK.ProcessAnimation(&self->wheelAnimator);
 
-    foreach_active(Player, player)
-    {
-        if (Player_CheckCollisionTouch(player, self, &Valve->hitbox))
-            OOZSetup->smogTimer = 0;
+{
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &Valve->hitbox))
+                OOZSetup->smogTimer = 0;
+        }
     }
 
     if (self->wheelAnimator.animationID == 2 && self->wheelAnimator.frameID == 5 && self->wheelAnimator.timer == 1)

@@ -11,10 +11,11 @@ ObjectAIZKingClaw *AIZKingClaw;
 
 void AIZKingClaw_Update(void)
 {
+    int32 i;
     RSDK_THIS(AIZKingClaw);
     StateMachine_Run(self->state);
 
-    for (int32 i = 0; i < MIN(self->grabCount, 8); ++i) {
+    for (i = 0; i < MIN(self->grabCount, 8); ++i) {
         Entity *grabbed = self->grabbedEntities[i];
         if (grabbed) {
             grabbed->position.x = self->clawPos.x;
@@ -47,7 +48,8 @@ void AIZKingClaw_Draw(void)
         RSDK.DrawSprite(&self->clawBackAnimator, &self->clawPos, false);
     }
     else {
-        for (int32 i = 0; i < AIZKingClaw_ChainCount; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
+        int32 i;
+        for (i = 0; i < AIZKingClaw_ChainCount; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
 
         RSDK.DrawSprite(&self->hingeAnimator, &self->clawPos, false);
         RSDK.DrawSprite(&self->clawFrontAnimator, &self->clawPos, false);
@@ -96,14 +98,17 @@ void AIZKingClaw_StageLoad(void)
 
 void AIZKingClaw_HandleClawPositions(void)
 {
+    int32 moveX;
+    int32 moveY;
+    int32 i;
     RSDK_THIS(AIZKingClaw);
 
     self->clawPos.x = self->position.x;
     self->clawPos.y = self->position.y;
-    int32 moveX     = RSDK.Sin256(self->angle) << 12;
-    int32 moveY     = RSDK.Cos256(self->angle) << 12;
+    moveX     = RSDK.Sin256(self->angle) << 12;
+    moveY     = RSDK.Cos256(self->angle) << 12;
 
-    for (int32 i = 0; i < AIZKingClaw_ChainCount; ++i) {
+    for (i = 0; i < AIZKingClaw_ChainCount; ++i) {
         self->chainPos[i].x = self->clawPos.x;
         self->chainPos[i].y = self->clawPos.y;
         self->clawPos.x += moveX;
@@ -137,6 +142,7 @@ void AIZKingClaw_State_Grab(void)
 #if GAME_INCLUDE_EDITOR
 void AIZKingClaw_EditorDraw(void)
 {
+    int32 i;
     RSDK_THIS(AIZKingClaw);
     int32 y = self->position.y;
     if (RSDK.CheckSceneFolder("AIZ")) {
@@ -154,7 +160,7 @@ void AIZKingClaw_EditorDraw(void)
 
     AIZKingClaw_HandleClawPositions();
 
-    for (int32 i = 0; i < AIZKingClaw_ChainCount; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
+    for (i = 0; i < AIZKingClaw_ChainCount; ++i) RSDK.DrawSprite(&self->chainAnimator, &self->chainPos[i], false);
 
     RSDK.DrawSprite(&self->hingeAnimator, &self->clawPos, false);
     RSDK.DrawSprite(&self->clawFrontAnimator, &self->clawPos, false);

@@ -86,15 +86,17 @@ void LightBulb_State_CheckPlayerCollisions(void)
     foreach_active(Player, player)
     {
         if (player->animator.animationID != ANI_HURT && Player_CheckCollisionTouch(player, self, &LightBulb->hitboxLightBulb)) {
+            int32 i;
             RSDK.PlaySfx(LightBulb->sfxBulbPop, false, 255);
 
 #if MANIA_USE_PLUS
             if (player->state != Player_State_MightyHammerDrop) {
+                int32 anim;
 #endif
                 if (player->state == Player_State_FlyCarried)
                     RSDK_GET_ENTITY(SLOT_PLAYER2, Player)->flyCarryTimer = 30;
 
-                int32 anim = player->animator.animationID;
+                anim = player->animator.animationID;
                 if (anim != ANI_FLY && anim != ANI_FLY_LIFT_TIRED) {
                     if (player->state != Player_State_TailsFlight) {
                         if (player->state != Player_State_DropDash)
@@ -121,7 +123,7 @@ void LightBulb_State_CheckPlayerCollisions(void)
             CREATE_ENTITY(Explosion, INT_TO_VOID(EXPLOSION_BOSSPUFF), self->position.x, self->position.y - 0x100000)->drawGroup =
                 Zone->objectDrawGroup[1];
 
-            for (int32 i = 0; i < 6; ++i) {
+            for (i = 0; i < 6; ++i) {
                 int32 x              = self->position.x + RSDK.Rand(-0x80000, 0x80000);
                 int32 y              = self->position.y + RSDK.Rand(-0x80000, 0x80000);
                 EntityDebris *debris = CREATE_ENTITY(Debris, NULL, x, y);

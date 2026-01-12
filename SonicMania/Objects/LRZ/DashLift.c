@@ -89,19 +89,22 @@ void DashLift_State_HandleDash(void)
             if (anim == ANI_SPINDASH || (anim == ANI_JUMP && ((1 << playerID) & self->activePlayers))) {
                 self->activePlayers |= (1 << playerID);
 
-                foreach_active(Dust, dust)
                 {
-                    if (dust->parent == (Entity *)player)
-                        destroyEntity(dust);
+                    foreach_active(Dust, dust)
+                    {
+                        if (dust->parent == (Entity *)player)
+                            destroyEntity(dust);
+                    }
                 }
 
                 player->velocity.x -= player->velocity.x >> 5;
                 player->position.x = self->position.x;
                 if (player->direction == FLIP_X) {
+                    int32 speed;
                     if ((player->sidekick && totalSpeed < 0) || self->drawPos.y >= self->amplitude.y)
                         continue;
 
-                    int32 speed = 0;
+                    speed = 0;
                     if (player->state == Player_State_Spindash) {
                         if (player->superState == SUPERSTATE_SUPER)
                             speed = ((player->abilityTimer >> 1) & 0x7FFF8000) + 0xB0000;
@@ -133,10 +136,11 @@ void DashLift_State_HandleDash(void)
                         RSDK.PlaySfx(DashLift->sfxPulley, false, 255);
                 }
                 else {
+                    int32 speed;
                     if ((player->sidekick && totalSpeed > 0) || self->drawPos.y <= self->amplitude.x)
                         continue;
 
-                    int32 speed = 0;
+                    speed = 0;
                     if (player->state == Player_State_Spindash) {
                         if (player->superState == SUPERSTATE_SUPER)
                             speed = -((player->abilityTimer >> 1) & 0x7FFF8000) - 0xB0000;

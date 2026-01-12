@@ -25,11 +25,13 @@ void SSZ1Setup_Create(void *data) {}
 
 void SSZ1Setup_StageLoad(void)
 {
+    int32 id;
+    int32 i;
     // The low lake style bg
     SSZ1Setup->background2 = RSDK.GetTileLayer(1);
 
-    int32 id = 0;
-    for (int32 i = 0; i < 0x200; ++i) {
+    id = 0;
+    for (i = 0; i < 0x200; ++i) {
         SSZ1Setup->background2->deformationData[i] = (8 * RSDK.Sin1024(id)) >> 10;
         id += 8;
     }
@@ -60,7 +62,7 @@ void SSZ1Setup_StageLoad(void)
 
 #if MANIA_USE_PLUS
     if ((SceneInfo->filter & FILTER_ENCORE)) {
-        RSDK.LoadPalette(0, "EncoreSSZ1.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreSSZ1.act", 0xFF);
         RSDK.CopyPalette(0, 128, 1, 128, 128);
     }
 #endif

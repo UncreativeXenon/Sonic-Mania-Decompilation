@@ -24,9 +24,10 @@ void SuperSparkle_Update(void)
 
         if (self->canSpawnSparkle) {
             if (++self->timer == 12) {
+                EntityDebris *sparkle;
                 self->timer = 0;
 
-                EntityDebris *sparkle = CREATE_ENTITY(Debris, NULL, player->position.x, player->position.y);
+                sparkle = CREATE_ENTITY(Debris, NULL, player->position.x, player->position.y);
                 sparkle->state        = Debris_State_Move;
                 sparkle->timer        = 16;
                 sparkle->inkEffect    = INK_ADD;
@@ -41,6 +42,7 @@ void SuperSparkle_Update(void)
         }
 
         if (player->characterID == ID_SONIC && !(Zone->timer & 7)) {
+            int32 cnt;
             int32 x = player->position.x + RSDK.Rand(-TO_FIXED(12), TO_FIXED(12));
             int32 y = player->position.y + RSDK.Rand(-TO_FIXED(18), TO_FIXED(18));
 
@@ -52,7 +54,7 @@ void SuperSparkle_Update(void)
             sparkle->velocity.y = -TO_FIXED(1);
             sparkle->drawGroup  = player->drawGroup;
             RSDK.SetSpriteAnimation(Ring->aniFrames, Zone->timer % 3 + 2, &sparkle->animator, true, 0);
-            int32 cnt = sparkle->animator.frameCount;
+            cnt = sparkle->animator.frameCount;
             if (sparkle->animator.animationID == 2) {
                 sparkle->alpha = 0xE0;
                 cnt >>= 1;

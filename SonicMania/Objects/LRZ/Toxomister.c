@@ -246,11 +246,12 @@ void Toxomister_StateCloud_ReachedFloor(void)
 
 void Toxomister_StateCloud_GrabbedPlayer(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Toxomister);
 
     RSDK.ProcessAnimation(&self->animator);
 
-    EntityPlayer *player = self->grabbedPlayer;
+    player = self->grabbedPlayer;
 
     if (!player) {
         self->parent->parent = NULL;
@@ -309,9 +310,10 @@ void Toxomister_StateCloud_GrabbedPlayer(void)
                     self->prevShakeFlags = 0;
                 }
                 else {
+                    uint8 shakeFlags;
                     self->shakeTimer--;
 
-                    uint8 shakeFlags = 0;
+                    shakeFlags = 0;
                     if (player->left)
                         shakeFlags = 1;
 

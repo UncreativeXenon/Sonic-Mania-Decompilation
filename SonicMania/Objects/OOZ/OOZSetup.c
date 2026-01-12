@@ -52,120 +52,125 @@ void OOZSetup_StaticUpdate(void)
     }
 
     OOZSetup->swimmingPlayerCount = 0;
-    foreach_active(Player, player)
     {
-        int32 playerID = RSDK.GetEntitySlot(player);
-        if (player->state != Player_State_Static) {
-            Hitbox *playerHitbox = Player_GetHitbox(player);
-            uint16 tile =
-                RSDK.GetTile(Zone->fgLayer[0], player->position.x >> 20, ((playerHitbox->bottom << 16) + player->position.y - 0x10000) >> 20);
-            if (tile == (uint16)-1)
-                tile = RSDK.GetTile(Zone->fgLayer[1], player->position.x >> 20, ((playerHitbox->bottom << 16) + player->position.y - 0x10000) >> 20);
+        foreach_active(Player, player)
+        {
+            int32 tileFlags;
+            int32 playerID = RSDK.GetEntitySlot(player);
+            if (player->state != Player_State_Static) {
+                Hitbox *playerHitbox = Player_GetHitbox(player);
+                uint16 tile =
+                    RSDK.GetTile(Zone->fgLayer[0], player->position.x >> 20, ((playerHitbox->bottom << 16) + player->position.y - 0x10000) >> 20);
+                if (tile == (uint16)-1)
+                    tile =
+                        RSDK.GetTile(Zone->fgLayer[1], player->position.x >> 20, ((playerHitbox->bottom << 16) + player->position.y - 0x10000) >> 20);
 
-            int32 tileFlags = RSDK.GetTileFlags(tile, player->collisionPlane);
-            if (tileFlags != OOZ_TFLAGS_NORMAL) {
-                if (player->shield == SHIELD_FIRE && player->superState != SUPERSTATE_SUPER && tileFlags != OOZ_TFLAGS_OILFALL) {
-                    int32 tx = (player->position.x & 0xFFF00000) + 0x70000;
-                    int32 ty = player->position.y + ((playerHitbox->bottom + 8) << 16);
-                    if (tileFlags == OOZ_TFLAGS_OILPOOL) {
-                        ty &= 0xFFF00000;
-                        ty -= 0xC0000;
-                        if (OOZSetup_StartFire(tx, ty, player->angle)) {
-                            EntitySol *sol  = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx - 0x10000, ty);
-                            sol->velocity.x = -0x40000;
-                            RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
-                            sol->state = Sol_State_OilFlame;
+                tileFlags = RSDK.GetTileFlags(tile, player->collisionPlane);
+                if (tileFlags != OOZ_TFLAGS_NORMAL) {
+                    if (player->shield == SHIELD_FIRE && player->superState != SUPERSTATE_SUPER && tileFlags != OOZ_TFLAGS_OILFALL) {
+                        int32 tx = (player->position.x & 0xFFF00000) + 0x70000;
+                        int32 ty = player->position.y + ((playerHitbox->bottom + 8) << 16);
+                        if (tileFlags == OOZ_TFLAGS_OILPOOL) {
+                            ty &= 0xFFF00000;
+                            ty -= 0xC0000;
+                            if (OOZSetup_StartFire(tx, ty, player->angle)) {
+                                EntitySol *sol  = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx - 0x10000, ty);
+                                sol->velocity.x = -0x40000;
+                                RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
+                                sol->state = Sol_State_OilFlame;
 
-                            sol             = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx + 0x10000, ty);
-                            sol->velocity.x = 0x40000;
-                            RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
-                            sol->state = Sol_State_OilFlame;
+                                sol             = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx + 0x10000, ty);
+                                sol->velocity.x = 0x40000;
+                                RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
+                                sol->state = Sol_State_OilFlame;
+                            }
+                        }
+                        else if (player->onGround) {
+                            ty &= 0xFFFF0000;
+                            if (OOZSetup_StartFire(tx, ty, player->angle)) {
+                                EntitySol *sol;
+                                ty -= 0x80000;
+                                sol  = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx - 0x10000, ty);
+                                sol->velocity.x = -0x40000;
+                                RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
+                                sol->state = Sol_State_FireballOilFlame;
+
+                                sol             = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx + 0x10000, ty);
+                                sol->velocity.x = 0x40000;
+                                RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
+                                sol->state = Sol_State_FireballOilFlame;
+                            }
                         }
                     }
-                    else if (player->onGround) {
-                        ty &= 0xFFFF0000;
-                        if (OOZSetup_StartFire(tx, ty, player->angle)) {
-                            ty -= 0x80000;
-                            EntitySol *sol  = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx - 0x10000, ty);
-                            sol->velocity.x = -0x40000;
-                            RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
-                            sol->state = Sol_State_FireballOilFlame;
 
-                            sol             = CREATE_ENTITY(Sol, INT_TO_VOID(true), tx + 0x10000, ty);
-                            sol->velocity.x = 0x40000;
-                            RSDK.SetSpriteAnimation(Sol->aniFrames, 3, &sol->mainAnimator, true, 0);
-                            sol->state = Sol_State_FireballOilFlame;
-                        }
-                    }
-                }
+                    switch (tileFlags) {
+                        case OOZ_TFLAGS_NORMAL:
+                        default: OOZSetup->activePlayers &= ~(1 << playerID); break;
 
-                switch (tileFlags) {
-                    case OOZ_TFLAGS_NORMAL:
-                    default: OOZSetup->activePlayers &= ~(1 << playerID); break;
+                        case OOZ_TFLAGS_OILPOOL:
+                            if (!player->sidekick)
+                                OOZSetup->swimmingPlayerCount++;
+                            OOZSetup->activePlayers &= ~(1 << playerID);
+                            if (player->velocity.y < 0) {
+                                player->velocity.y += 0x3800;
+                            }
+                            else {
+                                player->interaction    = true;
+                                player->tileCollisions = TILECOLLISION_DOWN;
+                                player->state          = OOZSetup_PlayerState_OilPool;
+                            }
+                            break;
 
-                    case OOZ_TFLAGS_OILPOOL:
-                        if (!player->sidekick)
-                            OOZSetup->swimmingPlayerCount++;
-                        OOZSetup->activePlayers &= ~(1 << playerID);
-                        if (player->velocity.y < 0) {
-                            player->velocity.y += 0x3800;
-                        }
-                        else {
+                        case OOZ_TFLAGS_OILSTRIP:
+                            if (player->state != Player_State_BubbleBounce
+#if MANIA_USE_PLUS
+                                && player->state != Player_State_MightyHammerDrop
+#endif
+                            ) {
+                                OOZSetup->activePlayers &= ~(1 << playerID);
+                                if (player->onGround) {
+                                    player->interaction    = true;
+                                    player->tileCollisions = TILECOLLISION_DOWN;
+                                    player->state          = OOZSetup_PlayerState_OilStrip;
+                                }
+                            }
+                            break;
+
+                        case OOZ_TFLAGS_OILSLIDE:
+                            if (player->state != Player_State_BubbleBounce
+#if MANIA_USE_PLUS
+                                && player->state != Player_State_MightyHammerDrop
+#endif
+                            ) {
+                                OOZSetup->activePlayers &= ~(1 << playerID);
+                                if (player->onGround) {
+                                    player->interaction    = true;
+                                    player->tileCollisions = TILECOLLISION_DOWN;
+                                    if (!player->angle)
+                                        player->state = OOZSetup_PlayerState_OilStrip;
+                                    else
+                                        player->state = OOZSetup_PlayerState_OilSlide;
+                                }
+                            }
+                            break;
+
+                        case OOZ_TFLAGS_OILFALL:
+                            if (!player->sidekick)
+                                OOZSetup->swimmingPlayerCount++;
+
+                            OOZSetup->activePlayers |= 1 << playerID;
                             player->interaction    = true;
                             player->tileCollisions = TILECOLLISION_DOWN;
-                            player->state          = OOZSetup_PlayerState_OilPool;
-                        }
-                        break;
-
-                    case OOZ_TFLAGS_OILSTRIP:
-                        if (player->state != Player_State_BubbleBounce
-#if MANIA_USE_PLUS
-                            && player->state != Player_State_MightyHammerDrop
-#endif
-                        ) {
-                            OOZSetup->activePlayers &= ~(1 << playerID);
-                            if (player->onGround) {
-                                player->interaction    = true;
-                                player->tileCollisions = TILECOLLISION_DOWN;
-                                player->state          = OOZSetup_PlayerState_OilStrip;
-                            }
-                        }
-                        break;
-
-                    case OOZ_TFLAGS_OILSLIDE:
-                        if (player->state != Player_State_BubbleBounce
-#if MANIA_USE_PLUS
-                            && player->state != Player_State_MightyHammerDrop
-#endif
-                        ) {
-                            OOZSetup->activePlayers &= ~(1 << playerID);
-                            if (player->onGround) {
-                                player->interaction    = true;
-                                player->tileCollisions = TILECOLLISION_DOWN;
-                                if (!player->angle)
-                                    player->state = OOZSetup_PlayerState_OilStrip;
-                                else
-                                    player->state = OOZSetup_PlayerState_OilSlide;
-                            }
-                        }
-                        break;
-
-                    case OOZ_TFLAGS_OILFALL:
-                        if (!player->sidekick)
-                            OOZSetup->swimmingPlayerCount++;
-
-                        OOZSetup->activePlayers |= 1 << playerID;
-                        player->interaction    = true;
-                        player->tileCollisions = TILECOLLISION_DOWN;
-                        if (player->velocity.y < 0)
-                            player->velocity.y += 0xC000;
-                        else
-                            player->state = OOZSetup_PlayerState_OilFall;
-                        break;
+                            if (player->velocity.y < 0)
+                                player->velocity.y += 0xC000;
+                            else
+                                player->state = OOZSetup_PlayerState_OilFall;
+                            break;
+                    }
                 }
-            }
-            else {
-                OOZSetup->activePlayers &= ~(1 << playerID);
+                else {
+                    OOZSetup->activePlayers &= ~(1 << playerID);
+                }
             }
         }
     }
@@ -180,20 +185,22 @@ void OOZSetup_StaticUpdate(void)
     }
 
 #if MANIA_USE_PLUS
-    foreach_active(Ring, ring)
     {
-        if (ring->state == Ring_State_Lost) {
-            uint16 tile = RSDK.GetTile(Zone->fgLayer[0], ring->position.x >> 20, (ring->position.y + 0xE0000) >> 20);
-            if (tile == (uint16)-1)
-                tile = RSDK.GetTile(Zone->fgLayer[1], ring->position.x >> 20, (ring->position.y + 0xE0000) >> 20);
+        foreach_active(Ring, ring)
+        {
+            if (ring->state == Ring_State_Lost) {
+                uint16 tile = RSDK.GetTile(Zone->fgLayer[0], ring->position.x >> 20, (ring->position.y + 0xE0000) >> 20);
+                if (tile == (uint16)-1)
+                    tile = RSDK.GetTile(Zone->fgLayer[1], ring->position.x >> 20, (ring->position.y + 0xE0000) >> 20);
 
-            if (RSDK.GetTileFlags(tile, ring->collisionPlane) == OOZ_TFLAGS_OILPOOL) {
-                ring->velocity.x -= ring->velocity.x >> 4;
-                ring->velocity.y = 0x2800;
-                ring->drawGroup  = Zone->objectDrawGroup[1];
-                if (ring->alpha > 0x40) {
-                    ring->alpha     = 0x40;
-                    ring->inkEffect = INK_ALPHA;
+                if (RSDK.GetTileFlags(tile, ring->collisionPlane) == OOZ_TFLAGS_OILPOOL) {
+                    ring->velocity.x -= ring->velocity.x >> 4;
+                    ring->velocity.y = 0x2800;
+                    ring->drawGroup  = Zone->objectDrawGroup[1];
+                    if (ring->alpha > 0x40) {
+                        ring->alpha     = 0x40;
+                        ring->inkEffect = INK_ALPHA;
+                    }
                 }
             }
         }
@@ -239,10 +246,12 @@ void OOZSetup_Create(void *data)
 
 void OOZSetup_StageLoad(void)
 {
+    int32 i;
+    int32 sfxID;
     OOZSetup->aniTiles = RSDK.LoadSpriteSheet("OOZ/AniTiles.gif", SCOPE_STAGE);
 
     OOZSetup->background1 = RSDK.GetTileLayer(0);
-    for (int32 i = 0; i < 0x400; ++i) {
+    for (i = 0; i < 0x400; ++i) {
         OOZSetup->background1->deformationData[i] = OOZSetup->deformData[i & 0x3F];
     }
 
@@ -290,8 +299,8 @@ void OOZSetup_StageLoad(void)
             Zone->stageFinishCallback = OOZ2Outro_StageFinish_EndAct2;
 
         if (SceneInfo->filter & FILTER_ENCORE) {
-            RSDK.LoadPalette(0, "EncoreOOZ2.act", 0b0000000011111111);
-            RSDK.LoadPalette(2, "EncoreOOZSmog.act", 0b0000000011111111);
+            RSDK.LoadPalette(0, "EncoreOOZ2.act", 0xFF);
+            RSDK.LoadPalette(2, "EncoreOOZSmog.act", 0xFF);
 
             RSDK.CopyPalette(0, 128, 1, 128, 128);
             RSDK.CopyPalette(0, 128, 3, 128, 128);
@@ -306,13 +315,13 @@ void OOZSetup_StageLoad(void)
     }
 #if MANIA_USE_PLUS
     else if (SceneInfo->filter & FILTER_ENCORE) {
-        RSDK.LoadPalette(0, "EncoreOOZ1.act", 0b0000000011111111);
+        RSDK.LoadPalette(0, "EncoreOOZ1.act", 0xFF);
         RSDK.CopyPalette(0, 128, 1, 128, 80);
         RSDK.CopyPalette(0, 128, 3, 128, 80);
     }
 #endif
 
-    int32 sfxID = Soundboard_LoadSfx("OOZ/Slide.wav", 12382, OOZSetup_SfxCheck_Slide, StateMachine_None);
+    sfxID = Soundboard_LoadSfx("OOZ/Slide.wav", 12382, OOZSetup_SfxCheck_Slide, StateMachine_None);
     if (sfxID >= 0)
         Soundboard->sfxFadeOutDuration[sfxID] = 30;
 
@@ -327,6 +336,7 @@ void OOZSetup_StageLoad(void)
 
 bool32 OOZSetup_SfxCheck_Flame2(void)
 {
+    int32 i;
     int32 count = 0;
 
     foreach_active(Sol, sol)
@@ -335,7 +345,7 @@ bool32 OOZSetup_SfxCheck_Flame2(void)
             count++;
     }
 
-    for (int32 i = 0; i < OOZSetup->flameCount; ++i) {
+    for (i = 0; i < OOZSetup->flameCount; ++i) {
         if (OOZSetup->flameTimerPtrs[i])
             count++;
     }
@@ -362,9 +372,10 @@ bool32 OOZSetup_SfxCheck_OilSwim(void) { return OOZSetup->swimmingPlayerCount > 
 
 void OOZSetup_Draw_Flames(void)
 {
+    int32 i;
     RSDK_THIS(OOZSetup);
 
-    for (int32 i = 0; i < OOZSetup->flameCount; ++i) {
+    for (i = 0; i < OOZSetup->flameCount; ++i) {
         if (OOZSetup->flameTimerPtrs[i]) {
             self->rotation                  = 2 * (OOZSetup->flamePositions[i].x & 0xFF);
             OOZSetup->flameAnimator.frameID = OOZSetup->flamePositions[i].y & 0xFF;
@@ -375,15 +386,18 @@ void OOZSetup_Draw_Flames(void)
 
 void OOZSetup_HandleActiveFlames(void)
 {
+    int32 i;
     RSDK_THIS(OOZSetup);
 
-    for (int32 i = 0; i < OOZSetup->flameCount; ++i) {
+    for (i = 0; i < OOZSetup->flameCount; ++i) {
         if (OOZSetup->flameTimerPtrs[i]) {
+            Vector2 storePos;
             --(*OOZSetup->flameTimerPtrs[i]);
 
             if (!*OOZSetup->flameTimerPtrs[i]) {
+                EntitySol *sol;
                 OOZSetup->flameTimerPtrs[i] = NULL;
-                EntitySol *sol              = CREATE_ENTITY(Sol, INT_TO_VOID(true), OOZSetup->flamePositions[i].x, OOZSetup->flamePositions[i].y);
+                sol              = CREATE_ENTITY(Sol, INT_TO_VOID(true), OOZSetup->flamePositions[i].x, OOZSetup->flamePositions[i].y);
                 sol->isFlameFX              = true;
                 sol->rotation               = 2 * (OOZSetup->flamePositions[i].x & 0xFF);
                 RSDK.SetSpriteAnimation(Sol->aniFrames, 2, &sol->mainAnimator, true, 0);
@@ -403,13 +417,15 @@ void OOZSetup_HandleActiveFlames(void)
                 OOZSetup->flamePositions[i].y = frame | (frameTimer << 8) | (OOZSetup->flamePositions[i].y & 0xFFFF0000);
             }
 
-            Vector2 storePos = self->position;
-            foreach_active(Player, player)
+            storePos = self->position;
             {
-                self->position = OOZSetup->flamePositions[i];
-                if (Player_CheckCollisionTouch(player, self, &Sol->hitboxBadnik)) {
-                    self->position = storePos;
-                    Player_ElementHurt(player, self, SHIELD_FIRE);
+                foreach_active(Player, player)
+                {
+                    self->position = OOZSetup->flamePositions[i];
+                    if (Player_CheckCollisionTouch(player, self, &Sol->hitboxBadnik)) {
+                        self->position = storePos;
+                        Player_ElementHurt(player, self, SHIELD_FIRE);
+                    }
                 }
             }
             self->position = storePos;

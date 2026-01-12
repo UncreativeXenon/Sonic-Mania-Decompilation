@@ -229,11 +229,12 @@ void Crane_State_CheckGrab(void)
 
 void Crane_State_RiseUp(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Crane);
     if (++self->timer < 32) {
         self->position.y -= 0x20000;
 
-        EntityPlayer *player = self->grabbedPlayer;
+        player = self->grabbedPlayer;
         if (player) {
             if (Player_CheckValidState(player)) {
                 player->animator.speed = 0;
@@ -265,6 +266,7 @@ void Crane_State_RiseUp(void)
 
 void Crane_State_ToDest1stHalf(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(Crane);
 
     self->velocity.x += 0x1000;
@@ -279,7 +281,7 @@ void Crane_State_ToDest1stHalf(void)
             self->state = Crane_State_ToDest2ndHalf;
     }
 
-    EntityPlayer *player = self->grabbedPlayer;
+    player = self->grabbedPlayer;
     if (player) {
         if (Player_CheckValidState(player)) {
             player->animator.speed = 0;

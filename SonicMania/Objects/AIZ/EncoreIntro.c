@@ -59,13 +59,14 @@ void EncoreIntro_Create(void *data)
         self->active = ACTIVE_NORMAL;
 
         if (globals->enableIntro) {
+            EntityPhantomRuby *ruby; 
             foreach_all(HUD, hud)
             {
                 HUD_MoveIn(hud);
                 hud->state = StateMachine_None;
             }
 
-            EntityPhantomRuby *ruby = EncoreIntro->phantomRuby;
+            ruby = EncoreIntro->phantomRuby;
             ruby->alpha             = 0;
             ruby->inkEffect         = INK_ALPHA;
             ruby->state             = EncoreIntro_PhantomRuby_OscillateFX;
@@ -108,24 +109,30 @@ void EncoreIntro_StageLoad(void)
 
 void EncoreIntro_SetupEntities(void)
 {
-    foreach_all(PhantomRuby, ruby)
     {
-        EncoreIntro->phantomRuby = ruby;
-        foreach_break;
+        foreach_all(PhantomRuby, ruby)
+        {
+            EncoreIntro->phantomRuby = ruby;
+            foreach_break;
+        }
     }
 
-    foreach_all(FXRuby, fxRuby)
     {
-        EncoreIntro->fxRuby = fxRuby;
-        fxRuby->state       = FXRuby_State_Shrinking;
-        fxRuby->outerRadius = 0;
-        foreach_break;
+        foreach_all(FXRuby, fxRuby)
+        {
+            EncoreIntro->fxRuby = fxRuby;
+            fxRuby->state       = FXRuby_State_Shrinking;
+            fxRuby->outerRadius = 0;
+            foreach_break;
+        }
     }
 
-    foreach_all(RubyPortal, portal)
     {
-        EncoreIntro->rubyPortal = portal;
-        foreach_break;
+        foreach_all(RubyPortal, portal)
+        {
+            EncoreIntro->rubyPortal = portal;
+            foreach_break;
+        }
     }
 }
 
@@ -150,6 +157,8 @@ void EncoreIntro_SetupCutscene(void)
 
 void EncoreIntro_SetupCutscenePart2(void)
 {
+    Vector2 size;
+    EntityPhantomRuby *ruby; 
     RSDK_THIS(EncoreIntro);
     EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     EntityCamera *camera  = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
@@ -163,7 +172,6 @@ void EncoreIntro_SetupCutscenePart2(void)
     camera->state           = Camera_State_FollowXY;
     camera->position.x      = player1->position.x;
 
-    Vector2 size;
     RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
     Zone->cameraBoundsR[0]      = size.x;
     Zone->playerBoundsR[0]      = size.x << 16;
@@ -172,13 +180,15 @@ void EncoreIntro_SetupCutscenePart2(void)
     Zone->playerBoundsL[0]      = Zone->cameraBoundsL[0] << 16;
     Zone->playerBoundActiveL[0] = true;
 
-    EntityPhantomRuby *ruby = EncoreIntro->phantomRuby;
-    foreach_all(SchrodingersCapsule, capsule)
+    ruby = EncoreIntro->phantomRuby;
     {
-        ruby->position.x = capsule->position.x;
-        ruby->state      = EncoreIntro_PhantomRuby_OscillateFX;
-        ruby->startPos.y = capsule->position.y - 0x800000;
-        ruby->position.y = capsule->position.y - 0x800000;
+        foreach_all(SchrodingersCapsule, capsule)
+        {
+            ruby->position.x = capsule->position.x;
+            ruby->state      = EncoreIntro_PhantomRuby_OscillateFX;
+            ruby->startPos.y = capsule->position.y - 0x800000;
+            ruby->position.y = capsule->position.y - 0x800000;
+        }
     }
 }
 
@@ -215,7 +225,9 @@ bool32 EncoreIntro_Cutscene_SetupAIZEncore(EntityCutsceneSeq *host)
             player1->groundVel  = 0;
             player1->velocity.x = 0;
             player1->direction  = FLIP_NONE;
-            foreach_all(CutsceneHBH, cutsceneHBH) { cutsceneHBH->drawGroup = Zone->objectDrawGroup[0]; }
+            {
+                foreach_all(CutsceneHBH, cutsceneHBH) { cutsceneHBH->drawGroup = Zone->objectDrawGroup[0]; }
+            }
             Zone->cameraBoundsT[0] = Zone->cameraBoundsB[0] - SCREEN_YSIZE;
             Zone->playerBoundsT[0] = Zone->cameraBoundsB[0] - SCREEN_YSIZE;
         }
@@ -225,10 +237,12 @@ bool32 EncoreIntro_Cutscene_SetupAIZEncore(EntityCutsceneSeq *host)
             PhantomRuby_PlaySfx(RUBYSFX_ATTACK4);
             Camera_ShakeScreen(0, 4, 4);
             Music_TransitionTrack(TRACK_EGGMAN1, 0.01);
-            foreach_active(Animals, animal)
             {
-                animal->behaviour = ANIMAL_BEHAVE_FREE;
-                animal->active    = ACTIVE_NORMAL;
+                foreach_active(Animals, animal)
+                {
+                    animal->behaviour = ANIMAL_BEHAVE_FREE;
+                    animal->active    = ACTIVE_NORMAL;
+                }
             }
         }
 
@@ -315,17 +329,21 @@ bool32 EncoreIntro_Cutscene_BeginAIZEncore(EntityCutsceneSeq *host)
         player->up = false;
 
     if (host->timer >= 120) {
-        foreach_all(TitleCard, titleCard)
         {
-            titleCard->active    = ACTIVE_NORMAL;
-            titleCard->state     = TitleCard_State_SetupBGElements;
-            titleCard->stateDraw = TitleCard_Draw_SlideIn;
-            foreach_break;
+            foreach_all(TitleCard, titleCard)
+            {
+                titleCard->active    = ACTIVE_NORMAL;
+                titleCard->state     = TitleCard_State_SetupBGElements;
+                titleCard->stateDraw = TitleCard_Draw_SlideIn;
+                foreach_break;
+            }
         }
-        foreach_all(HUD, hud)
         {
-            hud->vsStates[0] = HUD_State_MoveIn;
-            hud->state       = hud->vsStates[0];
+            foreach_all(HUD, hud)
+            {
+                hud->vsStates[0] = HUD_State_MoveIn;
+                hud->state       = hud->vsStates[0];
+            }
         }
         Music_PlayTrack(TRACK_STAGE);
         EncoreIntro_SetupCutscenePart2();
@@ -377,6 +395,8 @@ bool32 EncoreIntro_Cutscene_CapsuleFound(EntityCutsceneSeq *host)
         player->velocity.x = 0;
         player->groundVel  = 0;
         if (actClear->classID != ActClear->classID) {
+            EntityPlayer *buddy1;
+            EntityPlayer *buddy2;
             self->seenActClear = false;
             Music_TransitionTrack(TRACK_EGGMAN2, 0.05);
 
@@ -386,11 +406,11 @@ bool32 EncoreIntro_Cutscene_CapsuleFound(EntityCutsceneSeq *host)
             player->stateInput           = EncoreIntro_PlayerInput_BuddySel;
             RSDK.SetSpriteAnimation(player->aniFrames, ANI_IDLE, &player->animator, true, 0);
 
-            EntityPlayer *buddy1 = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
+            buddy1 = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
             buddy1->state        = Player_State_Ground;
             RSDK.SetSpriteAnimation(buddy1->aniFrames, ANI_IDLE, &buddy1->animator, true, 0);
 
-            EntityPlayer *buddy2 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
+            buddy2 = RSDK_GET_ENTITY(SLOT_PLAYER4, Player);
             buddy2->state        = Player_State_Ground;
             RSDK.SetSpriteAnimation(buddy2->aniFrames, ANI_IDLE, &buddy2->animator, true, 0);
             return true;
@@ -404,8 +424,11 @@ bool32 EncoreIntro_Cutscene_BuddySelect(EntityCutsceneSeq *host)
 {
     EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
 
+    EntityPlayer *selBuddy;
+    EntityPlayer *buddy;
+
     player->drawGroup      = Zone->playerDrawGroup[1];
-    EntityPlayer *selBuddy = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
+    selBuddy = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
     if (player->position.x > selBuddy->position.x - 0x380000) {
         globals->characterFlags = ID_SONIC | ID_MIGHTY;
     }
@@ -433,7 +456,7 @@ bool32 EncoreIntro_Cutscene_BuddySelect(EntityCutsceneSeq *host)
     CutsceneSeq_LockPlayerControl(player);
     player->stateInput = StateMachine_None;
 
-    EntityPlayer *buddy = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
+    buddy = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
     RSDK.CopyEntity(buddy, selBuddy, true);
     buddy->drawGroup       = Zone->playerDrawGroup[1];
     buddy->state           = EncoreIntro_PlayerState_HandleAir;
@@ -523,6 +546,7 @@ bool32 EncoreIntro_Cutscene_ViewEncoreTutorial(EntityCutsceneSeq *host)
             }
         }
         else {
+            int32 i;
             EntityCutsceneHBH *mystic = CutsceneHBH_GetEntity(HBH_MYSTIC);
             EntityPlayer *otherBuddy  = RSDK_GET_ENTITY(SLOT_PLAYER3, Player);
             if (!otherBuddy->classID)
@@ -537,7 +561,7 @@ bool32 EncoreIntro_Cutscene_ViewEncoreTutorial(EntityCutsceneSeq *host)
             CREATE_ENTITY(Explosion, INT_TO_VOID(2), mystic->position.x, mystic->position.y)->drawGroup = Zone->playerDrawGroup[1] - 1;
             Music_PlayTrack(TRACK_HBHMISCHIEF);
 
-            for (int32 i = 0; i < 2; ++i) {
+            for (i = 0; i < 2; ++i) {
                 EntityPlayer *playerPtr = RSDK_GET_ENTITY(i, Player);
                 playerPtr->state        = Player_State_Air;
                 playerPtr->onGround     = false;
@@ -551,22 +575,27 @@ bool32 EncoreIntro_Cutscene_ViewEncoreTutorial(EntityCutsceneSeq *host)
 
 bool32 EncoreIntro_Cutscene_MysticGetRuby(EntityCutsceneSeq *host)
 {
+    int32 pos;
+    int32 offset;
     EntityPlayer *player = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
     EntityPlayer *buddy  = RSDK_GET_ENTITY(SLOT_PLAYER2, Player);
     EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
-    UNUSED(camera);
 
     RSDK_THIS(EncoreIntro);
-    EntityCutsceneHBH *mystic = CutsceneHBH_GetEntity(HBH_MYSTIC);
-    EntityPhantomRuby *ruby   = EncoreIntro->phantomRuby;
+    EntityCutsceneHBH *mystic;
+    EntityPhantomRuby *ruby;
+
+    UNUSED(camera);
+    mystic = CutsceneHBH_GetEntity(HBH_MYSTIC);
+    ruby = EncoreIntro->phantomRuby;
 
     player->direction = ruby->position.x < player->position.x;
     buddy->direction  = ruby->position.x < buddy->position.x;
 
-    int32 offset = -0x320000;
+    offset = -0x320000;
     if (buddy->direction)
         offset = 0x320000;
-    int32 pos = offset + ruby->position.x;
+    pos = offset + ruby->position.x;
 
     if (mystic->position.x != pos) {
         if (mystic->position.x >= pos) {
@@ -933,14 +962,17 @@ bool32 EncoreIntro_Cutscene_RubyWarp(EntityCutsceneSeq *host)
             }
 
             if (host->timer >= host->storedTimer + 32) {
+                int32 i;
+                int32 angle;
                 EntityPlayer *players[2];
                 players[0] = player;
                 players[1] = buddy;
 
-                for (int32 i = 0, angle = 0; angle < 0x80; ++i, angle += 0x40) {
+                for (i = 0, angle = 0; angle < 0x80; ++i, angle += 0x40) {
+                    EntityPlayer *playerPtr;
                     if (!players[i])
                         break;
-                    EntityPlayer *playerPtr = players[i];
+                    playerPtr = players[i];
                     RSDK.SetSpriteAnimation(playerPtr->aniFrames, ANI_FAN, &playerPtr->animator, false, 0);
 
                     playerPtr->position.x += (playerPtr->position.x - playerPtr->position.x) >> 3;
@@ -1009,6 +1041,8 @@ bool32 EncoreIntro_Cutscene_FadeOutAndReset(EntityCutsceneSeq *host)
     EntityFXRuby *fxRuby = EncoreIntro->fxRuby;
 
     if (fxRuby->fadeBlack >= 512) {
+        Hitbox *playerHitbox;
+        Vector2 size;
         EntityPlayer *player    = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
         EntityCamera *camera    = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         EntityPhantomRuby *ruby = EncoreIntro->phantomRuby;
@@ -1033,7 +1067,7 @@ bool32 EncoreIntro_Cutscene_FadeOutAndReset(EntityCutsceneSeq *host)
         camera->target = (Entity *)player;
         camera->state  = Camera_State_FollowXY;
 
-        Hitbox *playerHitbox = Player_GetHitbox(player);
+        playerHitbox = Player_GetHitbox(player);
         while (
             !RSDK.ObjectTileGrip(player, player->collisionLayers, player->collisionMode, player->collisionPlane, 0, playerHitbox->bottom << 16, 8)) {
             player->position.y += 0x80000;
@@ -1046,26 +1080,31 @@ bool32 EncoreIntro_Cutscene_FadeOutAndReset(EntityCutsceneSeq *host)
             titleCard->stateDraw       = TitleCard_Draw_SlideIn;
         }
 
-        Vector2 size;
         RSDK.GetLayerSize(Zone->fgLayer[0], &size, true);
         Zone->playerBoundsR[0]      = size.x;
         Zone->cameraBoundsR[0]      = size.x;
         Zone->playerBoundActiveR[0] = true;
 
-        foreach_all(HUD, hud)
         {
-            hud->vsStates[0] = HUD_State_MoveIn;
-            hud->state       = hud->vsStates[0];
+            foreach_all(HUD, hud)
+            {
+                hud->vsStates[0] = HUD_State_MoveIn;
+                hud->state       = hud->vsStates[0];
+            }
         }
 
-        foreach_all(SchrodingersCapsule, capsule)
         {
-            ruby->position.x = capsule->position.x;
-            ruby->startPos.y = capsule->position.y - 0x800000;
-            ruby->state      = EncoreIntro_PhantomRuby_OscillateFX;
+            foreach_all(SchrodingersCapsule, capsule)
+            {
+                ruby->position.x = capsule->position.x;
+                ruby->startPos.y = capsule->position.y - 0x800000;
+                ruby->state      = EncoreIntro_PhantomRuby_OscillateFX;
+            }
         }
 
-        foreach_active(Animals, animal) { destroyEntity(animal); }
+        {
+            foreach_active(Animals, animal) { destroyEntity(animal); }
+        }
         return true;
     }
     else {

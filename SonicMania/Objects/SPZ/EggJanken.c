@@ -83,6 +83,7 @@ void EggJanken_Draw(void)
 
 void EggJanken_Create(void *data)
 {
+    int32 a;
     RSDK_THIS(EggJanken);
 
     RSDK.SetSpriteAnimation(EggJanken->aniFrames, 0, &self->eyeAnimator, true, 0);
@@ -106,7 +107,7 @@ void EggJanken_Create(void *data)
     self->health                 = 3;
     self->buttonAnimator.frameID = 1;
 
-    for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_None;
+    for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_None;
     self->state = EggJanken_State_SetupArena;
 }
 
@@ -188,17 +189,19 @@ void EggJanken_CheckPlayerCollisions(void)
         self->position.y = storeY;
 
         if (Player_CheckValidState(player)) {
+            int32 i;
             Player_CheckCollisionBox(player, self, &EggJanken->hitboxButtonSolid);
 
             if (Player_CheckCollisionTouch(player, self, &EggJanken->hitboxButton)) {
                 if (player->velocity.y < 0 && !self->buttonAnimator.frameID) {
                     self->buttonAnimator.frameID = 1;
                     if (self->state != EggJanken_State_AwaitButtonPress) {
+                        int32 a;
                         RSDK.StopSfx(EggJanken->sfxBeep3);
                         RSDK.PlaySfx(EggJanken->sfxClick, false, 255);
 
                         self->state = EggJanken_State_ButtonPressed;
-                        for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_RetractArm;
+                        for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_RetractArm;
                         self->stateEyes = EggJanken_Eyes_None;
 
                         self->jankenResult2[0] = self->eyeFrames[0];
@@ -212,7 +215,7 @@ void EggJanken_CheckPlayerCollisions(void)
                 }
             }
 
-            for (int32 i = 0; i < EGGJANKEN_ARM_COUNT; ++i) {
+            for (i = 0; i < EGGJANKEN_ARM_COUNT; ++i) {
                 self->position.x = self->armPos[i].x;
                 self->position.y = self->armPos[i].y;
 
@@ -262,10 +265,11 @@ void EggJanken_Explode(void)
 
 void EggJanken_ResetStates(void)
 {
+    int32 a;
     RSDK_THIS(EggJanken);
 
     self->state = EggJanken_State_RaiseArms;
-    for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_ExtendArm;
+    for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_ExtendArm;
 
     for (self->armID = 0; self->armID < EGGJANKEN_ARM_COUNT; ++self->armID) {
         self->jointFlags[self->armID]     = 0;
@@ -392,10 +396,11 @@ void EggJanken_State_AwaitButtonPress(void)
     RSDK_THIS(EggJanken);
 
     if (self->buttonAnimator.frameID == 1) {
+        EntityEggJankenPart *part;
         RSDK.SetSpriteAnimation(EggJanken->aniFrames, 8, &self->bodyAnimator, true, 0);
         self->state = EggJanken_State_Opened;
 
-        EntityEggJankenPart *part = CREATE_ENTITY(EggJankenPart, INT_TO_VOID(EGGJANKENPART_FACEPLATE_TL), self->position.x, self->position.y);
+        part = CREATE_ENTITY(EggJankenPart, INT_TO_VOID(EGGJANKENPART_FACEPLATE_TL), self->position.x, self->position.y);
         part->velocity.x          = -0x20000;
         part->velocity.y          = -0x20000;
         part->angle               = -1;
@@ -426,18 +431,20 @@ void EggJanken_State_Opened(void)
     RSDK_THIS(EggJanken);
 
     if (++self->timer >= 120) {
+        EntityEggJankenPart *part;
         self->timer = 0;
         RSDK.SetSpriteAnimation(EggJanken->aniFrames, 1, &self->bodyAnimator, true, 0);
         self->state     = EggJanken_State_InitialArmExtend;
         self->stateDraw = EggJanken_Draw_Active;
 
         for (self->armID = 0; self->armID < EGGJANKEN_ARM_COUNT; ++self->armID) {
+            int32 s;
             self->armRadiusSpeed[self->armID] = 0x40000;
-            for (int32 s = 0; s < EGGJANKEN_SEGMENT_COUNT; ++s) self->jointAngles[EGGJANKEN_SEGMENT_COUNT * self->armID + s] = 0xC0;
+            for (s = 0; s < EGGJANKEN_SEGMENT_COUNT; ++s) self->jointAngles[EGGJANKEN_SEGMENT_COUNT * self->armID + s] = 0xC0;
             self->stateArm[self->armID] = EggJanken_Arm_StretchRetractArm;
         }
 
-        EntityEggJankenPart *part = CREATE_ENTITY(EggJankenPart, INT_TO_VOID(EGGJANKENPART_SIDE_L), self->position.x, self->position.y);
+        part = CREATE_ENTITY(EggJankenPart, INT_TO_VOID(EGGJANKENPART_SIDE_L), self->position.x, self->position.y);
         part->velocity.x          = -0x40000;
         part->velocity.y          = -0x20000;
         part->angle               = -3;
@@ -471,6 +478,7 @@ void EggJanken_State_InitialArmExtend(void)
         self->radius += 0x100;
 
     if (self->stateArm[0] == EggJanken_Arm_Idle) {
+        int32 a;
         for (self->armID = 0; self->armID < EGGJANKEN_ARM_COUNT; ++self->armID) {
             self->jointFlags[self->armID]     = 0;
             self->jointAngleVels[self->armID] = 4;
@@ -482,7 +490,7 @@ void EggJanken_State_InitialArmExtend(void)
             }
         }
 
-        for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_ExtendArm;
+        for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_ExtendArm;
         self->state = EggJanken_State_InitialArmRaise;
     }
 }
@@ -492,7 +500,8 @@ void EggJanken_State_InitialArmRaise(void)
     RSDK_THIS(EggJanken);
 
     if (self->stateArm[0] == EggJanken_Arm_Idle) {
-        for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_SwingArm;
+        int32 a;
+        for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_SwingArm;
     }
 
     if ((self->jointAngles[0] & 0xF8) == 0x88 && (self->jointAngles[1] & 0xF8) == 0x80) {
@@ -509,12 +518,14 @@ void EggJanken_State_None(void)
 
 void EggJanken_State_Destroyed(void)
 {
+    EntityEggJankenPart *part;
     RSDK_THIS(EggJanken);
 
     EggJanken_Explode();
 
-    EntityEggJankenPart *part = NULL;
+    part = NULL;
     switch (++self->timer) {
+        EntitySignPost *signPost;
         case 60:
             part                         = CREATE_ENTITY(EggJankenPart, INT_TO_VOID(EGGJANKENPART_BUTTON), self->position.x, self->position.y);
             self->buttonAnimator.frameID = 2;
@@ -554,7 +565,7 @@ void EggJanken_State_Destroyed(void)
         case 180: {
             RSDK.PlaySfx(SignPost->sfxTwinkle, false, 255);
 
-            EntitySignPost *signPost = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, SignPost);
+            signPost = RSDK_GET_ENTITY(SceneInfo->entitySlot + 1, SignPost);
             signPost->position.x     = self->position.x;
             signPost->state          = SignPost_State_Falling;
 
@@ -599,8 +610,9 @@ void EggJanken_State_ResultPlayerWinner(void)
 
     if (self->timer == 90) {
         for (self->armID = 0; self->armID < EGGJANKEN_ARM_COUNT; ++self->armID) {
+            int32 s;
             self->armRadiusSpeed[self->armID] = 0x40000;
-            for (int32 s = 0; s < EGGJANKEN_SEGMENT_COUNT; ++s) self->jointAngles[EGGJANKEN_SEGMENT_COUNT * self->armID + s] = 0xC0;
+            for (s = 0; s < EGGJANKEN_SEGMENT_COUNT; ++s) self->jointAngles[EGGJANKEN_SEGMENT_COUNT * self->armID + s] = 0xC0;
             self->stateArm[self->armID] = EggJanken_Arm_StretchRetractArm;
         }
 
@@ -632,11 +644,12 @@ void EggJanken_State_HitShake(void)
         self->timer        = 0;
 
         if (!self->health) {
+            EntityPlayer *player1;
             self->isMoving         = false;
             SceneInfo->timeEnabled = false;
             self->state            = EggJanken_State_Destroyed;
 
-            EntityPlayer *player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
+            player1 = RSDK_GET_ENTITY(SLOT_PLAYER1, Player);
             if (player1->superState == SUPERSTATE_SUPER)
                 player1->superState = SUPERSTATE_FADEOUT;
             Player_GiveScore(player1, 1000);
@@ -664,8 +677,9 @@ void EggJanken_State_RaiseArms(void)
     RSDK_THIS(EggJanken);
 
     if (self->stateArm[0] == EggJanken_Arm_Idle) {
+        int32 a;
         self->state = EggJanken_State_SwingDropArms;
-        for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_SwingArm;
+        for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_SwingArm;
     }
 }
 
@@ -733,11 +747,13 @@ void EggJanken_State_PrepareArmAttack(void)
 
         self->jointAngleVels[self->attackingArmID] = 8;
         for (self->armJointID = 0; self->armJointID < EGGJANKEN_SEGMENT_COUNT; ++self->armJointID) {
+            int32 distX;
+            int32 distY;
             int32 slot = EGGJANKEN_SEGMENT_COUNT * self->attackingArmID + self->armJointID;
 
             self->jointDelays[slot] = 4 * self->armJointID;
-            int32 distX             = self->position.x - player1->position.x;
-            int32 distY             = (self->position.y - player1->position.y) >> 16;
+            distX             = self->position.x - player1->position.x;
+            distY             = (self->position.y - player1->position.y) >> 16;
             if (self->attackingArmID)
                 self->jointTargetAngles[slot] = (uint8)(0x40 - RSDK.ATan2((distX + 0x280000) >> 16, distY));
             else
@@ -823,8 +839,9 @@ void EggJanken_State_FlipOver(void)
 
     if ((self->fullRotation & 0x1FFFF) == 0x10000) {
         for (self->armID = 0; self->armID < EGGJANKEN_ARM_COUNT; ++self->armID) {
+            int32 s;
             self->armRadiusSpeed[self->armID] = 0x40000;
-            for (int32 s = 0; s < EGGJANKEN_SEGMENT_COUNT; ++s) self->jointAngles[EGGJANKEN_SEGMENT_COUNT * self->armID + s] = 0xC0;
+            for (s = 0; s < EGGJANKEN_SEGMENT_COUNT; ++s) self->jointAngles[EGGJANKEN_SEGMENT_COUNT * self->armID + s] = 0xC0;
             self->stateArm[self->armID] = EggJanken_Arm_ExtendArm;
         }
 
@@ -878,6 +895,7 @@ void EggJanken_State_Drop(void)
     self->velocity.y += 0x7000;
 
     if (RSDK.ObjectTileCollision(self, Zone->collisionLayers, CMODE_FLOOR, 0, 0, 0x200000, true)) {
+        EntityCamera *camera;
         for (self->armID = 0; self->armID < EGGJANKEN_ARM_COUNT; ++self->armID) {
             for (self->armJointID = 0; self->armJointID < EGGJANKEN_SEGMENT_COUNT; ++self->armJointID) {
                 self->jointAngleVels[self->armID]                                                 = 8;
@@ -890,7 +908,7 @@ void EggJanken_State_Drop(void)
         }
 
         RSDK.PlaySfx(EggJanken->sfxImpact4, false, 255);
-        EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+        camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
         camera->shakePos.y   = 4;
         self->velocity.y     = 0;
         self->state          = EggJanken_State_DropArms;
@@ -912,8 +930,9 @@ void EggJanken_State_Dropped(void)
     RSDK_THIS(EggJanken);
 
     if (++self->timer == 60) {
+        int32 a;
         self->timer = 0;
-        for (int32 a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_RetractArm;
+        for (a = 0; a < EGGJANKEN_ARM_COUNT; ++a) self->stateArm[a] = EggJanken_Arm_RetractArm;
         self->state = EggJanken_State_RetractDropArms;
     }
 }
@@ -1073,12 +1092,13 @@ void EggJanken_Arm_StretchRetractArm(void)
 
 void EggJanken_Arm_SwingArm(void)
 {
+    int32 slot;
     RSDK_THIS(EggJanken);
 
     if (self->jointFlags[self->armID] == ((1 << EGGJANKEN_SEGMENT_COUNT) - 1))
         EggJanken_SwapArmSwingDir();
 
-    int32 slot = self->armJointID + EGGJANKEN_SEGMENT_COUNT * self->armID;
+    slot = self->armJointID + EGGJANKEN_SEGMENT_COUNT * self->armID;
 
     if (self->jointDelays[slot]) {
         self->jointDelays[slot]--;
@@ -1141,6 +1161,7 @@ void EggJanken_Arm_ArmAttack(void)
 
 void EggJanken_Arm_Dropping(void)
 {
+    int32 slot;
     RSDK_THIS(EggJanken);
 
     if (self->jointFlags[self->armID] == ((1 << EGGJANKEN_SEGMENT_COUNT) - 1)) {
@@ -1148,7 +1169,7 @@ void EggJanken_Arm_Dropping(void)
         self->stateArm[self->armID]   = EggJanken_Arm_Idle;
     }
 
-    int32 slot = self->armJointID + EGGJANKEN_SEGMENT_COUNT * self->armID;
+    slot = self->armJointID + EGGJANKEN_SEGMENT_COUNT * self->armID;
 
     if (self->jointDelays[slot]) {
         self->jointDelays[slot]--;
@@ -1187,6 +1208,7 @@ void EggJanken_Draw_Closed(void)
 
 void EggJanken_Draw_Active(void)
 {
+    int32 radius;
     RSDK_THIS(EggJanken);
     Vector2 drawPos;
 
@@ -1198,7 +1220,7 @@ void EggJanken_Draw_Active(void)
     EggJanken->armAnimator.frameID = 0;
     RSDK.DrawSprite(&EggJanken->armAnimator, &drawPos, false);
 
-    int32 radius                   = (self->armRadius[self->armID] >> 16);
+    radius                   = (self->armRadius[self->armID] >> 16);
     EggJanken->armAnimator.frameID = 1;
     self->armJointID               = 0;
     for (self->armJointID = 0; self->armJointID < EGGJANKEN_JOINT_COUNT; ++self->armJointID) {

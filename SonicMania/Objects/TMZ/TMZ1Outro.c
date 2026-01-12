@@ -51,10 +51,12 @@ bool32 TMZ1Outro_CutsceneAct1_SetupPlayers(EntityCutsceneSeq *host)
 {
     CutsceneSeq_LockAllPlayerControl();
 
-    foreach_active(Player, player)
-    {
-        player->state      = Player_State_Ground;
-        player->stateInput = StateMachine_None;
+{
+        foreach_active(Player, player)
+        {
+            player->state      = Player_State_Ground;
+            player->stateInput = StateMachine_None;
+        }
     }
 
     return true;
@@ -68,9 +70,10 @@ bool32 TMZ1Outro_CutsceneAct1_ElevatorRide(EntityCutsceneSeq *host)
     }
 
     if (host->timer == 160) {
+        TileLayer *moveLayer;
         Camera_ShakeScreen(0, 0, 6);
         CrimsonEye->targetElevatorSpeed    = -0x10000;
-        TileLayer *moveLayer               = RSDK.GetTileLayer(Zone->moveLayer);
+        moveLayer               = RSDK.GetTileLayer(Zone->moveLayer);
         moveLayer->drawGroup[0]            = 0;
         moveLayer->scrollPos               = 0x5000000;
         moveLayer->scrollInfo[0].scrollPos = -0x4D00000;
@@ -92,17 +95,21 @@ bool32 TMZ1Outro_CutsceneAct1_ElevatorRide(EntityCutsceneSeq *host)
         }
     }
 
-    foreach_active(ItemBox, itembox)
-    {
-        // NOTE:
-        // broken monitors are carried up due to the differences how they work compared to unbroken ones
-        // unbroken monitors do not do any collision/gravity checks, so they're moved offscreen as expected
-        // however, unbroken monitors DO do gravity & collision, so the elevator collision overrides the code here and allows em to be carried into
-        // act 2
-        itembox->position.y -= CrimsonEye->targetElevatorSpeed;
+{
+        foreach_active(ItemBox, itembox)
+        {
+            // NOTE:
+            // broken monitors are carried up due to the differences how they work compared to unbroken ones
+            // unbroken monitors do not do any collision/gravity checks, so they're moved offscreen as expected
+            // however, unbroken monitors DO do gravity & collision, so the elevator collision overrides the code here and allows em to be carried
+            // into act 2
+            itembox->position.y -= CrimsonEye->targetElevatorSpeed;
+        }
     }
 
-    foreach_active(SignPost, signPost) { signPost->position.y -= CrimsonEye->targetElevatorSpeed; }
+{
+        foreach_active(SignPost, signPost) { signPost->position.y -= CrimsonEye->targetElevatorSpeed; }
+    }
 
     return false;
 }
@@ -152,12 +159,13 @@ bool32 TMZ1Outro_CutsceneAct1_HeadForEntrance(EntityCutsceneSeq *host)
 
 bool32 TMZ1Outro_CutsceneAct1_EnterMonarch(EntityCutsceneSeq *host)
 {
+    EntityCamera *camera;
     RSDK_THIS(TMZ1Outro);
 
     self->alpha += 4;
     RSDK.SetLimitedFade(0, 3, 5, self->alpha, 128, 256);
 
-    EntityCamera *camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
+    camera = RSDK_GET_ENTITY(SLOT_CAMERA1, Camera);
     if (camera->offset.x > 0)
         camera->offset.x -= 0x10000;
 

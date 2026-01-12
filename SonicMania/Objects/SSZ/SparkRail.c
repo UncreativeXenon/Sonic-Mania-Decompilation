@@ -18,9 +18,10 @@ void SparkRail_Update(void)
     {
         if (Player_CheckCollisionTouch(player, self, &self->hitbox) && player->onGround) {
             if (abs(player->groundVel) > 0x80000) {
+                EntityDebris *spark;
                 RSDK.PlaySfx(SparkRail->sfxPon, false, 255);
 
-                EntityDebris *spark = CREATE_ENTITY(Debris, Debris_State_Move, self->position.x, self->position.y);
+                spark = CREATE_ENTITY(Debris, Debris_State_Move, self->position.x, self->position.y);
                 RSDK.SetSpriteAnimation(SparkRail->aniFrames, 0, &spark->animator, true, 0);
                 spark->drawFX     = FX_FLIP;
                 spark->direction  = player->direction != FLIP_NONE;

@@ -149,13 +149,14 @@ void FlasherMKII_HandleHarmPlayerCollisions(void)
 
 void FlasherMKII_State_Idle(void)
 {
+    EntityPlayer *player;
     RSDK_THIS(FlasherMKII);
 
     self->active = ACTIVE_NORMAL;
     if (self->timer > 0)
         self->timer--;
 
-    EntityPlayer *player = Player_GetNearestPlayer();
+    player = Player_GetNearestPlayer();
     if (player) {
         int32 rx = (self->position.x - player->position.x) >> 16;
         int32 ry = (self->position.y - player->position.y) >> 16;

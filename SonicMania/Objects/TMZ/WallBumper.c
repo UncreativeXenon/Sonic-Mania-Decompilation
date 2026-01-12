@@ -21,10 +21,11 @@ void WallBumper_Draw(void)
 
     Vector2 drawPos = self->position;
     if (self->type != WALLBUMPER_H) {
+        int32 i;
         self->direction ^= self->reverse;
 
         drawPos.x -= self->size << 20;
-        for (int32 i = 0; i < self->size; ++i) {
+        for (i = 0; i < self->size; ++i) {
             RSDK.DrawSprite(&self->animator, &drawPos, false);
 
             drawPos.x += 0x200000;
@@ -33,10 +34,11 @@ void WallBumper_Draw(void)
         self->direction ^= self->reverse;
     }
     else {
+        int32 i;
         self->direction ^= FLIP_Y * self->reverse;
 
         drawPos.y -= self->size << 20;
-        for (int32 i = 0; i < self->size; ++i) {
+        for (i = 0; i < self->size; ++i) {
             RSDK.DrawSprite(&self->animator, &drawPos, false);
 
             drawPos.y += 0x200000;

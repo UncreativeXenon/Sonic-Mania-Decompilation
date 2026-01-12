@@ -51,13 +51,14 @@ void PlaneSwitch_DrawSprites(void)
     RSDK_THIS(PlaneSwitch);
 
     Vector2 drawPos;
+    int32 i;
 
     drawPos.x = self->position.x - TO_FIXED(8);
     drawPos.y = self->position.y - (self->size << 19);
     Zone_RotateOnPivot(&drawPos, &self->position, self->angle);
 
     self->animator.frameID = self->flags & 3;
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += RSDK.Sin256(self->angle) << 12;
         drawPos.y += RSDK.Cos256(self->angle) << 12;
@@ -68,7 +69,7 @@ void PlaneSwitch_DrawSprites(void)
     Zone_RotateOnPivot(&drawPos, &self->position, self->angle);
 
     self->animator.frameID = (self->flags >> 2) & 3;
-    for (int32 i = 0; i < self->size; ++i) {
+    for (i = 0; i < self->size; ++i) {
         RSDK.DrawSprite(&self->animator, &drawPos, false);
         drawPos.x += RSDK.Sin256(self->angle) << 12;
         drawPos.y += RSDK.Cos256(self->angle) << 12;

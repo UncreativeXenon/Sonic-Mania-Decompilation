@@ -132,21 +132,26 @@ void HandLauncher_CheckPlayerCollisions(void)
 
 bool32 HandLauncher_CheckPlayerInRange(void)
 {
+    int32 storeX;
+    int32 storeY;
+    bool32 inRange;
     RSDK_THIS(HandLauncher);
 
     if (self->activePlayers)
         return true;
 
-    int32 storeX   = self->position.x;
-    int32 storeY   = self->position.y;
+    storeX   = self->position.x;
+    storeY   = self->position.y;
     self->position = self->playerPos;
 
-    bool32 inRange = false;
-    foreach_active(Player, player)
+    inRange = false;
     {
-        if (Player_CheckCollisionTouch(player, self, &HandLauncher->hitboxRange)) {
-            inRange = true;
-            foreach_break;
+        foreach_active(Player, player)
+        {
+            if (Player_CheckCollisionTouch(player, self, &HandLauncher->hitboxRange)) {
+                inRange = true;
+                foreach_break;
+            }
         }
     }
 
@@ -261,12 +266,13 @@ void HandLauncher_State_TryGrabPlayer(void)
 
 void HandLauncher_State_GrabbedPlayer(void)
 {
+    int32 dist;
     RSDK_THIS(HandLauncher);
 
     if (self->timer < 3) {
         self->position = self->playerPos;
 
-        int32 dist = (self->playerPos.y - self->startPos.y) / 3;
+        dist = (self->playerPos.y - self->startPos.y) / 3;
         if (self->timer <= 3)
             self->position.y -= dist * self->timer;
         else
@@ -278,7 +284,7 @@ void HandLauncher_State_GrabbedPlayer(void)
         }
         else if (self->timer < 66) {
             self->position = self->playerPos;
-            int32 dist     = (self->playerPos.y - self->startPos.y) / 3;
+            dist     = (self->playerPos.y - self->startPos.y) / 3;
             self->position.y -= dist * MIN(66 - self->timer, 3);
         }
         else {

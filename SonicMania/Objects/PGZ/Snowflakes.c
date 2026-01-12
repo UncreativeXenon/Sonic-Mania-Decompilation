@@ -11,10 +11,13 @@ ObjectSnowflakes *Snowflakes;
 
 void Snowflakes_Update(void)
 {
+    Vector2 range;
+    int32 i;
     RSDK_THIS(Snowflakes);
 
     if (Snowflakes->count < 0x40 && !(Zone->timer % 16)) {
-        for (int32 i = 0; i < 0x40; ++i) {
+        int32 i;
+        for (i = 0; i < 0x40; ++i) {
             if (!self->positions[i].x && !self->positions[i].y && (i & 0x8000) == 0) {
                 int32 screenY = ScreenInfo->position.y;
                 int32 scrX    = ScreenInfo->position.x % ScreenInfo->size.x;
@@ -40,11 +43,10 @@ void Snowflakes_Update(void)
         }
     }
 
-    Vector2 range;
     range.x = 0x800000;
     range.y = 0x800000;
 
-    for (int32 i = 0; i < 0x40; ++i) {
+    for (i = 0; i < 0x40; ++i) {
         if (self->positions[i].x || self->positions[i].y) {
             Vector2 pos = Snowflakes_HandleWrap(i);
             int32 angle = RSDK.Sin256(self->angles[i]) << 6;
@@ -88,18 +90,20 @@ void Snowflakes_StaticUpdate(void)
 
 void Snowflakes_Draw(void)
 {
+    int32 i;
     RSDK_THIS(Snowflakes);
     int32 drawHigh  = Zone->objectDrawGroup[1];
     int32 drawGroup = SceneInfo->currentDrawGroup;
 
-    for (int32 i = 0; i < 0x40; ++i) {
+    for (i = 0; i < 0x40; ++i) {
         if (self->positions[i].x || self->positions[i].y) {
             int32 priority = self->priority[i];
 
             if ((priority || drawGroup != drawHigh) && (priority != 1 || drawGroup == drawHigh)) {
+                int32 angle;
                 Vector2 drawPos = Snowflakes_HandleWrap(i);
                 self->direction = FLIP_NONE;
-                int32 angle     = RSDK.Sin256(self->angles[i]) << 6;
+                angle     = RSDK.Sin256(self->angles[i]) << 6;
 
                 if (self->animIDs[i] <= 2) {
                     RSDK.SetSpriteAnimation(Snowflakes->aniFrames, self->animIDs[i], &self->animator, true, self->frameIDs[i] >> 2);
@@ -150,6 +154,10 @@ void Snowflakes_StageLoad(void)
 
 Vector2 Snowflakes_HandleWrap(int32 id)
 {
+    int32 newX;
+    int32 posX;
+    int32 posY;
+    Vector2 pos;
     RSDK_THIS(Snowflakes);
 
     int32 x = self->positions[id].x;
@@ -159,18 +167,18 @@ Vector2 Snowflakes_HandleWrap(int32 id)
     if (!self->priority[id])
         mult = 64;
 
-    int32 newX = x - (ScreenInfo->position.x << 8) * mult;
+    newX = x - (ScreenInfo->position.x << 8) * mult;
     while (newX < 0) newX += ScreenInfo->size.x << 16;
 
-    int32 posX = ScreenInfo->position.x / ScreenInfo->size.x;
+    posX = ScreenInfo->position.x / ScreenInfo->size.x;
     if ((newX % (ScreenInfo->size.x << 16)) >> 16 < ScreenInfo->position.x % ScreenInfo->size.x)
         posX = ScreenInfo->position.x / ScreenInfo->size.x + 1;
 
-    int32 posY = 0;
+    posY = 0;
     if (y > (ScreenInfo->size.y + ScreenInfo->position.y) << 16)
         posY = -ScreenInfo->size.y;
 
-    Vector2 pos;
+    pos;
     pos.x = (posX * ScreenInfo->size.x << 16) + (newX % (ScreenInfo->size.x << 16));
     pos.y = (posY << 16) + y;
     return pos;

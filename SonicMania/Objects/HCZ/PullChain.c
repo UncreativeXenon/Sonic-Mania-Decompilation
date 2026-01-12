@@ -17,116 +17,118 @@ void PullChain_Update(void)
         if (self->currentlyActive)
             self->currentlyActive = false;
 
-        foreach_active(Player, player)
         {
-            int32 playerID = RSDK.GetEntitySlot(player);
+            foreach_active(Player, player)
+            {
+                int32 playerID = RSDK.GetEntitySlot(player);
 
-            if (self->grabDelay[playerID] > 0)
-                self->grabDelay[playerID]--;
+                if (self->grabDelay[playerID] > 0)
+                    self->grabDelay[playerID]--;
 
-            if (!player->sidekick) {
-                if (((1 << playerID) & self->activePlayers)) {
-                    if (self->chainOffset < 0x100000)
-                        self->chainOffset += 0x8000;
+                if (!player->sidekick) {
+                    if (((1 << playerID) & self->activePlayers)) {
+                        if (self->chainOffset < 0x100000)
+                            self->chainOffset += 0x8000;
 
-                    if (self->chainOffset > 0x100000)
-                        self->chainOffset = 0x100000;
+                        if (self->chainOffset > 0x100000)
+                            self->chainOffset = 0x100000;
 
-                    if (self->chainOffset == 0x100000) {
-                        if (!self->down) {
-                            self->currentlyActive = true;
-                            self->activated       = true;
-                            self->toggled         = !self->toggled;
+                        if (self->chainOffset == 0x100000) {
+                            if (!self->down) {
+                                self->currentlyActive = true;
+                                self->activated       = true;
+                                self->toggled         = !self->toggled;
+                            }
+
+                            self->down = true;
                         }
-
-                        self->down = true;
                     }
+
+                    self->position.y = self->basePos.y + self->chainOffset;
                 }
 
-                self->position.y = self->basePos.y + self->chainOffset;
-            }
+                if (!((1 << playerID) & self->activePlayers)) {
+                    if (!(self->releasedPlayers & (1 << playerID))) {
+                        if (!Current || !((1 << playerID) & Current->activePlayers)) {
+                            int32 x = abs(player->position.x - self->position.x) >> 16;
+                            int32 y = abs((player->position.y - 0x180000) - self->position.y) >> 16;
 
-            if (!((1 << playerID) & self->activePlayers)) {
-                if (!(self->releasedPlayers & (1 << playerID))) {
-                    if (!Current || !((1 << playerID) & Current->activePlayers)) {
-                        int32 x = abs(player->position.x - self->position.x) >> 16;
-                        int32 y = abs((player->position.y - 0x180000) - self->position.y) >> 16;
+                            if (MathHelpers_SquareRoot(x * x + y * y) <= 8 && player->state != Player_State_Static && !self->grabDelay[playerID]) {
+                                self->activePlayers |= 1 << playerID;
+                                self->releasedPlayers |= 1 << playerID;
 
-                        if (MathHelpers_SquareRoot(x * x + y * y) <= 8 && player->state != Player_State_Static
-                            && !self->grabDelay[playerID]) {
-                            self->activePlayers |= 1 << playerID;
-                            self->releasedPlayers |= 1 << playerID;
+                                RSDK.PlaySfx(Player->sfxGrab, false, 0xFF);
 
-                            RSDK.PlaySfx(Player->sfxGrab, false, 0xFF);
+                                if (!player->sidekick)
+                                    RSDK.PlaySfx(PullChain->sfxPullChain, false, 0xFF);
 
-                            if (!player->sidekick)
-                                RSDK.PlaySfx(PullChain->sfxPullChain, false, 0xFF);
+                                RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, true, 6);
+                                player->nextGroundState = StateMachine_None;
+                                player->nextAirState    = StateMachine_None;
+                                player->velocity.x      = 0;
+                                player->velocity.y      = 0;
+                                player->state           = Player_State_Static;
 
-                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_HANG, &player->animator, true, 6);
-                            player->nextGroundState = StateMachine_None;
-                            player->nextAirState    = StateMachine_None;
-                            player->velocity.x      = 0;
-                            player->velocity.y      = 0;
-                            player->state           = Player_State_Static;
-
-                            // Reset the dunky code inputs if a proper player grabs it
-                            if (!player->sidekick) {
-                                for (int32 i = 0; i < 18; ++i) self->cheatCodeInputs[i] = 0;
+                                // Reset the dunky code inputs if a proper player grabs it
+                                if (!player->sidekick) {
+                                    int32 i;
+                                    for (i = 0; i < 18; ++i) self->cheatCodeInputs[i] = 0;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if ((1 << playerID) & self->activePlayers) {
-                player->position.x = self->position.x;
-                player->position.y = self->position.y + 0x1C0000;
+                if ((1 << playerID) & self->activePlayers) {
+                    player->position.x = self->position.x;
+                    player->position.y = self->position.y + 0x1C0000;
 
-                // R.I.P dunkey mode, you are very missed :(
+                    // R.I.P dunkey mode, you are very missed :(
 #if GAME_VERSION == VER_100
-                if (!player->sidekick && PullChain_HandleDunkeyCode(player)) {
-                    HandLauncher->dunkeyMode = true;
-                    RSDK.PlaySfx(Ring->sfxRing, false, 0xFF);
-                }
+                    if (!player->sidekick && PullChain_HandleDunkeyCode(player)) {
+                        HandLauncher->dunkeyMode = true;
+                        RSDK.PlaySfx(Ring->sfxRing, false, 0xFF);
+                    }
 #endif
 
-                if (player->jumpPress || player->animator.animationID != ANI_HANG || player->velocity.x || player->velocity.y) {
-                    self->activePlayers &= ~(1 << playerID);
-                    if (player->jumpPress) {
-                        if (self->chainOffset < 0x100000 && !player->sidekick)
-                            RSDK.StopSfx(PullChain->sfxPullChain);
+                    if (player->jumpPress || player->animator.animationID != ANI_HANG || player->velocity.x || player->velocity.y) {
+                        self->activePlayers &= ~(1 << playerID);
+                        if (player->jumpPress) {
+                            if (self->chainOffset < 0x100000 && !player->sidekick)
+                                RSDK.StopSfx(PullChain->sfxPullChain);
 
-                        RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, true, 0);
-                        player->velocity.x = 0;
-                        player->velocity.y = -0x20000;
-                        player->state      = Player_State_Air;
+                            RSDK.SetSpriteAnimation(player->aniFrames, ANI_JUMP, &player->animator, true, 0);
+                            player->velocity.x = 0;
+                            player->velocity.y = -0x20000;
+                            player->state      = Player_State_Air;
+                        }
+
+                        self->grabDelay[playerID] = 30;
                     }
 
-                    self->grabDelay[playerID] = 30;
+                    if ((1 << playerID) & self->activePlayers)
+                        continue;
                 }
 
-                if ((1 << playerID) & self->activePlayers)
-                    continue;
+                // Make sure we're far enough away before unsetting this
+                // This controls if players can grab the hook
+                if (self->releasedPlayers & (1 << playerID)) {
+                    int32 x = abs(player->position.x - self->position.x);
+                    int32 y = abs(player->position.y - 0x180000 - self->position.y);
+                    if (MathHelpers_SquareRoot((x >> 16) * (x >> 16) + (y >> 16) * (y >> 16)) > 4)
+                        self->releasedPlayers &= ~(1 << playerID);
+                }
             }
 
-            // Make sure we're far enough away before unsetting this
-            // This controls if players can grab the hook
-            if (self->releasedPlayers & (1 << playerID)) {
-                int32 x = abs(player->position.x - self->position.x);
-                int32 y = abs(player->position.y - 0x180000 - self->position.y);
-                if (MathHelpers_SquareRoot((x >> 16) * (x >> 16) + (y >> 16) * (y >> 16)) > 4)
-                    self->releasedPlayers &= ~(1 << playerID);
+            if (!self->activePlayers) {
+                self->down = false;
+
+                if (self->chainOffset > 0)
+                    self->chainOffset -= 0x8000;
+
+                if (self->chainOffset < 0)
+                    self->chainOffset = 0;
             }
-        }
-
-        if (!self->activePlayers) {
-            self->down = false;
-
-            if (self->chainOffset > 0)
-                self->chainOffset -= 0x8000;
-
-            if (self->chainOffset < 0)
-                self->chainOffset = 0;
         }
     }
 }
@@ -137,17 +139,19 @@ void PullChain_StaticUpdate(void) {}
 
 void PullChain_Draw(void)
 {
+    Vector2 drawPos;
+    int32 i;
     RSDK_THIS(PullChain);
 
     RSDK.DrawSprite(&self->hookAnimator, NULL, false);
 
-    Vector2 drawPos = self->position;
-    for (int32 i = 0; i < self->length; ++i) {
+    drawPos = self->position;
+    for (i = 0; i < self->length; ++i) {
         RSDK.DrawSprite(&self->chainAnimator, &drawPos, false);
         drawPos.y -= 0x80000;
     }
 
-    for (int32 i = 0; i < self->chainOffset; i += 0x80000) {
+    for (i = 0; i < self->chainOffset; i += 0x80000) {
         RSDK.DrawSprite(&self->chainAnimator, &drawPos, false);
         drawPos.y -= 0x80000;
     }

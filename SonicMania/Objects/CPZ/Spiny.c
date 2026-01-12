@@ -147,6 +147,7 @@ void Spiny_State_Init(void)
 
 void Spiny_State_Floor(void)
 {
+    int32 distance;
     RSDK_THIS(Spiny);
 
     RSDK.ProcessAnimation(&self->animator);
@@ -158,7 +159,7 @@ void Spiny_State_Floor(void)
         self->velocity.x = -self->velocity.x;
     }
 
-    int32 distance = 0x7FFFFFFF;
+    distance = 0x7FFFFFFF;
     self->position.x += self->velocity.x;
 
     if (!self->moveTimer) {
@@ -189,6 +190,7 @@ void Spiny_State_Floor(void)
 
 void Spiny_State_Shoot_Floor(void)
 {
+    EntitySpiny *shot;
     RSDK_THIS(Spiny);
 
     RSDK.ProcessAnimation(&self->animator);
@@ -196,7 +198,7 @@ void Spiny_State_Shoot_Floor(void)
     if (--self->moveTimer == 20) {
         RSDK.PlaySfx(Spiny->sfxShot, false, 0xFF);
 
-        EntitySpiny *shot = CREATE_ENTITY(Spiny, INT_TO_VOID(true), self->position.x, self->position.y);
+        shot = CREATE_ENTITY(Spiny, INT_TO_VOID(true), self->position.x, self->position.y);
         shot->velocity.x  = self->shotVelocity;
         if (!(self->direction & 2))
             shot->velocity.y = -0x30000;
@@ -292,10 +294,12 @@ void Spiny_State_Shot(void)
             self->state = Spiny_State_ShotDisappear;
         }
 
-        foreach_active(Player, player)
         {
-            if (Player_CheckCollisionTouch(player, self, &Spiny->hitboxShot))
-                Player_ProjectileHurt(player, self);
+            foreach_active(Player, player)
+            {
+                if (Player_CheckCollisionTouch(player, self, &Spiny->hitboxShot))
+                    Player_ProjectileHurt(player, self);
+            }
         }
     }
     else {

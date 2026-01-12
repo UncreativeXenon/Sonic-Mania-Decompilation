@@ -85,9 +85,10 @@ void Competition_State_Manager(void)
 
 #if MANIA_USE_PLUS
     if (self->timer <= 0) {
+        int32 p;
         Zone->gotTimeOver      = true;
         SceneInfo->timeEnabled = false;
-        for (int32 p = 0; p < Player->playerCount; ++p) {
+        for (p = 0; p < Player->playerCount; ++p) {
             EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
             if (player->classID == Player->classID && player->state == Player_State_Death)
                 player->visible = true;
@@ -103,9 +104,10 @@ void Competition_State_Manager(void)
                 Music_PlayJingle(TRACK_DROWNING);
             }
             else if (!self->timer) {
+                int32 p;
                 Zone->gotTimeOver      = true;
                 SceneInfo->timeEnabled = false;
-                for (int32 p = 0; p < Player->playerCount; ++p) {
+                for (p = 0; p < Player->playerCount; ++p) {
                     if (!self->playerFinished[p]) {
                         EntityPlayer *player = RSDK_GET_ENTITY(p, Player);
                         if (player->classID == Player->classID)
@@ -139,18 +141,20 @@ void Competition_State_Manager(void)
 #if MANIA_USE_PLUS
 void Competition_ResetOptions(void)
 {
+    int32 i;
+    int32 p;
     EntityCompetitionSession *session = CompetitionSession_GetSession();
     session->inMatch                  = false;
     session->matchID                  = 0;
     session->matchCount               = 0;
     session->stageIndex               = 0;
 
-    for (int32 i = 0; i < COMPETITION_STAGE_COUNT; ++i) {
+    for (i = 0; i < COMPETITION_STAGE_COUNT; ++i) {
         session->completedStages[i] = false;
         session->matchWinner[i]     = 0;
     }
 
-    for (int32 p = 0; p < PLAYER_COUNT; ++p) {
+    for (p = 0; p < PLAYER_COUNT; ++p) {
         session->finishState[p]       = FINISHTYPE_NOTFINISHED;
         session->playerID[p]          = ID_NONE;
         session->time[p].minutes      = 0;
@@ -167,11 +171,12 @@ void Competition_ResetOptions(void)
 
 void Competition_ClearMatchData(void)
 {
+    int32 p;
     EntityCompetitionSession *session = CompetitionSession_GetSession();
 
     session->matchWinner[session->matchID] = 0;
 
-    for (int32 p = 0; p < PLAYER_COUNT; ++p) {
+    for (p = 0; p < PLAYER_COUNT; ++p) {
         session->finishState[p]       = FINISHTYPE_NOTFINISHED;
         session->time[p].minutes      = 0;
         session->time[p].seconds      = 0;
@@ -185,6 +190,9 @@ void Competition_ClearMatchData(void)
 
 void Competition_DeriveWinner(int32 playerID, uint8 finishType)
 {
+    int32 p;
+    int32 deathCount;
+    bool32 allPlayersFinished;
     EntityCompetitionSession *session = CompetitionSession_GetSession();
     session->finishState[playerID]    = finishType;
 
@@ -198,19 +206,23 @@ void Competition_DeriveWinner(int32 playerID, uint8 finishType)
         session->time[playerID].milliseconds = 59;
     }
 
-    int32 deathCount          = 0;
-    bool32 allPlayersFinished = true;
-    for (int32 p = 0; p < session->playerCount; ++p) {
+    deathCount          = 0;
+    allPlayersFinished = true;
+    for (p = 0; p < session->playerCount; ++p) {
         if (!session->lives[p] || session->finishState[p] == FINISHTYPE_GAMEOVER)
             ++deathCount;
     }
 
     if (deathCount < session->playerCount - 1) {
-        for (int32 p = 0; p < session->playerCount; ++p) allPlayersFinished = allPlayersFinished && (!session->lives[p] || session->finishState[p]);
+        int32 p;
+        for (p = 0; p < session->playerCount; ++p) allPlayersFinished = allPlayersFinished && (!session->lives[p] || session->finishState[p]);
     }
 
     if (allPlayersFinished) {
         if (!session->matchWinner[session->matchID]) {
+            int32 scores[PLAYER_COUNT];
+            int32 winner;
+            int32 p;
             uint32 winnerTime       = 0xFFFFFFFF;
             int32 winnerRings      = 0;
             int32 winnerScore      = 0;
@@ -218,7 +230,7 @@ void Competition_DeriveWinner(int32 playerID, uint8 finishType)
             int32 winnerTotalRings = 0;
 
             uint32 times[PLAYER_COUNT];
-            for (int32 p = 0; p < session->playerCount; ++p) {
+            for (p = 0; p < session->playerCount; ++p) {
                 int32 mins = session->time[p].minutes;
                 int32 secs = session->time[p].seconds;
                 int32 ms   = session->time[p].milliseconds;
@@ -241,11 +253,10 @@ void Competition_DeriveWinner(int32 playerID, uint8 finishType)
                     winnerTime = time;
             }
 
-            int32 scores[PLAYER_COUNT];
             memset(scores, 0, PLAYER_COUNT * sizeof(int32));
 
-            int32 winner = 0;
-            for (int32 p = 0; p < session->playerCount; ++p) {
+            winner = 0;
+            for (p = 0; p < session->playerCount; ++p) {
                 if (session->finishState[p] == FINISHTYPE_PASSEDSIGNPOST) {
                     int32 score = 0;
                     if (session->rings[p] == winnerRings)
@@ -271,7 +282,7 @@ void Competition_DeriveWinner(int32 playerID, uint8 finishType)
                 }
             }
 
-            for (int32 p = 0; p < session->playerCount; ++p) {
+            for (p = 0; p < session->playerCount; ++p) {
                 bool32 isWinner = session->lives[p] > 0 && session->finishState[p] != FINISHTYPE_GAMEOVER && scores[p] == winner;
                 if (isWinner) {
                     Competition_WinMatchFor(p);

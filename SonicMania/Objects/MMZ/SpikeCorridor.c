@@ -79,6 +79,8 @@ void SpikeCorridor_SetupHitboxes(void)
 
 void SpikeCorridor_HandleDrawing(Animator *animator, int32 offsetY, int8 size, bool32 useWarnAnim)
 {
+    int32 anim;
+    int32 x;
     RSDK_THIS(SpikeCorridor);
 
     int32 startX = self->position.x - (self->colWidth << 18);
@@ -87,13 +89,15 @@ void SpikeCorridor_HandleDrawing(Animator *animator, int32 offsetY, int8 size, b
     drawPos.x = 0;
     drawPos.y = self->position.y + offsetY;
 
-    int32 anim = useWarnAnim ? 5 : 0;
+    anim = useWarnAnim ? 5 : 0;
 
-    for (int32 x = 0; x < self->colWidth;) {
+    for (x = 0; x < self->colWidth;) {
+        int32 w;
+        bool32 useOpeningAnim;
         drawPos.x = startX;
 
-        int32 w               = 0;
-        bool32 useOpeningAnim = false;
+        w               = 0;
+        useOpeningAnim = false;
         if (x >= size) {
             if (x < size + 6)
                 useOpeningAnim = true;
@@ -172,11 +176,12 @@ void SpikeCorridor_SetupNextSpikeRow(void)
 
 void SpikeCorridor_CheckPlayerCollisions(void)
 {
+    int32 i;
     RSDK_THIS(SpikeCorridor);
 
     foreach_active(Player, player)
     {
-        for (int32 i = 0; i < 2; ++i) {
+        for (i = 0; i < 2; ++i) {
             int32 side = Player_CheckCollisionBox(player, self, &self->hitboxes[i]);
 
             if (side == C_BOTTOM) {
@@ -260,11 +265,12 @@ void SpikeCorridor_StateDropper_DropWarn(void)
 
 void SpikeCorridor_StateDropper_SpawnSpikes(void)
 {
+    EntitySpikeCorridor *fallRow;
     RSDK_THIS(SpikeCorridor);
 
     RSDK.PlaySfx(SpikeCorridor->sfxDrop, false, 255);
 
-    EntitySpikeCorridor *fallRow = CREATE_ENTITY(SpikeCorridor, self, self->startPos.x, self->startPos.y);
+    fallRow = CREATE_ENTITY(SpikeCorridor, self, self->startPos.x, self->startPos.y);
     fallRow->isPermanent         = true;
     fallRow->state               = SpikeCorridor_StateSpikes_Setup;
     fallRow->active              = ACTIVE_NORMAL;
@@ -345,12 +351,13 @@ void SpikeCorridor_StateSpikes_Land(void) { SpikeCorridor_CheckPlayerCollisions(
 
 void SpikeCorridor_Draw_DropWarn(void)
 {
+    int32 yOff;
     RSDK_THIS(SpikeCorridor);
 
     Animator animator;
     memset(&animator, 0, sizeof(Animator));
 
-    int32 yOff = 0;
+    yOff = 0;
     if ((ScreenInfo->position.y << 16) - self->startPos.y > 0)
         yOff = (ScreenInfo->position.y << 16) - self->startPos.y;
 

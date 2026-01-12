@@ -104,12 +104,13 @@ void EncoreGoodEnd_SetupPlayer(int32 playerID)
 
 void EncoreGoodEnd_StatePlayer_MoveToPos(void)
 {
+    int32 playerID;
     RSDK_THIS(Player);
 
     self->velocity.x = 0x18000;
     self->groundVel  = 0x18000;
 
-    int32 playerID = HUD_CharacterIndexFromID(self->characterID);
+    playerID = HUD_CharacterIndexFromID(self->characterID);
 
     if (self->position.x >= EncoreGoodEnd->decorations[playerID + E_END_SONIC]->position.x) {
         self->position.x = EncoreGoodEnd->decorations[playerID + E_END_SONIC]->position.x;
@@ -207,6 +208,7 @@ void EncoreGoodEnd_StatePlayer_EndingIdle(void)
 
 void EncoreGoodEnd_StatePlayer_EndingSonic(void)
 {
+    int32 anim;
     RSDK_THIS(Player);
 
     EntityDecoration *playerDecor = EncoreGoodEnd->decorations[E_END_SONIC];
@@ -256,7 +258,7 @@ void EncoreGoodEnd_StatePlayer_EndingSonic(void)
         default: break;
     }
 
-    int32 anim = playerDecor->animator.frameID;
+    anim = playerDecor->animator.frameID;
     if (anim == ANI_RUN || anim == ANI_SKID || anim == ANI_DROPDASH)
         playerDecor->animator.speed = 0;
 
@@ -361,7 +363,9 @@ bool32 EncoreGoodEnd_Cutscene_MoveToPlace(EntityCutsceneSeq *host)
         EncoreGoodEnd->decorations[E_END_KING]->position.y += 0x500000;
         RSDK.SetSpriteAnimation(Decoration->aniFrames, E_END_DECOR_SONICLAYDOWN, &EncoreGoodEnd->decorations[E_END_SONIC]->animator, true, 21);
 
-        foreach_all(UICreditsText, label) { label->active = ACTIVE_NEVER; }
+        {
+            foreach_all(UICreditsText, label) { label->active = ACTIVE_NEVER; }
+        }
     }
     else if (host->timer == 120) {
         player1->position.x = 0x300000;
@@ -429,6 +433,7 @@ bool32 EncoreGoodEnd_Cutscene_KingAppear(EntityCutsceneSeq *host)
 
     if (decor->velocity.y > 0) {
         if (decor->position.y >= self->position.y) {
+            EntityFXFade *fxFade;
             decor->position.y = self->position.y;
 
             RSDK.SetSpriteAnimation(Decoration->aniFrames, E_END_DECOR_SONICSHOCKED, &EncoreGoodEnd->decorations[E_END_SONIC]->animator, true, 0);
@@ -453,14 +458,16 @@ bool32 EncoreGoodEnd_Cutscene_KingAppear(EntityCutsceneSeq *host)
             EncoreGoodEnd->decorations[E_END_GLASSM]->position.x -= 0x80000;
             EncoreGoodEnd->decorations[E_END_GLASSM]->rotation = 32;
 
-            foreach_all(UICreditsText, label)
             {
-                label->active    = ACTIVE_NORMAL;
-                label->state     = UICreditsText_State_SetupCharPos;
-                label->drawGroup = Zone->hudDrawGroup;
+                foreach_all(UICreditsText, label)
+                {
+                    label->active    = ACTIVE_NORMAL;
+                    label->state     = UICreditsText_State_SetupCharPos;
+                    label->drawGroup = Zone->hudDrawGroup;
+                }
             }
 
-            EntityFXFade *fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xF0F0F0), self->position.x, self->position.y);
+            fxFade = CREATE_ENTITY(FXFade, INT_TO_VOID(0xF0F0F0), self->position.x, self->position.y);
             fxFade->speedIn      = 256;
             fxFade->speedOut     = 64;
             fxFade->drawGroup    = Zone->objectDrawGroup[1];
