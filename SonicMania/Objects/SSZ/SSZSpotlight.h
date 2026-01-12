@@ -44,7 +44,7 @@ struct EntitySSZSpotlight {
     Vector2 originPos;
     Vector2 spotlightVertices[8];
     Vector2 drawVertices[8];
-    color *colorTable;
+    uint32 *colorTable;
     Animator animator;
 };
 
