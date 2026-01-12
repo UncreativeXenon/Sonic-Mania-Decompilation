@@ -1,3 +1,5 @@
+# Xbox 360 Downloads at https://github.com/UncreativeXenon/RSDKv5-Decompilation/releases
+
 # **SUPPORT THE OFFICIAL RELEASE OF SONIC MANIA (PLUS)**
 + Without assets from the official releases, this decompilation will not run.
 
