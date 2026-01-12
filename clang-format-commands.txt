@@ -1,1 +1,0 @@
-[in ./Sonic Mania] find ./Objects -iname '*.h' -o -iname '*.c' | xargs clang-format -i -verbose -style=file
