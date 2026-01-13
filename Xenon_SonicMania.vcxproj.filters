@@ -9,6 +9,15 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Dependencies">
+      <UniqueIdentifier>{05f9a928-b00c-4a46-9132-f56687c2a096}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dependencies\libtheora">
+      <UniqueIdentifier>{1e85dea3-3cb5-4928-884a-2734d5836548}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dependencies\libogg">
+      <UniqueIdentifier>{18e8fecd-1c7d-402e-992c-53354399a0b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\RSDKv5\RSDKv5\main.cpp">
@@ -130,6 +139,87 @@
     </ClCompile>
     <ClCompile Include="dependencies\RSDKv5\dependencies\all\tinyxml2\tinyxml2.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\analyze.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\apiwrapper.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\bitpack.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decapiwrapper.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decinfo.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decode.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\dequant.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encapiwrapper.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encfrag.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encinfo.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encode.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\enquant.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\fdct.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\fragment.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffdec.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffenc.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\idct.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\info.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\internal.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\mathops.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\mcenc.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\quant.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\rate.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\state.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\tokenize.c">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libogg\src\bitwise.c">
+      <Filter>Dependencies\libogg</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libogg\src\framing.c">
+      <Filter>Dependencies\libogg</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -261,6 +351,72 @@
     </ClInclude>
     <ClInclude Include="SonicMania\GameVariables.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\apiwrapper.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\bitpack.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\dct.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decint.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\dequant.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encint.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\enquant.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffdec.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffenc.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffman.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\internal.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\mathops.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\modedec.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\ocintrin.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\quant.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\state.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\include\theora\codec.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\include\theora\theora.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\include\theora\theoradec.h">
+      <Filter>Dependencies\libtheora</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libogg\include\ogg\ogg.h">
+      <Filter>Dependencies\libogg</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libogg\include\ogg\os_types.h">
+      <Filter>Dependencies\libogg</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libogg\src\crctable.h">
+      <Filter>Dependencies\libogg</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

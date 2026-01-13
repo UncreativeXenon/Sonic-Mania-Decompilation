@@ -81,6 +81,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
+    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
@@ -94,6 +95,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
+    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
@@ -111,7 +113,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_DEBUG;_XBOX;__XBOX__;RETRO_STANDALONE=0;RETRO_REVISION=2;RETRO_USE_MOD_LOADER=0;RSDK_USE_DX9;GAME_VERSION=6;GAME_INCLUDE_EDITOR=0</PreprocessorDefinitions>
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
-      <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\RSDKv5\RSDKv5;$(ProjectDir)\dependencies\RSDKv5\dependencies\all;$(ProjectDir)\dependencies\RSDKv5\dependencies\all\tinyxml2;$(ProjectDir)\SonicMania;$(ProjectDir)\SonicMania\Objects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\RSDKv5\RSDKv5;$(ProjectDir)\dependencies\RSDKv5\dependencies\all;$(ProjectDir)\dependencies\RSDKv5\dependencies\all\tinyxml2;$(ProjectDir)\dependencies\RSDKv5\dependencies\xbox360\libogg\include;$(ProjectDir)\dependencies\RSDKv5\dependencies\xbox360\libtheora\include;$(ProjectDir)\SonicMania;$(ProjectDir)\SonicMania\Objects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -121,6 +123,9 @@
       <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>xapilibd.lib;d3d9d.lib;d3dx9d.lib;xgraphicsd.lib;xboxkrnl.lib;xnetd.lib;xaudiod2.lib;xactd3.lib;x3daudiod.lib;xmcored.lib;xbdm.lib;vcompd.lib</AdditionalDependencies>
     </Link>
+    <Deploy>
+      <DeploymentType>EmulateDvd</DeploymentType>
+    </Deploy>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">
     <ClCompile>
@@ -209,7 +214,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;_XBOX;__XBOX__;RETRO_STANDALONE=0;RETRO_REVISION=2;RETRO_USE_MOD_LOADER=0;RSDK_USE_DX9;GAME_VERSION=6;GAME_INCLUDE_EDITOR=0</PreprocessorDefinitions>
       <CompileAs>Default</CompileAs>
-      <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\RSDKv5\RSDKv5;$(ProjectDir)\dependencies\RSDKv5\dependencies\all;$(ProjectDir)\dependencies\RSDKv5\dependencies\all\tinyxml2;$(ProjectDir)\SonicMania;$(ProjectDir)\SonicMania\Objects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\RSDKv5\RSDKv5;$(ProjectDir)\dependencies\RSDKv5\dependencies\all;$(ProjectDir)\dependencies\RSDKv5\dependencies\all\tinyxml2;$(ProjectDir)\dependencies\RSDKv5\dependencies\xbox360\libogg\include;$(ProjectDir)\dependencies\RSDKv5\dependencies\xbox360\libtheora\include;$(ProjectDir)\SonicMania;$(ProjectDir)\SonicMania\Objects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
     </ClCompile>
@@ -221,6 +226,9 @@
       <SetChecksum>true</SetChecksum>
       <AdditionalDependencies>xapilib.lib;d3d9.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3.lib;x3daudio.lib;xmcore.lib;vcomp.lib</AdditionalDependencies>
     </Link>
+    <Deploy>
+      <DeploymentType>EmulateDvd</DeploymentType>
+    </Deploy>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
     <ClCompile>
@@ -251,6 +259,33 @@
     <ClCompile Include="dependencies\RSDKv5\dependencies\all\iniparser\iniparser.cpp" />
     <ClCompile Include="dependencies\RSDKv5\dependencies\all\miniz\miniz.c" />
     <ClCompile Include="dependencies\RSDKv5\dependencies\all\tinyxml2\tinyxml2.cpp" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libogg\src\bitwise.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libogg\src\framing.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\analyze.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\apiwrapper.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\bitpack.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decapiwrapper.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decinfo.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decode.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\dequant.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encapiwrapper.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encfrag.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encinfo.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encode.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\enquant.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\fdct.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\fragment.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffdec.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffenc.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\idct.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\info.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\internal.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\mathops.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\mcenc.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\quant.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\rate.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\state.c" />
+    <ClCompile Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\tokenize.c" />
     <ClCompile Include="dependencies\RSDKv5\RSDKv5\main.cpp" />
     <ClCompile Include="dependencies\RSDKv5\RSDKv5\RSDK\Audio\Audio.cpp" />
     <ClCompile Include="dependencies\RSDKv5\RSDKv5\RSDK\Core\Link.cpp" />
@@ -293,6 +328,28 @@
     <ClInclude Include="dependencies\RSDKv5\dependencies\all\iniparser\iniparser.h" />
     <ClInclude Include="dependencies\RSDKv5\dependencies\all\miniz\miniz.h" />
     <ClInclude Include="dependencies\RSDKv5\dependencies\all\tinyxml2\tinyxml2.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libogg\include\ogg\ogg.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libogg\include\ogg\os_types.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libogg\src\crctable.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\include\theora\codec.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\include\theora\theora.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\include\theora\theoradec.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\apiwrapper.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\bitpack.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\dct.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\decint.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\dequant.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\encint.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\enquant.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffdec.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffenc.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\huffman.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\internal.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\mathops.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\modedec.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\ocintrin.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\quant.h" />
+    <ClInclude Include="dependencies\RSDKv5\dependencies\xbox360\libtheora\lib\state.h" />
     <ClInclude Include="dependencies\RSDKv5\RSDKv5\main.hpp" />
     <ClInclude Include="dependencies\RSDKv5\RSDKv5\RSDK\Audio\Audio.hpp" />
     <ClInclude Include="dependencies\RSDKv5\RSDKv5\RSDK\Core\Link.hpp" />
