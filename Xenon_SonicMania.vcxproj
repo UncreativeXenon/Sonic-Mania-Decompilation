@@ -129,7 +129,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Debug|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
-    <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
+    <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
     <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">
@@ -153,12 +153,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
-    <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
+    <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
     <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release NoPlus|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
-    <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
+    <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
     <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
