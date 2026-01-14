@@ -6,17 +6,25 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		RSDKv5 Debug|Xbox 360 = RSDKv5 Debug|Xbox 360
+		RSDKv5 Release NoPlus|Xbox 360 = RSDKv5 Release NoPlus|Xbox 360
 		RSDKv5 Release|Xbox 360 = RSDKv5 Release|Xbox 360
 		RSDKv5U Debug|Xbox 360 = RSDKv5U Debug|Xbox 360
+		RSDKv5U Release NoPlus|Xbox 360 = RSDKv5U Release NoPlus|Xbox 360
 		RSDKv5U Release|Xbox 360 = RSDKv5U Release|Xbox 360
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Debug|Xbox 360.ActiveCfg = Debug|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Debug|Xbox 360.Build.0 = Debug|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Release NoPlus|Xbox 360.ActiveCfg = RSDKv5 Release NoPlus|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Release NoPlus|Xbox 360.Build.0 = RSDKv5 Release NoPlus|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Release NoPlus|Xbox 360.Deploy.0 = RSDKv5 Release NoPlus|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Release|Xbox 360.ActiveCfg = Release|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5 Release|Xbox 360.Build.0 = Release|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Debug|Xbox 360.ActiveCfg = RSDKv5U Debug|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Debug|Xbox 360.Build.0 = RSDKv5U Debug|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release NoPlus|Xbox 360.ActiveCfg = RSDKv5U Release NoPlus|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release NoPlus|Xbox 360.Build.0 = RSDKv5U Release NoPlus|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release NoPlus|Xbox 360.Deploy.0 = RSDKv5U Release NoPlus|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release|Xbox 360.ActiveCfg = RSDKv5U Release|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release|Xbox 360.Build.0 = RSDKv5U Release|Xbox 360
 	EndGlobalSection
