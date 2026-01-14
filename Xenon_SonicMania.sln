@@ -10,6 +10,7 @@ Global
 		RSDKv5 Release|Xbox 360 = RSDKv5 Release|Xbox 360
 		RSDKv5U Debug|Xbox 360 = RSDKv5U Debug|Xbox 360
 		RSDKv5U Release NoPlus|Xbox 360 = RSDKv5U Release NoPlus|Xbox 360
+		RSDKv5U Release TitleID|Xbox 360 = RSDKv5U Release TitleID|Xbox 360
 		RSDKv5U Release|Xbox 360 = RSDKv5U Release|Xbox 360
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -25,6 +26,9 @@ Global
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release NoPlus|Xbox 360.ActiveCfg = RSDKv5U Release NoPlus|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release NoPlus|Xbox 360.Build.0 = RSDKv5U Release NoPlus|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release NoPlus|Xbox 360.Deploy.0 = RSDKv5U Release NoPlus|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release TitleID|Xbox 360.ActiveCfg = RSDKv5U Release TitleID|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release TitleID|Xbox 360.Build.0 = RSDKv5U Release TitleID|Xbox 360
+		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release TitleID|Xbox 360.Deploy.0 = RSDKv5U Release TitleID|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release|Xbox 360.ActiveCfg = RSDKv5U Release|Xbox 360
 		{BEC2A277-5626-4462-AE00-E7A8B6E8AEB2}.RSDKv5U Release|Xbox 360.Build.0 = RSDKv5U Release|Xbox 360
 	EndGlobalSection

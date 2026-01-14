@@ -37,6 +37,10 @@
       <Configuration>RSDKv5U Release NoPlus</Configuration>
       <Platform>Xbox 360</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="RSDKv5U Release TitleID|Xbox 360">
+      <Configuration>RSDKv5U Release TitleID</Configuration>
+      <Platform>Xbox 360</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="RSDKv5U Release|Xbox 360">
       <Configuration>RSDKv5U Release</Configuration>
       <Platform>Xbox 360</Platform>
@@ -79,6 +83,10 @@
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release TitleID|Xbox 360'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release NoPlus|Xbox 360'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
@@ -115,6 +123,9 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release|Xbox 360'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release TitleID|Xbox 360'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release NoPlus|Xbox 360'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -125,12 +136,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
-    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Debug|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
-    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
@@ -144,22 +155,27 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
-    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5 Release NoPlus|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5.xex</ImageXexOutput>
-    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
-    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release TitleID|Xbox 360'">
+    <LinkIncremental>false</LinkIncremental>
+    <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release NoPlus|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
     <ImageXexOutput>$(OutDir)RSDKv5U.xex</ImageXexOutput>
-    <RemoteRoot>Hdd:\Apps\RSDKv5\</RemoteRoot>
+    <RemoteRoot>Hdd:\Games\RSDKv5\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
@@ -382,6 +398,40 @@
     <Deploy>
       <DeploymentType>EmulateDvd</DeploymentType>
     </Deploy>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release TitleID|Xbox 360'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <StringPooling>true</StringPooling>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PrecompiledHeaderOutputFile>$(OutDir)$(ProjectName).pch</PrecompiledHeaderOutputFile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>NDEBUG;_XBOX;__XBOX__;RETRO_STANDALONE=0;RETRO_REVISION=3;RETRO_USE_MOD_LOADER=0;RSDK_USE_DX9;GAME_VERSION=6;GAME_INCLUDE_EDITOR=0</PreprocessorDefinitions>
+      <CompileAs>Default</CompileAs>
+      <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\RSDKv5\RSDKv5;$(ProjectDir)\dependencies\RSDKv5\dependencies\all;$(ProjectDir)\dependencies\RSDKv5\dependencies\all\tinyxml2;$(ProjectDir)\dependencies\RSDKv5\dependencies\xbox360\libogg\include;$(ProjectDir)\dependencies\RSDKv5\dependencies\xbox360\libtheora\include;$(ProjectDir)\SonicMania;$(ProjectDir)\SonicMania\Objects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
+      <SetChecksum>true</SetChecksum>
+      <AdditionalDependencies>xapilib.lib;d3d9.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3.lib;x3daudio.lib;xmcore.lib;vcomp.lib</AdditionalDependencies>
+    </Link>
+    <Deploy>
+      <DeploymentType>EmulateDvd</DeploymentType>
+    </Deploy>
+    <ImageXex>
+      <TitleID>0x4D5307E7</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release NoPlus|Xbox 360'">
     <ClCompile>
