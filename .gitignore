@@ -22,16 +22,20 @@ CMakeUserPresets.json
 [Rr]elease/
 [Rr]eleases/
 [Bb]uild/
-RSDKv5 [Dd]ebug/
 RSDKv5 [Dd]ebugPublic/
-RSDKv5 [Rr]elease/
-RSDKv5 [Rr]eleases/
-RSDKv5 [Rr]elease NoPlus/
-RSDKv5U [Dd]ebug/
 RSDKv5U [Dd]ebugPublic/
+RSDKv5 [Dd]ebug/
+RSDKv5U [Dd]ebug/
+RSDKv5 [Dd]ebug ModLoader/
+RSDKv5U [Dd]ebug ModLoader/
+RSDKv5 [Rr]elease/
+RSDKv5 [Rr]elease NoPlus/
+RSDKv5 [Rr]elease ModLoader/
+RSDKv5 [Rr]elease ModLoader NoPlus/
 RSDKv5U [Rr]elease/
-RSDKv5U [Rr]eleases/
 RSDKv5U [Rr]elease NoPlus/
+RSDKv5U [Rr]elease ModLoader/
+RSDKv5U [Rr]elease ModLoader NoPlus/
 RSDKv5U [Rr]elease TitleID/
 [Bb]uild/
 x64/
