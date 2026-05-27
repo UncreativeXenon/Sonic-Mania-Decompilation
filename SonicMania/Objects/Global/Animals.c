@@ -46,14 +46,14 @@ void Animals_Create(void *data)
     self->updateRange.y = TO_FIXED(64);
     self->drawGroup     = Zone->objectDrawGroup[0];
 
-    type = ANIMAL_POCKY;
+    type = ANIMAL_RICKY + 1;
 #if MANIA_USE_PLUS
     if (!(globals->secrets & SECRET_RICKYMODE))
 #endif
         type = VOID_TO_INT(data);
 
     if (!self->type && ZONE_RAND(0, 256) == 21) {
-        type                      = ANIMAL_POCKY;
+        type                      = ANIMAL_RICKY + 1;
         self->velocity.y          = -TO_FIXED(4);
         self->type                = type - 1;
         self->state               = Animals_State_Fall;
