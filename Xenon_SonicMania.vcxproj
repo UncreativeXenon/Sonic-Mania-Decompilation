@@ -704,7 +704,7 @@
       <DeploymentType>EmulateDvd</DeploymentType>
     </Deploy>
     <ImageXex>
-      <TitleID>0x4D5307E7</TitleID>
+      <TitleID>0x5841534D</TitleID>
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RSDKv5U Release NoPlus|Xbox 360'">
